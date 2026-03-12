@@ -30,7 +30,7 @@ jobs:
         run: |
           dotnet-sonarscanner begin /k:"ClaudiuDC21_LabResource-Manager" /o:"claudiudc21" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
           
-          dotnet build Backend-CleanArchitecture/*.sln*
-          dotnet build Backend-VerticalSlice/*.slnx
+          dotnet build BackendCleanArhitecture/LabResource.CleanArhitecture.slnx
+          dotnet build BackendVerticalSlice/LabResource.VerticalSlice.slnx
           
           dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
