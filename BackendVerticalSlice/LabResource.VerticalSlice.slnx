@@ -1,3 +1,3 @@
 <Solution>
-  <Project Path="LabResource.VerticalApi/LabResource.VerticalApi.csproj" />
+  <Project Path="LabResource.VerticalSliceAPI/LabResource.VerticalApi.csproj" />
 </Solution>
