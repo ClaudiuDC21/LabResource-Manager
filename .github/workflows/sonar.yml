@@ -9,6 +9,8 @@ jobs:
   build:
     name: Build and analyze
     runs-on: windows-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -18,12 +20,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v4
-        with:
-          path: ~\sonar\cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
       - name: Install SonarCloud scanner
         run: |
           dotnet tool install --global dotnet-sonarscanner
@@ -33,5 +29,8 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           dotnet-sonarscanner begin /k:"ClaudiuDC21_LabResource-Manager" /o:"claudiudc21" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
-          dotnet build
+          
+          dotnet build Backend-CleanArchitecture/*.sln*
+          dotnet build Backend-VerticalSlice/*.slnx
+          
           dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
