@@ -28,7 +28,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          dotnet-sonarscanner begin /k:"ClaudiuDC21_LabResource-Manager" /o:"claudiudc21" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
+          dotnet-sonarscanner begin /k:"ClaudiuDC21_LabResource-Manager" /o:"claudiudc21" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io"
           
           dotnet build BackendCleanArhitecture/LabResource.CleanArhitecture.slnx
           dotnet build BackendVerticalSlice/LabResource.VerticalSlice.slnx
