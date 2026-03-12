@@ -1,0 +1,6 @@
+@LabResource.VerticalApi_HostAddress = http://localhost:5062
+
+GET {{LabResource.VerticalApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
