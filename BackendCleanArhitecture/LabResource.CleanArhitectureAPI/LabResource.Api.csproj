@@ -25,6 +25,12 @@
 
   <ItemGroup>
     <Folder Include="Controllers\" />
+    <Folder Include="Middlewares\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LabResource.Application\LabResource.Application.csproj" />
+    <ProjectReference Include="..\LabResource.Infrastructure\LabResource.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
