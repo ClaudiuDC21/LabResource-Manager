@@ -1,4 +1,6 @@
 using FluentValidation;
+using LabResource.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Serilog;
 
@@ -11,8 +13,6 @@ builder.Host.UseSerilog();
 
 builder.Services.AddControllers();
 
-
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
 builder.Services.AddEndpointsApiExplorer();
@@ -25,6 +25,9 @@ builder.Services.AddSwaggerGen(c =>
         Description = "API-ul pentru arhitectura Clean Arhitecture"
     });
 });
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 
