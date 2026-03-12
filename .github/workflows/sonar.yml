@@ -33,4 +33,4 @@ jobs:
           dotnet build BackendCleanArhitecture/LabResource.CleanArhitecture.slnx
           dotnet build BackendVerticalSlice/LabResource.VerticalSlice.slnx
           
-          dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+          dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
