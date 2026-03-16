@@ -1,6 +1,6 @@
 <Solution>
   <Project Path="LabResource.Application/LabResource.Application.csproj" Id="2c30097e-a4b0-4908-93e4-2a78a8c9c30a" />
-  <Project Path="LabResource.CleanArhitectureAPI/LabResource.Api.csproj" />
+  <Project Path="LabResource.CleanArhitectureAPI/LabResource.CleanApi.csproj" />
   <Project Path="LabResource.Infrastructure/LabResource.Infrastructure.csproj" Id="7e7436d6-bf79-4edc-a47d-f12a9edbc970" />
   <Project Path="LabResourceDomain/LabResource.Domain.csproj" Id="6e5ac5fa-1fb3-4ae7-b649-6b77ee40bfd1" />
 </Solution>
