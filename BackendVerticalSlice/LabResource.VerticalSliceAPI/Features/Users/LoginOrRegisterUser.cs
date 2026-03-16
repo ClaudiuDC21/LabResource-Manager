@@ -66,7 +66,7 @@ public static class LoginOrRegisterUser
             return newUser;
         }
 
-        private Result MapToResult(User user)
+        private static Result MapToResult(User user)
         {
             return new Result(user.Id, user.FullName, user.Email, user.Role);
         }

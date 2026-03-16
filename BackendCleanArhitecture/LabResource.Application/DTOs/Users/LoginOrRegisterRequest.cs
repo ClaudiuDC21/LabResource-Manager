@@ -1,4 +1,4 @@
-﻿namespace LabResource.Application.DTOs;
+﻿namespace LabResource.Application.DTOs.Users;
 
 public class LoginOrRegisterRequest
 {

@@ -1,5 +1,5 @@
 ﻿using LabResource.Application.Interfaces.Repositories;
-using LabResource.Infrastructure.Persistence.Repositories;
+using LabResource.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LabResource.Infrastructure;

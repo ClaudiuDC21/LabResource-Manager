@@ -1,5 +1,4 @@
-﻿using LabResource.Application.DTOs;
-using LabResource.Application.DTOs.Users;
+﻿using LabResource.Application.DTOs.Users;
 using LabResource.Application.Interfaces.Repositories;
 using LabResource.Application.Interfaces.Services;
 using LabResource.Domain.Entities;
@@ -28,6 +27,52 @@ public class UserService : IUserService
         var newUser = await RegisterNewUserAsync(request.FullName, request.Email, role);
 
         return MapToResponse(newUser);
+    }
+
+    public async Task<IEnumerable<UserResponse>> GetAllActiveUsersAsync()
+    {
+        var users = await _userRepository.GetAllActiveAsync();
+        return users.Select(MapToResponse);
+    }
+
+    public async Task<UserResponse?> GetUserByIdAsync(Guid id)
+    {
+        var user = await _userRepository.GetByIdAsync(id);
+
+        return user != null ? MapToResponse(user) : null;
+    }
+
+    public async Task<bool> UpdateUserAsync(Guid id, UpdateUserRequest request)
+    {
+        var user = await _userRepository.GetByIdAsync(id);
+        if (user == null)
+        {
+            return false;
+        }
+
+        user.FullName = request.FullName;
+        user.MatriculationNumber = request.MatriculationNumber;
+
+        await _userRepository.UpdateAsync(user);
+        await _userRepository.SaveChangesAsync();
+
+        return true;
+    }
+
+    public async Task<bool> DeactivateUserAsync(Guid id)
+    {
+        var user = await _userRepository.GetByIdAsync(id);
+        if (user == null)
+        {
+            return false;
+        }
+
+        user.IsActive = false;
+
+        await _userRepository.UpdateAsync(user);
+        await _userRepository.SaveChangesAsync();
+
+        return true;
     }
 
     private UserRole DetermineUserRole(string email)
@@ -59,7 +104,7 @@ public class UserService : IUserService
         return newUser;
     }
 
-    private UserResponse MapToResponse(User user)
+    private static UserResponse MapToResponse(User user)
     {
         return new UserResponse
         {
