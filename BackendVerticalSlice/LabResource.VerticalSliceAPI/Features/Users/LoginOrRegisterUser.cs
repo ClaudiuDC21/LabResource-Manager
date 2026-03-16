@@ -37,7 +37,7 @@ public static class LoginOrRegisterUser
             return MapToResult(newUser);
         }
 
-        private UserRole DetermineUserRole(string email)
+        private static UserRole DetermineUserRole(string email)
         {
             if (email.EndsWith("@stud.ubbcluj.ro", StringComparison.OrdinalIgnoreCase))
                 return UserRole.Student;

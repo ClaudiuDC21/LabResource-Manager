@@ -1,12 +1,13 @@
 ﻿using LabResource.VerticalApi.Common.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace LabResource.VerticalApi.Features.Users;
 
 public static class UpdateUser
 {
-    public record Command(Guid Id, string FullName, string? MatriculationNumber) : IRequest<bool>;
+    public record Command([property: JsonRequired] Guid Id, string FullName, string? MatriculationNumber) : IRequest<bool>;
 
     public class Handler : IRequestHandler<Command, bool>
     {
