@@ -1,8 +1,9 @@
 ﻿using FluentValidation;
+using LabResource.VerticalApi.Common.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
 using Serilog;
-using Microsoft.EntityFrameworkCore;
-using LabResource.VerticalApi.Common.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +27,7 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1",
         Description = "API-ul pentru arhitectura Vertical Slice"
     });
+    c.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
 });
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
