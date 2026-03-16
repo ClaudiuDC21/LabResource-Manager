@@ -1,8 +1,7 @@
-﻿namespace LabResource.VerticalApi.Common.Enums
+﻿namespace LabResource.VerticalApi.Common.Enums;
+
+public enum UserRole
 {
-    public enum UserRole
-    {
-        Student = 1,
-        Teacher = 2
-    }
+    Student = 1,
+    Teacher = 2
 }
