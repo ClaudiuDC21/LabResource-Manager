@@ -22,5 +22,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasIndex(x => x.Email)
             .IsUnique();
+
+        builder.Property(x => x.MatriculationNumber)
+            .HasMaxLength(20)
+            .IsRequired(false);
     }
 }
