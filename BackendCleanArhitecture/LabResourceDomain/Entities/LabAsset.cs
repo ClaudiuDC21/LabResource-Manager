@@ -2,19 +2,17 @@
 
 namespace LabResource.Domain.Entities;
 
-public class User
+public class LabAsset
 {
     public Guid Id { get; set; }
 
-    public string FullName { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
 
-    public string Email { get; set; } = string.Empty;
+    public string? SerialNumber { get; set; }
 
-    public UserRole Role { get; set; }
+    public AssetStatus Status { get; set; } = AssetStatus.Available;
 
-    public string? MatriculationNumber { get; set; }
-
-    public bool IsActive { get; set; } = true;
+    public bool IsActive { get; set; } = true; 
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
