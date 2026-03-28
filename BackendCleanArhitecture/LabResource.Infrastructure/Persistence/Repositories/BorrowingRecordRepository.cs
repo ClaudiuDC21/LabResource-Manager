@@ -25,6 +25,14 @@ public class BorrowingRecordRepository : IBorrowingRecordRepository
             .FirstOrDefaultAsync(b => b.LabAssetId == labAssetId && b.ReturnedAt == null);
     }
 
+    public async Task<IEnumerable<BorrowingRecord>> GetActiveBorrowingsByUserIdAsync(Guid userId)
+    {
+        return await _context.BorrowingRecords
+            .Include(b => b.LabAsset)
+            .Where(b => b.UserId == userId && b.ReturnedAt == null)
+            .ToListAsync();
+    }
+
     public Task UpdateAsync(BorrowingRecord record)
     {
         _context.BorrowingRecords.Update(record);

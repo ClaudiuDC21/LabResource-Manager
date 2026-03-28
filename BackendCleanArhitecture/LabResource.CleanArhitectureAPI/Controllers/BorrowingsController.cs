@@ -50,4 +50,18 @@ public class BorrowingsController : ControllerBase
             return NotFound(new { Error = ex.Message });
         }
     }
+
+    [HttpGet("user/{userId:guid}/active")]
+    public async Task<IActionResult> GetActiveForUser(Guid userId)
+    {
+        try
+        {
+            var result = await _borrowingService.GetActiveBorrowingsForUserAsync(userId);
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(new { Error = ex.Message });
+        }
+    }
 }

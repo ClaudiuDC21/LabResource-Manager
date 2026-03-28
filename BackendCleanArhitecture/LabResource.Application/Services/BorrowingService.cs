@@ -98,4 +98,24 @@ public class BorrowingService : IBorrowingService
             NewStatus = asset.Status
         };
     }
+
+    public async Task<IEnumerable<ActiveBorrowingResponse>> GetActiveBorrowingsForUserAsync(Guid userId)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null)
+        {
+            throw new ArgumentException("User not found.");
+        }
+
+        var activeBorrowings = await _borrowingRepository.GetActiveBorrowingsByUserIdAsync(userId);
+
+        return activeBorrowings.Select(b => new ActiveBorrowingResponse
+        {
+            BorrowingRecordId = b.Id,
+            LabAssetId = b.LabAssetId,
+            AssetName = b.LabAsset.Name,
+            SerialNumber = b.LabAsset.SerialNumber,
+            BorrowedAt = b.BorrowedAt
+        });
+    }
 }
