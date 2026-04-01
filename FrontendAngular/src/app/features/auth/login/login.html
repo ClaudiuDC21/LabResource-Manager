@@ -1,0 +1,55 @@
+<div class="min-h-screen flex align-items-center justify-content-center surface-ground px-4">
+  <div class="surface-card p-5 shadow-2 border-round w-full lg:w-4 flex flex-column">
+    
+    <div class="text-center mb-5">
+      <img src="logo-LabResource.png" alt="Logo" height="55" class="mb-3" />
+      <div class="text-900 text-3xl font-bold mb-3">Welcome Back</div>
+
+      <div class="flex align-items-center justify-content-center gap-2 mb-4">
+        <span class="text-500 font-medium text-sm">Active API:</span>
+        <span
+          [ngClass]="backendService.isCleanArchitecture() ? 'bg-logo-green shadow-soft-green' : 'bg-logo-blue'"
+          class="px-2 py-1 border-round text-white text-xs font-bold uppercase tracking-wider flex align-items-center gap-2"
+        >
+          <i [class]="backendService.isCleanArchitecture() ? 'pi pi-shield' : 'pi pi-database'"></i>
+          {{ backendService.isCleanArchitecture() ? 'Clean Architecture' : 'Vertical Slice' }}
+        </span>
+      </div>
+
+      <span class="text-600 font-medium line-height-3">Don't have an account?</span>
+      <a class="font-medium no-underline ml-2 text-logo-green" routerLink="/register">Create today!</a>
+    </div>
+
+    <div>
+      <label for="email" class="block text-900 font-medium mb-2">Email</label>
+      <input id="email" type="text" pInputText class="w-full mb-3 p-3" placeholder="Enter your email" />
+
+      <label for="password" class="block text-900 font-medium mb-2">Password</label>
+      <input id="password" type="password" pInputText class="w-full mb-5 p-3" placeholder="Enter your password" />
+
+      <div class="flex align-items-center justify-content-between mb-6">
+        <div class="flex align-items-center">
+          <p-checkbox id="rememberme" [binary]="true" class="mr-2"></p-checkbox>
+          <label for="rememberme" class="text-700">Remember me</label>
+        </div>
+        <a class="font-medium no-underline text-logo-green text-sm">Forgot password?</a>
+      </div>
+
+      <button
+        class="p-button p-component w-full bg-logo-green shadow-soft-green py-3 font-bold text-xl"
+        (click)="handleLogin()"
+      >
+        <span class="p-button-label">Sign In</span>
+      </button>
+    </div>
+
+    <p class="text-center text-500 text-xs mt-5 line-height-3 italic border-top-1 surface-border pt-3">
+        * You are currently interacting with the 
+        <span class="font-bold" [ngClass]="backendService.isCleanArchitecture() ? 'text-logo-green' : 'text-logo-blue'">
+            {{ backendService.isCleanArchitecture() ? 'Clean Architecture' : 'Vertical Slice' }}
+        </span> 
+        implementation.
+    </p>
+
+  </div>
+</div>
