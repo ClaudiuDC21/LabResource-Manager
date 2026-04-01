@@ -1,1 +1,60 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+html {
+    font-size: 14px;
+}
+
+body {
+    font-family: var(--font-family);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    user-select: none;
+    cursor: default;
+}
+
+input, textarea, [contenteditable="true"] {
+    user-select: text;
+    cursor: text;
+}
+
+a, button, .p-button, .cursor-pointer, [routerLink] {
+    cursor: pointer;
+}
+
+.p-component {
+    font-family: var(--font-family) !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+    font-weight: 700;
+    color: #111827;
+}
+
+$emerald: #10b981;
+
+.bg-logo-green { 
+    background-color: $emerald !important; 
+    color: white !important; 
+    border: none !important; 
+}
+
+.border-logo-green { 
+    border: 1px solid $emerald !important; 
+    color: $emerald !important; 
+    background-color: white !important; 
+}
+
+.shadow-soft-green { 
+    box-shadow: 0 2px 8px 0 rgba(16, 185, 129, 0.1) !important; 
+}
+
+.bg-logo-blue { 
+    background-color: #0ea5e9 !important; 
+    color: white !important; 
+    border: none !important; 
+}
