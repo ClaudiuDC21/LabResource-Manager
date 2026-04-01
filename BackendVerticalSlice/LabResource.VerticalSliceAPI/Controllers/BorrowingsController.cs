@@ -64,4 +64,18 @@ public class BorrowingsController : ControllerBase
             return NotFound(new { Error = ex.Message });
         }
     }
+
+    [HttpGet("asset/{assetId:guid}/history")]
+    public async Task<IActionResult> GetAssetHistory(Guid assetId)
+    {
+        try
+        {
+            var result = await _mediator.Send(new GetAssetHistory.Query(assetId));
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(new { Error = ex.Message });
+        }
+    }
 }
