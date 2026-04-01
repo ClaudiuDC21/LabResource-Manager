@@ -1,0 +1,48 @@
+<header class="surface-card shadow-2 py-1 px-5 flex align-items-center justify-content-between z-5 relative">
+  
+  <div class="flex align-items-center cursor-pointer" routerLink="/">
+    <img src="logo-LabResource.png" alt="Lab Resource Management" height="55" class="block" />
+  </div>
+
+  <div class="flex align-items-center gap-5">
+    
+    <div class="flex align-items-center gap-3 bg-gray-50 px-3 py-2 border-round-3xl border-1 surface-border">
+      <i class="pi pi-server text-600"></i>
+      <span class="text-sm font-semibold text-700">API:</span>
+      
+      <button 
+        class="p-button p-component p-button-sm border-round-3xl px-3 py-1 font-bold transition-all shadow-1"
+        [ngClass]="backendService.isCleanArchitecture() ? 'bg-logo-green' : 'bg-logo-blue'"
+        (click)="backendService.toggleBackend()">
+        <i [class]="backendService.isCleanArchitecture() ? 'pi pi-shield mr-2' : 'pi pi-database mr-2'"></i>
+        {{ backendService.isCleanArchitecture() ? 'Clean Arch' : 'Vertical Slice' }}
+      </button>
+    </div>
+
+    <div class="flex align-items-center gap-3 border-left-1 surface-border pl-4">
+      
+      @if (!isLoggedIn) {
+        <button 
+            class="p-button p-component bg-logo-green shadow-soft-green font-bold cursor-pointer border-round px-4 py-2" 
+            routerLink="/login">
+            <span class="p-button-label">Login</span>
+        </button>
+        
+        <button 
+            class="p-button p-component border-logo-green font-bold cursor-pointer border-round px-4 py-2 hover:surface-50 transition-colors" 
+            routerLink="/register">
+            <span class="p-button-label">Register</span>
+        </button>
+      }
+      
+      @else {
+        <div class="flex flex-column align-items-end hidden sm:flex text-right">
+          <span class="font-bold text-900 text-sm">Claudiu</span>
+          <span class="text-xs text-500">Administrator</span>
+        </div>
+        <p-button icon="pi pi-sign-out" severity="danger" [text]="true" [rounded]="true" size="large"></p-button>
+      }
+
+    </div>
+  </div>
+</header>
