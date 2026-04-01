@@ -118,4 +118,25 @@ public class BorrowingService : IBorrowingService
             BorrowedAt = b.BorrowedAt
         });
     }
+
+    public async Task<IEnumerable<AssetHistoryResponse>> GetAssetHistoryAsync(Guid labAssetId)
+    {
+        var asset = await _assetRepository.GetByIdAsync(labAssetId);
+        if (asset == null)
+        {
+            throw new ArgumentException("Asset not found.");
+        }
+
+        var history = await _borrowingRepository.GetHistoryByAssetIdAsync(labAssetId);
+
+        return history.Select(b => new AssetHistoryResponse
+        {
+            BorrowingRecordId = b.Id,
+            UserName = b.User.FullName,
+            MatriculationNumber = b.User.MatriculationNumber,
+            BorrowedAt = b.BorrowedAt,
+            ReturnedAt = b.ReturnedAt,
+            Remarks = b.Remarks
+        });
+    }
 }

@@ -33,6 +33,15 @@ public class BorrowingRecordRepository : IBorrowingRecordRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<BorrowingRecord>> GetHistoryByAssetIdAsync(Guid labAssetId)
+    {
+        return await _context.BorrowingRecords
+            .Include(b => b.User)
+            .Where(b => b.LabAssetId == labAssetId)
+            .OrderByDescending(b => b.BorrowedAt)
+            .ToListAsync();
+    }
+
     public Task UpdateAsync(BorrowingRecord record)
     {
         _context.BorrowingRecords.Update(record);
