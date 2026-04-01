@@ -15,18 +15,41 @@ public class UserService : IUserService
         _userRepository = userRepository;
     }
 
-    public async Task<UserResponse> LoginOrRegisterAsync(LoginOrRegisterRequest request)
+    public async Task<UserResponse> RegisterUserAsync(RegisterUserRequest request)
     {
         var existingUser = await _userRepository.GetByEmailAsync(request.Email);
         if (existingUser != null)
         {
-            return MapToResponse(existingUser);
+            throw new ArgumentException("Email is already in use.");
         }
 
-        var role = DetermineUserRole(request.Email);
-        var newUser = await RegisterNewUserAsync(request.FullName, request.Email, role);
+        var assignedRole = request.Email.EndsWith("@ubbcluj.ro", StringComparison.OrdinalIgnoreCase)
+            ? Domain.Enums.UserRole.Teacher 
+            : Domain.Enums.UserRole.Student; 
 
-        return MapToResponse(newUser);
+        var newUser = new User
+        {
+            Id = Guid.NewGuid(),
+            FullName = request.FullName,
+            Email = request.Email,
+            MatriculationNumber = request.MatriculationNumber,
+            Role = assignedRole,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password)
+        };
+
+        await _userRepository.AddAsync(newUser);
+        await _userRepository.SaveChangesAsync();
+
+        return new UserResponse
+        {
+            Id = newUser.Id,
+            FullName = newUser.FullName,
+            Email = newUser.Email,
+            Role = newUser.Role,
+            IsActive = newUser.IsActive
+        };
     }
 
     public async Task<IEnumerable<UserResponse>> GetAllActiveUsersAsync()
@@ -52,6 +75,27 @@ public class UserService : IUserService
 
         user.FullName = request.FullName;
         user.MatriculationNumber = request.MatriculationNumber;
+
+        await _userRepository.UpdateAsync(user);
+        await _userRepository.SaveChangesAsync();
+
+        return true;
+    }
+
+    public async Task<bool> UpdatePasswordAsync(Guid id, UpdatePasswordRequest request)
+    {
+        var user = await _userRepository.GetByIdAsync(id);
+        if (user == null)
+        {
+            return false;
+        }
+
+        if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+        {
+            throw new ArgumentException("Invalid current password.");
+        }
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
 
         await _userRepository.UpdateAsync(user);
         await _userRepository.SaveChangesAsync();

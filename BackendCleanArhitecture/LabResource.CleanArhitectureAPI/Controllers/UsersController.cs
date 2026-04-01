@@ -1,9 +1,11 @@
 ﻿using LabResource.Application.DTOs.Users;
 using LabResource.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LabResource.CleanApi.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class UsersController : ControllerBase
@@ -13,20 +15,6 @@ public class UsersController : ControllerBase
     public UsersController(IUserService userService)
     {
         _userService = userService;
-    }
-
-    [HttpPost("login-or-register")]
-    public async Task<IActionResult> LoginOrRegister([FromBody] LoginOrRegisterRequest request)
-    {
-        try
-        {
-            var result = await _userService.LoginOrRegisterAsync(request);
-            return Ok(result);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
     }
 
     [HttpGet]
@@ -58,6 +46,26 @@ public class UsersController : ControllerBase
         }
 
         return NoContent();
+    }
+
+    [HttpPut("{id:guid}/password")]
+    public async Task<IActionResult> UpdatePassword(Guid id, [FromBody] UpdatePasswordRequest request)
+    {
+        try
+        {
+            var success = await _userService.UpdatePasswordAsync(id, request);
+
+            if (!success)
+            {
+                return NotFound(new { Message = "User not found." });
+            }
+
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
     }
 
     [HttpDelete("{id:guid}")]

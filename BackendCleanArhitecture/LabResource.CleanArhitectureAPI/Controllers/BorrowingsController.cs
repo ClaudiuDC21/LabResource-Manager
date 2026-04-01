@@ -1,9 +1,11 @@
 ﻿using LabResource.Application.DTOs.Borrowings;
 using LabResource.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LabResource.CleanApi.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class BorrowingsController : ControllerBase
