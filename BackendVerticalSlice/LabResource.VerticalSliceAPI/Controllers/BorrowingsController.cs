@@ -1,9 +1,11 @@
 ﻿using LabResource.VerticalApi.Features.Borrowings;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LabResource.VerticalApi.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class BorrowingsController : ControllerBase

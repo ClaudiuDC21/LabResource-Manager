@@ -1,9 +1,11 @@
 ﻿using LabResource.VerticalApi.Features.Users;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LabResource.VerticalApi.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class UsersController : ControllerBase
@@ -13,20 +15,6 @@ public class UsersController : ControllerBase
     public UsersController(IMediator mediator)
     {
         _mediator = mediator;
-    }
-
-    [HttpPost("login-or-register")]
-    public async Task<IActionResult> LoginOrRegister([FromBody] LoginOrRegisterUser.Command command)
-    {
-        try
-        {
-            var result = await _mediator.Send(command);
-            return Ok(result);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
     }
 
     [HttpGet]
@@ -63,6 +51,31 @@ public class UsersController : ControllerBase
         }
 
         return NoContent();
+    }
+
+    [HttpPut("{id:guid}/password")]
+    public async Task<IActionResult> UpdatePassword(Guid id, [FromBody] UpdatePassword.Command command)
+    {
+        if (id != command.Id)
+        {
+            return BadRequest(new { Error = "Id mismatch." });
+        }
+
+        try
+        {
+            var success = await _mediator.Send(command);
+
+            if (!success)
+            {
+                return NotFound(new { Message = "User not found." });
+            }
+
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
     }
 
     [HttpDelete("{id:guid}")]
