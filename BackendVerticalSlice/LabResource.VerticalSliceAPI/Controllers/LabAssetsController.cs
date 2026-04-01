@@ -1,4 +1,5 @@
-﻿using LabResource.VerticalApi.Features.LabAssets;
+﻿using LabResource.VerticalApi.Common.Enums;
+using LabResource.VerticalApi.Features.LabAssets;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,6 +19,7 @@ public class LabAssetsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = nameof(UserRole.Teacher))]
     public async Task<IActionResult> Create([FromBody] CreateLabAsset.Command command)
     {
         try
@@ -51,6 +53,7 @@ public class LabAssetsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = nameof(UserRole.Teacher))]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateLabAsset.Command command)
     {
         if (id != command.Id)
@@ -75,6 +78,7 @@ public class LabAssetsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = nameof(UserRole.Teacher))]
     public async Task<IActionResult> Deactivate(Guid id)
     {
         var success = await _mediator.Send(new DeactivateLabAsset.Command(id));

@@ -1,5 +1,6 @@
 ﻿using LabResource.Application.DTOs.LabAssets;
 using LabResource.Application.Interfaces.Services;
+using LabResource.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,6 +19,7 @@ public class LabAssetsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = nameof(UserRole.Teacher))]
     public async Task<IActionResult> Create([FromBody] CreateLabAssetRequest request)
     {
         try
@@ -52,6 +54,7 @@ public class LabAssetsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = nameof(UserRole.Teacher))]
     public async Task<IActionResult> Update(Guid id, [FromBody] CreateLabAssetRequest request)
     {
         try
@@ -71,6 +74,7 @@ public class LabAssetsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = nameof(UserRole.Teacher))]
     public async Task<IActionResult> Deactivate(Guid id)
     {
         var success = await _labAssetService.DeactivateAssetAsync(id);
