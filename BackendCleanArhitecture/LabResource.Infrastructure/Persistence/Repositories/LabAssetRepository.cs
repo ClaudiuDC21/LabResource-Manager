@@ -27,6 +27,8 @@ public class LabAssetRepository : ILabAssetRepository
     public async Task<IEnumerable<LabAsset>> GetAllActiveAsync()
     {
         return await _context.LabAssets
+            .Include(a => a.BorrowingRecords)
+                .ThenInclude(b => b.User)
             .Where(a => a.IsActive)
             .ToListAsync();
     }

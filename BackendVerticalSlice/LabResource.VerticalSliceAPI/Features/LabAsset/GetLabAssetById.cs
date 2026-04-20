@@ -9,7 +9,8 @@ public static class GetLabAssetById
 {
     public record Query(Guid Id) : IRequest<Result?>;
 
-    public record Result(Guid Id, string Name, string? SerialNumber, AssetStatus Status, bool IsActive);
+    // Adăugăm câmpul
+    public record Result(Guid Id, string Name, string? SerialNumber, AssetStatus Status, bool IsActive, string? CurrentBorrowerName);
 
     public class Handler : IRequestHandler<Query, Result?>
     {
@@ -23,6 +24,8 @@ public static class GetLabAssetById
         public async Task<Result?> Handle(Query request, CancellationToken cancellationToken)
         {
             var asset = await _context.LabAssets
+                .Include(a => a.BorrowingRecords)
+                    .ThenInclude(b => b.User)
                 .FirstOrDefaultAsync(a => a.Id == request.Id, cancellationToken);
 
             if (asset == null)
@@ -30,7 +33,10 @@ public static class GetLabAssetById
                 return null;
             }
 
-            return new Result(asset.Id, asset.Name, asset.SerialNumber, asset.Status, asset.IsActive);
+            var borrowerName = asset.BorrowingRecords
+                .FirstOrDefault(b => b.ReturnedAt == null)?.User.FullName;
+
+            return new Result(asset.Id, asset.Name, asset.SerialNumber, asset.Status, asset.IsActive, borrowerName);
         }
     }
 }

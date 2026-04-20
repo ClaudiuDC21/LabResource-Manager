@@ -99,13 +99,17 @@ public class LabAssetService : ILabAssetService
 
     private LabAssetResponse MapToResponse(LabAsset asset)
     {
+        var activeBorrowing = asset.BorrowingRecords?.FirstOrDefault(b => b.ReturnedAt == null);
+
         return new LabAssetResponse
         {
             Id = asset.Id,
             Name = asset.Name,
             SerialNumber = asset.SerialNumber,
             Status = asset.Status,
-            IsActive = asset.IsActive
+            IsActive = asset.IsActive,
+            CurrentBorrowerName = activeBorrowing?.User?.FullName,
+            CurrentBorrowDate = activeBorrowing?.BorrowedAt // <-- AICI TRIMITEM DATA
         };
     }
 }
