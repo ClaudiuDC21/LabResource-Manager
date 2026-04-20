@@ -1,5 +1,6 @@
 using FluentValidation;
 using LabResource.Application;
+using LabResource.Application.Settings;
 using LabResource.Infrastructure;
 using LabResource.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -61,7 +62,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
         };
     });
-
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
 builder.Services.AddAuthorization();
 
 builder.Services.AddCors(options =>

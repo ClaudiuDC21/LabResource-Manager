@@ -1,7 +1,8 @@
 ﻿using LabResource.Application.DTOs.Auth;
 using LabResource.Application.Interfaces.Repositories;
 using LabResource.Application.Interfaces.Services;
-using Microsoft.Extensions.Configuration;
+using LabResource.Application.Settings;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -12,12 +13,12 @@ namespace LabResource.Application.Services;
 public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
-    private readonly IConfiguration _configuration;
+    private readonly JwtSettings _jwtSettings;
 
-    public AuthService(IUserRepository userRepository, IConfiguration configuration)
+    public AuthService(IUserRepository userRepository, IOptions<JwtSettings> jwtOptions)
     {
         _userRepository = userRepository;
-        _configuration = configuration;
+        _jwtSettings = jwtOptions.Value;
     }
 
     public async Task<AuthResponse?> LoginAsync(LoginRequest request)
@@ -29,7 +30,7 @@ public class AuthService : IAuthService
             return null;
         }
 
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -41,8 +42,8 @@ public class AuthService : IAuthService
         };
 
         var token = new JwtSecurityToken(
-            _configuration["Jwt:Issuer"],
-            _configuration["Jwt:Audience"],
+            _jwtSettings.Issuer,
+            _jwtSettings.Audience,
             claims,
             expires: DateTime.UtcNow.AddHours(8),
             signingCredentials: credentials);
