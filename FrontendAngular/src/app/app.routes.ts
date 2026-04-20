@@ -4,6 +4,7 @@ import { MainLayoutComponent } from './features/layout/main-layout/main-layout';
 import { LoginComponent } from './features/auth/login/login';
 import { RegisterComponent } from './features/auth/register/register';
 import { ProfileComponent } from './features/profile/profile';
+import { DashboardComponent } from './features/dashboard/dashboard';
 
 export const routes: Routes = [
   {
@@ -14,6 +15,7 @@ export const routes: Routes = [
       { path: 'login', component: LoginComponent },
       { path: 'register', component: RegisterComponent },
       { path: 'profile', component: ProfileComponent },
+      { path: 'dashboard', component: DashboardComponent },
       { 
         path: 'dashboard', 
         children: []
