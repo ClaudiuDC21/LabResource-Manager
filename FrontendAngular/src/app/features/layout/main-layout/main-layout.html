@@ -1,21 +1,22 @@
 <div class="flex flex-column min-h-screen" style="background-color: #f0fdf4;">
   <app-header></app-header>
   
-  <div class="flex flex-grow-1" style="padding-top: 80px">
+  <div class="flex flex-grow-1 relative" style="padding-top: 80px">
     
     @if (showSidebar) {
       <app-sidebar></app-sidebar>
     }
 
-    <main class="flex-grow-1 transition-all transition-duration-300" 
-          [ngClass]="{
-            'md:ml-15rem': showSidebar && layoutService.isSidebarExpanded(),
-            'md:ml-5rem': showSidebar && !layoutService.isSidebarExpanded()
-          }">
-      <router-outlet></router-outlet>
-    </main>
+    <div class="flex flex-column flex-grow-1 w-full transition-all transition-duration-300" 
+         [style.marginLeft]="showSidebar ? (layoutService.isSidebarExpanded() ? '15rem' : '5rem') : '0'">
+      
+      <main class="flex-grow-1 w-full overflow-hidden">
+        <router-outlet></router-outlet>
+      </main>
+
+      <app-footer></app-footer>
+
+    </div>
 
   </div>
-  
-  <app-footer></app-footer>
 </div>
