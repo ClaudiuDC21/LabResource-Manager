@@ -9,7 +9,7 @@ public static class GetUserById
 {
     public record Query(Guid Id) : IRequest<Result?>;
 
-    public record Result(Guid Id, string FullName, string Email, UserRole Role);
+    public record Result(Guid Id, string FullName, string Email, UserRole Role, bool IsActive, string? MatriculationNumber);
 
     public class Handler : IRequestHandler<Query, Result?>
     {
@@ -30,7 +30,14 @@ public static class GetUserById
                 return null;
             }
 
-            return new Result(user.Id, user.FullName, user.Email, user.Role);
+            return new Result(
+                user.Id,
+                user.FullName,
+                user.Email,
+                user.Role,
+                user.IsActive,
+                user.MatriculationNumber
+            );
         }
     }
 }

@@ -9,7 +9,7 @@ public static class GetAllActiveUsers
 {
     public record Query() : IRequest<IEnumerable<Result>>;
 
-    public record Result(Guid Id, string FullName, string Email, UserRole Role);
+    public record Result(Guid Id, string FullName, string Email, UserRole Role, bool IsActive, string? MatriculationNumber);
 
     public class Handler : IRequestHandler<Query, IEnumerable<Result>>
     {
@@ -24,7 +24,13 @@ public static class GetAllActiveUsers
         {
             return await _context.Users
                 .Where(u => u.IsActive)
-                .Select(u => new Result(u.Id, u.FullName, u.Email, u.Role))
+                .Select(u => new Result(
+                    u.Id,
+                    u.FullName,
+                    u.Email,
+                    u.Role,
+                    u.IsActive,
+                    u.MatriculationNumber))
                 .ToListAsync(cancellationToken);
         }
     }

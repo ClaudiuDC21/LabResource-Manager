@@ -9,4 +9,5 @@ public class UserResponse
     public string Email { get; set; } = string.Empty;
     public UserRole Role { get; set; }
     public bool IsActive { get; set; }
+    public string? MatriculationNumber { get; set; }
 }

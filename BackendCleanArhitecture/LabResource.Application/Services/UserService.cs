@@ -48,7 +48,8 @@ public class UserService : IUserService
             FullName = newUser.FullName,
             Email = newUser.Email,
             Role = newUser.Role,
-            IsActive = newUser.IsActive
+            IsActive = newUser.IsActive,
+            MatriculationNumber = newUser.MatriculationNumber
         };
     }
 
@@ -155,7 +156,8 @@ public class UserService : IUserService
             Id = user.Id,
             FullName = user.FullName,
             Email = user.Email,
-            Role = user.Role
+            Role = user.Role,
+            MatriculationNumber = user.MatriculationNumber
         };
     }
 }
