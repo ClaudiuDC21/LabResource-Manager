@@ -6,24 +6,41 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { DialogModule } from 'primeng/dialog';
 import { TagModule } from 'primeng/tag';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { AuthService } from '../../core/services/auth';
 import { LabAssetService } from '../../core/services/lab-asset';
+import { BorrowingService } from '../../core/services/borrowing';
 import { LabAsset, CreateLabAssetRequest, AssetStatus } from '../../core/models/lab-asset';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, TableModule, ButtonModule, InputTextModule, DialogModule, TagModule],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    TableModule, 
+    ButtonModule, 
+    InputTextModule, 
+    DialogModule, 
+    TagModule,
+    ConfirmDialogModule,
+    ToastModule
+  ],
+  providers: [ConfirmationService, MessageService],
   templateUrl: './dashboard.html'
 })
 export class DashboardComponent implements OnInit {
   authService = inject(AuthService);
   private assetService = inject(LabAssetService);
+  private borrowingService = inject(BorrowingService);
+  private confirmationService = inject(ConfirmationService);
+  private messageService = inject(MessageService);
 
   assets = signal<LabAsset[]>([]);
   isLoading = signal<boolean>(true);
 
-  // Starea pentru Modal (Pop-up de Adăugare/Editare)
   assetDialog = false;
   isEditing = false;
   currentAssetId: string | null = null;
@@ -45,7 +62,7 @@ export class DashboardComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: (err) => {
-        console.error('Error loading assets', err);
+        console.error(err);
         this.isLoading.set(false);
       }
     });
@@ -55,7 +72,6 @@ export class DashboardComponent implements OnInit {
     return this.authService.currentUser()?.role === 'Teacher';
   }
 
-  // Mapăm Enum-ul la culorile din PrimeNG
   getStatusSeverity(status: AssetStatus): 'success' | 'warn' | 'danger' {
     switch (status) {
       case AssetStatus.Available: return 'success';
@@ -73,8 +89,6 @@ export class DashboardComponent implements OnInit {
       default: return 'Unknown';
     }
   }
-
-  // --- Operații CRUD (Doar Profesori) ---
 
   openNew() {
     this.assetForm = { name: '', serialNumber: '' };
@@ -94,28 +108,26 @@ export class DashboardComponent implements OnInit {
     this.assetDialog = false;
   }
 
- saveAsset() {
+  saveAsset() {
     if (!this.validateForm()) return;
 
     if (this.isEditing && this.currentAssetId) {
-      // Apel pentru Update (Editare)
       this.assetService.update(this.currentAssetId, this.assetForm).subscribe({
         next: () => {
-          this.showSuccessMessage();
           this.loadAssets();
           this.hideDialog();
+          this.messageService.add({ severity: 'success', summary: 'Updated', detail: 'Asset updated successfully.' });
         },
-        error: (err: any) => this.handleError(err) // Am adăugat explicit ': any'
+        error: (err: any) => this.handleError(err) 
       });
     } else {
-      // Apel pentru Create (Adăugare nouă)
       this.assetService.create(this.assetForm).subscribe({
         next: () => {
-          this.showSuccessMessage();
           this.loadAssets();
           this.hideDialog();
+          this.messageService.add({ severity: 'success', summary: 'Created', detail: 'Asset created successfully.' });
         },
-        error: (err: any) => this.handleError(err) // Am adăugat explicit ': any'
+        error: (err: any) => this.handleError(err) 
       });
     }
   }
@@ -124,21 +136,57 @@ export class DashboardComponent implements OnInit {
     return !!this.assetForm.name && this.assetForm.name.trim().length > 0;
   }
 
-  private showSuccessMessage() {
-    console.log('Operation successful');
-  }
-
   private handleError(err: any) {
-    console.error('API Error:', err);
-    alert('An error occurred. Please try again.');
+    console.error(err);
+    this.messageService.add({ severity: 'error', summary: 'Error', detail: 'An error occurred. Please try again.' });
   }
 
   deleteAsset(asset: LabAsset) {
-    if (confirm(`Are you sure you want to delete ${asset.name}?`)) {
-      this.assetService.deactivate(asset.id).subscribe({
-        next: () => this.loadAssets(),
-        error: (err) => alert('Error deleting asset')
-      });
-    }
+    this.confirmationService.confirm({
+      message: `Are you sure you want to delete ${asset.name}?`,
+      header: 'Confirm Deletion',
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text p-button-secondary',
+      accept: () => {
+        this.assetService.deactivate(asset.id).subscribe({
+          next: () => {
+            this.loadAssets();
+            this.messageService.add({ severity: 'success', summary: 'Deleted', detail: 'Asset successfully removed.' });
+          },
+          error: (err) => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete asset.' })
+        });
+      }
+    });
+  }
+
+  borrowAsset(asset: LabAsset) {
+    const user = this.authService.currentUser();
+    if (!user) return;
+
+    const request = {
+      userId: user.id,
+      labAssetId: asset.id
+    };
+
+    this.confirmationService.confirm({
+      message: `Do you want to borrow the ${asset.name}?`,
+      header: 'Confirm Borrow',
+      icon: 'pi pi-info-circle',
+      acceptButtonStyleClass: 'bg-logo-green border-none hover:bg-green-700',
+      rejectButtonStyleClass: 'p-button-text p-button-secondary',
+      accept: () => {
+        this.borrowingService.borrow(request).subscribe({
+          next: (response) => {
+            this.loadAssets();
+            this.messageService.add({ severity: 'success', summary: 'Success', detail: `Successfully borrowed ${response.assetName}!` });
+          },
+          error: (err) => {
+            console.error(err);
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: err.error?.Error || 'Failed to borrow asset.' });
+          }
+        });
+      }
+    });
   }
 }

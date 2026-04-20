@@ -10,6 +10,10 @@ export interface LabAsset {
   serialNumber?: string;
   status: AssetStatus;
   isActive: boolean;
+  
+  // Câmpurile noi pentru informațiile de împrumut
+  currentBorrowerName?: string;
+  currentBorrowDate?: string; // Va veni ca un ISO string (ex: "2026-04-20T10:00:00Z")
 }
 
 export interface CreateLabAssetRequest {
