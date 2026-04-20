@@ -5,6 +5,7 @@ import { LoginComponent } from './features/auth/login/login';
 import { RegisterComponent } from './features/auth/register/register';
 import { ProfileComponent } from './features/profile/profile';
 import { DashboardComponent } from './features/dashboard/dashboard';
+import { MyBorrowingsComponent } from './features/my-borrowings/my-borrowings';
 
 export const routes: Routes = [
   {
@@ -16,6 +17,7 @@ export const routes: Routes = [
       { path: 'register', component: RegisterComponent },
       { path: 'profile', component: ProfileComponent },
       { path: 'dashboard', component: DashboardComponent },
+      { path: 'my-borrowings', component: MyBorrowingsComponent },
       { 
         path: 'dashboard', 
         children: []

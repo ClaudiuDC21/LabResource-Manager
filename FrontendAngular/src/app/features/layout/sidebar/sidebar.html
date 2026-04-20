@@ -17,6 +17,18 @@
         </a>
       </li>
       
+      <li class="mb-3" [title]="layoutService.isSidebarExpanded() ? '' : 'My Items'">
+        <a routerLink="/my-borrowings" 
+           routerLinkActive="bg-green-100 text-green-700 font-bold" 
+           class="flex align-items-center cursor-pointer border-round text-700 hover:surface-hover transition-all transition-duration-150 no-underline"
+           [ngClass]="layoutService.isSidebarExpanded() ? 'p-3' : 'w-3rem h-3rem justify-content-center mx-auto'">
+          <i class="pi pi-shopping-bag text-xl" [ngClass]="layoutService.isSidebarExpanded() ? 'mr-3' : ''"></i>
+          @if (layoutService.isSidebarExpanded()) {
+            <span class="font-medium text-lg white-space-nowrap">My Items</span>
+          }
+        </a>
+      </li>
+
       <li class="mb-3" [title]="layoutService.isSidebarExpanded() ? '' : 'Users'">
         <a routerLink="/users" 
            routerLinkActive="bg-green-100 text-green-700 font-bold" 
