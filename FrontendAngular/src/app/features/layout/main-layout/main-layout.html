@@ -1,11 +1,21 @@
-<div class="min-h-screen flex flex-column">
+<div class="flex flex-column min-h-screen" style="background-color: #f0fdf4;">
   <app-header></app-header>
   
-  <div class="flex-grow-1 flex">
-    <app-sidebar></app-sidebar>
+  <div class="flex flex-grow-1" style="padding-top: 80px">
     
-    <main class="p-4 flex-grow-1 surface-ground">
+    @if (showSidebar) {
+      <app-sidebar></app-sidebar>
+    }
+
+    <main class="flex-grow-1 transition-all transition-duration-300" 
+          [ngClass]="{
+            'md:ml-15rem': showSidebar && layoutService.isSidebarExpanded(),
+            'md:ml-5rem': showSidebar && !layoutService.isSidebarExpanded()
+          }">
       <router-outlet></router-outlet>
     </main>
+
   </div>
+  
+  <app-footer></app-footer>
 </div>

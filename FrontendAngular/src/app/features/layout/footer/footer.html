@@ -1,0 +1,51 @@
+<footer class="px-4 py-8 md:px-6 lg:px-8">
+    <div class="grid">
+        <div class="col-12 md:col-4 mb-5 md:mb-0">
+            <div class="flex align-items-center mb-4">
+                <img src="logo-LabResource.png" alt="Logo" height="45" class="mr-3">
+            </div>
+            <p class="text-700 line-height-3 md:w-10 text-lg">
+                Optimizing laboratory workflows through modern software architecture and intuitive resource management.
+            </p>
+        </div>
+
+        <div class="col-12 sm:col-6 md:col-2 mb-5 md:mb-0">
+            <span class="block text-900 font-bold mb-4 uppercase text-sm tracking-widest">Platform</span>
+            <ul class="list-none p-0 m-0">
+                <li class="mb-3">
+                    <a routerLink="/" class="text-600 hover:text-logo-green no-underline transition-colors transition-duration-300">Home</a>
+                </li>
+                <li class="mb-3">
+                    <a routerLink="/login" class="text-600 hover:text-logo-green no-underline transition-colors transition-duration-300">Login</a>
+                </li>
+                <li>
+                    <a routerLink="/register" class="text-600 hover:text-logo-green no-underline transition-colors transition-duration-300">Register</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="col-12 sm:col-6 md:col-3 mb-5 md:mb-0">
+            <span class="block text-900 font-bold mb-4 uppercase text-sm tracking-widest">Academic Project</span>
+            <p class="text-600 line-height-3 m-0">
+                Master's Dissertation Project<br>
+                <span class="font-semibold text-700">Babeș-Bolyai University</span><br>
+                Faculty of Mathematics and Computer Science
+            </p>
+        </div>
+
+        <div class="col-12 md:col-3">
+            <span class="block text-900 font-bold mb-4 uppercase text-sm tracking-widest">Powered By</span>
+            <div class="flex gap-4 mb-4">
+                <i class="pi pi-bolt text-2xl text-400 hover:text-logo-green cursor-pointer transition-colors" title="Angular"></i>
+                <i class="pi pi-server text-2xl text-400 hover:text-blue-500 cursor-pointer transition-colors" title=".NET 10"></i>
+                <i class="pi pi-database text-2xl text-400 hover:text-orange-500 cursor-pointer transition-colors" title="SQL Server"></i>
+                <i class="pi pi-shield text-2xl text-400 hover:text-purple-500 cursor-pointer transition-colors" title="JWT Auth"></i>
+            </div>
+            
+            <div class="text-500 text-sm font-medium mt-4">
+                © {{ currentYear }} LabResource.<br>
+                Built with <i class="pi pi-heart text-red-500 text-xs"></i> for Science.
+            </div>
+        </div>
+    </div>
+</footer>

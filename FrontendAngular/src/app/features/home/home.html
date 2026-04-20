@@ -1,14 +1,263 @@
-<div class="min-h-screen flex flex-column align-items-center justify-content-center surface-ground px-4">
-    <div class="text-center mb-6">
-        <i class="pi pi-desktop text-7xl text-primary mb-4"></i>
-        <h1 class="text-900 font-bold text-5xl mb-3">Welcome to Lab Resource Management</h1>
-        <p class="text-600 text-xl mb-5 max-w-30rem mx-auto">
-            A centralized platform to efficiently manage, track, and organize laboratory equipment and user access.
-        </p>
-        
-        <button class="p-button p-component p-button-lg shadow-3 cursor-pointer" routerLink="/login">
-            <span class="p-button-label font-bold">Proceed to Login</span>
-            <span class="p-button-icon p-button-icon-right pi pi-arrow-right ml-2"></span>
-        </button>
+<div class="grid grid-nogutter text-800 align-items-center" style="min-height: calc(100vh - 70px)">
+  <div class="col-12 md:col-6 p-6 text-center md:text-left">
+    <section>
+      <span class="block text-logo-green font-bold mb-2 uppercase tracking-widest text-sm"
+        >Welcome to LabResource</span
+      >
+      <div class="text-6xl font-extrabold mb-4 text-900 tracking-tight leading-tight">
+        Modernize Your Lab Workflow
+      </div>
+      <p class="mt-0 mb-5 text-700 line-height-3 text-xl md:w-10">
+        The all-in-one platform for managing laboratory equipment, chemical resources, and research
+        scheduling. Optimized for efficiency, whether you are coordinating resources or starting
+        your next big project.
+      </p>
+
+      @if (!authService.isLoggedIn()) {
+        <div
+          class="flex flex-column sm:flex-row gap-3 justify-content-center md:justify-content-start"
+        >
+          <button
+            pButton
+            pRipple
+            label="Get Started"
+            class="p-button-lg bg-logo-green border-none shadow-soft-green font-bold px-5"
+            routerLink="/login"
+          ></button>
+          <button
+            pButton
+            pRipple
+            label="Register Account"
+            class="p-button-lg p-button-outlined border-logo-green text-logo-green font-bold px-5 bg-white"
+            routerLink="/register"
+          ></button>
+        </div>
+      } @else {
+        <button
+          pButton
+          pRipple
+          label="Go to Dashboard"
+          icon="pi pi-arrow-right"
+          iconPos="right"
+          class="p-button-lg bg-logo-green border-none shadow-soft-green font-bold px-5"
+          routerLink="/dashboard"
+        ></button>
+      }
+
+      <div
+        class="mt-8 flex flex-wrap align-items-center justify-content-center md:justify-content-start gap-4"
+      >
+        <div class="flex align-items-center gap-2">
+          <i class="pi pi-check-circle text-logo-green font-bold text-xl"></i
+          ><span class="text-700 font-medium">Resource Tracking</span>
+        </div>
+        <div class="flex align-items-center gap-2">
+          <i class="pi pi-check-circle text-logo-green font-bold text-xl"></i
+          ><span class="text-700 font-medium">Role-Based Access</span>
+        </div>
+        <div class="flex align-items-center gap-2">
+          <i class="pi pi-check-circle text-logo-green font-bold text-xl"></i
+          ><span class="text-700 font-medium">Dual Architecture</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="col-12 md:col-6 flex align-items-center justify-content-center p-6">
+    <img
+      src="lab-management-hero.svg"
+      alt="Lab Management Illustration"
+      class="w-full max-w-30rem md:max-w-full h-auto animation-duration-1000 fadeinright"
+    />
+  </div>
+</div>
+
+<div class="px-4 py-8 md:px-6 lg:px-8">
+  <div class="text-center mb-8">
+    <span class="text-logo-green font-bold tracking-widest uppercase text-sm">How It Works</span>
+    <h2 class="text-900 font-extrabold text-5xl mb-4 mt-2">A Seamless Lab Experience</h2>
+    <p class="text-600 text-xl md:w-6 m-auto line-height-3">
+      From browsing the initial catalog to approving complex resource requests, our platform handles
+      the heavy lifting so you can focus on science.
+    </p>
+  </div>
+
+  <div class="grid align-items-center mb-8">
+    <div class="col-12 md:col-6 p-4 md:pr-8">
+      <div class="text-logo-green font-bold mb-2 tracking-wider">STEP 01</div>
+      <h3 class="text-900 font-bold text-4xl mb-3 leading-tight">Explore the Digital Inventory</h3>
+      <p class="text-700 line-height-3 text-lg mb-4">
+        Eliminate the guesswork of physical inventory checks. Our centralized catalog provides a
+        transparent view of every asset in the lab.
+      </p>
+      <ul class="list-none p-0 m-0 text-left">
+        <li class="flex align-items-start mb-3">
+          <i class="pi pi-check-circle text-logo-green mr-3 mt-1 font-bold text-xl"></i>
+          <span class="text-700"
+            ><strong>Unified View:</strong> Access all resources in one place.</span
+          >
+        </li>
+        <li class="flex align-items-start mb-3">
+          <i class="pi pi-check-circle text-logo-green mr-3 mt-1 font-bold text-xl"></i>
+          <span class="text-700"
+            ><strong>Smart Metadata:</strong> View manuals and safety data sheets.</span
+          >
+        </li>
+        <li class="flex align-items-start">
+          <i class="pi pi-check-circle text-logo-green mr-3 mt-1 font-bold text-xl"></i>
+          <span class="text-700"
+            ><strong>Live Status:</strong> See what's in stock or borrowed.</span
+          >
+        </li>
+      </ul>
     </div>
+    <div class="col-12 md:col-6 p-4">
+      <img
+        src="how-inventory.svg"
+        alt="Inventory Management"
+        class="w-full h-auto animation-duration-1000 fadeinright"
+      />
+    </div>
+  </div>
+
+  <div class="grid align-items-center mb-8 flex-column-reverse md:flex-row">
+    <div class="col-12 md:col-6 p-4">
+      <img
+        src="how-borrow.svg"
+        alt="Borrow Request"
+        class="w-full h-auto animation-duration-1000 fadeinleft"
+      />
+    </div>
+    <div class="col-12 md:col-6 p-4 md:pl-8">
+      <div class="text-logo-green font-bold mb-2 tracking-wider">STEP 02</div>
+      <h3 class="text-900 font-bold text-4xl mb-3 leading-tight">Instant Borrowing for Students</h3>
+      <p class="text-700 line-height-3 text-lg mb-4">
+        Empower students to take charge of their research. Requesting materials is as simple as a
+        few clicks.
+      </p>
+      <ul class="list-none p-0 m-0 text-left">
+        <li class="flex align-items-start mb-3">
+          <i class="pi pi-check-circle text-logo-green mr-3 mt-1 font-bold text-xl"></i>
+          <span class="text-700"
+            ><strong>Self-Service:</strong> Students add items to list independently.</span
+          >
+        </li>
+        <li class="flex align-items-start mb-3">
+          <i class="pi pi-check-circle text-logo-green mr-3 mt-1 font-bold text-xl"></i>
+          <span class="text-700"
+            ><strong>Deadline Alerts:</strong> Track return dates automatically.</span
+          >
+        </li>
+        <li class="flex align-items-start">
+          <i class="pi pi-check-circle text-logo-green mr-3 mt-1 font-bold text-xl"></i>
+          <span class="text-700"
+            ><strong>Digital Logs:</strong> Recorded securely without paperwork.</span
+          >
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="grid align-items-center">
+    <div class="col-12 md:col-6 p-4 md:pr-8">
+      <div class="text-logo-green font-bold mb-2 tracking-wider">STEP 03</div>
+      <h3 class="text-900 font-bold text-4xl mb-3 leading-tight">Admin Control & Monitoring</h3>
+      <p class="text-700 line-height-3 text-lg mb-4">
+        Teachers and administrators maintain full oversight. The platform highlights pending
+        approvals and shortages.
+      </p>
+      <ul class="list-none p-0 m-0 text-left">
+        <li class="flex align-items-start mb-3">
+          <i class="pi pi-check-circle text-logo-green mr-3 mt-1 font-bold text-xl"></i>
+          <span class="text-700"
+            ><strong>One-Tap Approvals:</strong> Review requests from your dashboard.</span
+          >
+        </li>
+        <li class="flex align-items-start mb-3">
+          <i class="pi pi-check-circle text-logo-green mr-3 mt-1 font-bold text-xl"></i>
+          <span class="text-700"
+            ><strong>Stock Alerts:</strong> Notifications for critical reagent levels.</span
+          >
+        </li>
+        <li class="flex align-items-start">
+          <i class="pi pi-check-circle text-logo-green mr-3 mt-1 font-bold text-xl"></i>
+          <span class="text-700"
+            ><strong>Architecture Switch:</strong> Test data integrity across backends.</span
+          >
+        </li>
+      </ul>
+    </div>
+    <div class="col-12 md:col-6 p-4">
+      <img
+        src="how-manage.svg"
+        alt="Admin Management"
+        class="w-full h-auto animation-duration-1000 fadeinright"
+      />
+    </div>
+  </div>
+</div>
+
+<div class="px-4 py-8 md:px-6 lg:px-8 xl:py-12 text-center">
+  <div class="mb-7">
+    <span class="text-logo-green font-bold tracking-widest uppercase text-sm"
+      >Discover The Project</span
+    >
+    <h2 class="text-900 font-extrabold text-5xl mb-4 mt-2">What makes this app different?</h2>
+    <p class="text-600 text-xl md:w-6 m-auto line-height-3">
+      Hover over the cards below to discover the technical details that power our system.
+    </p>
+  </div>
+
+  <div class="grid mt-6 gap-y-5">
+    <div class="col-12 lg:col-4 p-3">
+      <div class="interactive-card shadow-3">
+        <div class="front-content">
+          <img src="about-ui.svg" alt="Modern UI" class="h-12rem mb-5" />
+          <h3 class="text-900 font-bold text-2xl m-0">Modern Interface</h3>
+        </div>
+        <div class="hover-overlay">
+          <i class="pi pi-bolt text-5xl mb-4 text-white"></i>
+          <h4 class="text-2xl font-bold text-white mb-3">Angular & PrimeNG</h4>
+          <p class="line-height-3 text-white font-medium text-lg">
+            A clean, responsive, and intuitive UI designed to make resource management as
+            frictionless as possible.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 lg:col-4 p-3">
+      <div class="interactive-card shadow-3">
+        <div class="front-content">
+          <img src="about-server.svg" alt="Dual Architecture" class="h-12rem mb-5" />
+          <h3 class="text-900 font-bold text-2xl m-0">Dual Architecture</h3>
+        </div>
+        <div class="hover-overlay">
+          <i class="pi pi-sitemap text-5xl mb-4 text-white"></i>
+          <h4 class="text-2xl font-bold text-white mb-3">C# Backend</h4>
+          <p class="line-height-3 text-white font-medium text-lg">
+            Operating on two distinct API implementations: Clean Architecture and Vertical Slice
+            Architecture.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 lg:col-4 p-3">
+      <div class="interactive-card shadow-3">
+        <div class="front-content">
+          <img src="about-security.svg" alt="Security" class="h-12rem mb-5" />
+          <h3 class="text-900 font-bold text-2xl m-0">Role-Based Security</h3>
+        </div>
+        <div class="hover-overlay">
+          <i class="pi pi-lock text-5xl mb-4 text-white"></i>
+          <h4 class="text-2xl font-bold text-white mb-3">JWT Authentication</h4>
+          <p class="line-height-3 text-white font-medium text-lg">
+            Strict access controls ensuring that Teachers can manage the inventory, while Students
+            can safely borrow equipment.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

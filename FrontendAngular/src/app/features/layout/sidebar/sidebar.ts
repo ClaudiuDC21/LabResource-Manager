@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { LayoutService } from '../services/layout.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -8,4 +9,6 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './sidebar.html'
 })
-export class SidebarComponent {}
+export class SidebarComponent {
+  layoutService = inject(LayoutService);
+}
