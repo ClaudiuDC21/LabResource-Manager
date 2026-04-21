@@ -54,7 +54,7 @@ export class RegisterComponent {
       fullName,
       email,
       password,
-      matriculationNumber: matriculationNumber ? matriculationNumber : null
+      matriculationNumber: matriculationNumber || null
     };
 
     this.authService.register(payload).subscribe({

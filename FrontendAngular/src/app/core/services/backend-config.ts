@@ -7,7 +7,7 @@ export class BackendConfigService {
   private readonly CLEAN_ARCH_URL = 'https://localhost:6001';
   private readonly VERTICAL_SLICE_URL = 'https://localhost:5001';
 
-  private selectedUrl = signal<string>(
+  private readonly selectedUrl = signal<string>(
     localStorage.getItem('preferredBackend') || this.CLEAN_ARCH_URL
   );
 

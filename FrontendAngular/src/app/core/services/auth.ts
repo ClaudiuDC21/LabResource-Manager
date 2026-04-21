@@ -40,7 +40,7 @@ return {
   login(credentials: { email: string; password: string }) {
     return this.http.post('/api/auth/login', credentials).pipe(
       tap((response: any) => {
-        if (response && response.token) {
+        if (response?.token) {
           localStorage.setItem('token', response.token);
           this.isLoggedIn.set(true);
         }

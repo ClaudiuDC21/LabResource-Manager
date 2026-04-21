@@ -29,20 +29,20 @@
                     <div class="flex flex-column gap-4 mt-4 flex-grow-1">
                         
                         <div class="flex flex-column gap-2">
-                            <label class="text-500 font-medium text-sm">Full Name</label>
+                            <label for="fullName" class="text-500 font-medium text-sm">Full Name</label>
                             
                             @if (isEditingProfile()) {
-                                <input pInputText [(ngModel)]="profileForm.fullName" class="w-full p-3 border-round border-1 surface-border hover:border-primary transition-colors" />
+                                <input id="fullName" pInputText [(ngModel)]="profileForm.fullName" class="w-full p-3 border-round border-1 surface-border hover:border-primary transition-colors" />
                             } @else {
                                 <div class="text-900 font-bold text-xl p-2 surface-100 border-round">{{ userFromApi.fullName }}</div>
                             }
                         </div>
 
                         <div class="flex flex-column gap-2">
-                            <label class="text-500 font-medium text-sm">Matriculation Number</label>
+                            <label for="matriculationNumber" class="text-500 font-medium text-sm">Matriculation Number</label>
                             
                             @if (isEditingProfile()) {
-                                <input pInputText [(ngModel)]="profileForm.matriculationNumber" placeholder="Optional" class="w-full p-3 border-round border-1 surface-border hover:border-primary transition-colors" />
+                                <input id="matriculationNumber" pInputText [(ngModel)]="profileForm.matriculationNumber" placeholder="Optional" class="w-full p-3 border-round border-1 surface-border hover:border-primary transition-colors" />
                             } @else {
                                 <div class="text-900 font-bold text-lg p-2 surface-100 border-round min-h-3rem flex align-items-center">
                                     {{ userFromApi.matriculationNumber || 'Not provided' }}
