@@ -10,5 +10,5 @@ import { LayoutService } from '../services/layout.service';
   templateUrl: './sidebar.html'
 })
 export class SidebarComponent {
-  private readonly layoutService = inject(LayoutService);
+  readonly layoutService = inject(LayoutService);
 }

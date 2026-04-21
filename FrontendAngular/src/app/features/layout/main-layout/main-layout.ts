@@ -16,7 +16,7 @@ import { AuthService } from '../../../core/services/auth';
 export class MainLayoutComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly layoutService = inject(LayoutService); // Am injectat serviciul
+  readonly layoutService = inject(LayoutService); // Am injectat serviciul
 
   get showSidebar(): boolean {
     return this.authService.isLoggedIn() && this.router.url !== '/';

@@ -20,7 +20,7 @@ import { AuthService } from '../../../core/services/auth';
   templateUrl: './login.html'
 })
 export class LoginComponent {
-  private readonly backendService = inject(BackendConfigService);
+  readonly backendService = inject(BackendConfigService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);

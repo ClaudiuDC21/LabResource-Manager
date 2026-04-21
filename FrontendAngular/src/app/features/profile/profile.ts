@@ -16,7 +16,7 @@ import { AuthService } from '../../core/services/auth';
   templateUrl: './profile.html'
 })
 export class ProfileComponent implements OnInit {
-  private readonly authService = inject(AuthService);
+  readonly authService = inject(AuthService);
   private readonly http = inject(HttpClient);
 
   isEditingProfile = signal<boolean>(false);

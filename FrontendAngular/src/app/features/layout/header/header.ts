@@ -15,8 +15,8 @@ import { AuthService } from '../../../core/services/auth';
   templateUrl: './header.html'
 })
 export class HeaderComponent {
-  private readonly backendService = inject(BackendConfigService);
-  private readonly authService = inject(AuthService);
+  readonly backendService = inject(BackendConfigService);
+  readonly authService = inject(AuthService);
 
   private readonly confirmationService = inject(ConfirmationService);
   private readonly router = inject(Router);
