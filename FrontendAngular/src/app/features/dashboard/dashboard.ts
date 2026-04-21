@@ -32,11 +32,11 @@ import { LabAsset, CreateLabAssetRequest, AssetStatus } from '../../core/models/
   templateUrl: './dashboard.html'
 })
 export class DashboardComponent implements OnInit {
-  authService = inject(AuthService);
-  private assetService = inject(LabAssetService);
-  private borrowingService = inject(BorrowingService);
-  private confirmationService = inject(ConfirmationService);
-  private messageService = inject(MessageService);
+  private readonly authService = inject(AuthService);
+  private readonly assetService = inject(LabAssetService);
+  private readonly borrowingService = inject(BorrowingService);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly messageService = inject(MessageService);
 
   assets = signal<LabAsset[]>([]);
   isLoading = signal<boolean>(true);

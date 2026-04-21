@@ -14,9 +14,9 @@ import { AuthService } from '../../../core/services/auth';
   templateUrl: './main-layout.html'
 })
 export class MainLayoutComponent {
-  authService = inject(AuthService);
-  router = inject(Router);
-  layoutService = inject(LayoutService); // Am injectat serviciul
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly layoutService = inject(LayoutService); // Am injectat serviciul
 
   get showSidebar(): boolean {
     return this.authService.isLoggedIn() && this.router.url !== '/';

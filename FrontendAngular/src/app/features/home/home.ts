@@ -12,5 +12,5 @@ import { AuthService } from '../../core/services/auth';
   styleUrl: './home.scss'
 })
 export class HomeComponent {
-  authService = inject(AuthService);
+  private readonly authService = inject(AuthService);
 }

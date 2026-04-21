@@ -20,10 +20,10 @@ import { AuthService } from '../../../core/services/auth';
   templateUrl: './login.html'
 })
 export class LoginComponent {
-  backendService = inject(BackendConfigService);
-  private authService = inject(AuthService);
-  private router = inject(Router);
-  private fb = inject(FormBuilder);
+  private readonly backendService = inject(BackendConfigService);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly fb = inject(FormBuilder);
 
   isLoading = false;
   errorMessage = '';
@@ -52,7 +52,6 @@ export class LoginComponent {
       },
       error: (err) => {
         this.isLoading = false;
-        // Prindem mesajul trimis din backend: new { Message = "invalid email or password" }
         this.errorMessage = err.error?.message || err.error?.Message || 'Invalid email or password.';
         console.error('Login error:', err);
       }

@@ -6,10 +6,10 @@ import { LabAsset, CreateLabAssetRequest } from '../models/lab-asset';
 
 @Injectable({ providedIn: 'root' })
 export class LabAssetService {
-  private http = inject(HttpClient);
-  private backendConfig = inject(BackendConfigService); // Am injectat serviciul nostru
+  private readonly http = inject(HttpClient);
+  private readonly backendConfig = inject(BackendConfigService); // Am injectat serviciul nostru
   
-  private apiUrl = '/api/LabAssets';
+  private readonly apiUrl = '/api/LabAssets';
 
   getAllActive(): Observable<LabAsset[]> {
     return this.http.get<LabAsset[]>(this.apiUrl);

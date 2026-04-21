@@ -12,10 +12,10 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class BorrowingService {
-  private http = inject(HttpClient);
+  private readonly http = inject(HttpClient);
   
   // The interceptor will handle prepending https://localhost:6001 or 5001
-  private apiUrl = '/api/Borrowings';
+  private readonly apiUrl = '/api/Borrowings';
 
   borrow(request: BorrowAssetRequest): Observable<BorrowingResponse> {
     return this.http.post<BorrowingResponse>(`${this.apiUrl}/borrow`, request);

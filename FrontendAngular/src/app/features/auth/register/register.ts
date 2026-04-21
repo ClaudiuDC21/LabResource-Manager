@@ -18,10 +18,10 @@ import { AuthService } from '../../../core/services/auth';
   templateUrl: './register.html'
 })
 export class RegisterComponent {
-  backendService = inject(BackendConfigService);
-  private authService = inject(AuthService);
-  private router = inject(Router);
-  private fb = inject(FormBuilder);
+  private readonly backendService = inject(BackendConfigService);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly fb = inject(FormBuilder);
 
   isLoading = false;
   errorMessage = '';

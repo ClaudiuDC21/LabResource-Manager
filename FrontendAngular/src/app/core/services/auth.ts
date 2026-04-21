@@ -6,9 +6,9 @@ import { tap } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private http = inject(HttpClient);
-  private backendConfig = inject(BackendConfigService);
-  private router = inject(Router);
+  private readonly http = inject(HttpClient);
+  private readonly backendConfig = inject(BackendConfigService);
+  private readonly router = inject(Router);
 
   isLoggedIn = signal<boolean>(!!localStorage.getItem('token'));
 
@@ -49,7 +49,7 @@ return {
   }
 
   register(userData: { fullName: string; email: string; matriculationNumber?: string | null; password: string }) {
-    return this.http.post('/api/auth/register', userData);
+    return this.http.post('/api/users/register', userData);
   }
 
   logout() {

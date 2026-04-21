@@ -1,60 +1,103 @@
 <div class="p-4 md:p-6 lg:p-8 transition-all transition-duration-300">
-    <div class="mb-5">
-        <h1 class="text-3xl font-bold text-900 m-0">My Borrowed Items</h1>
-        <p class="text-600 mt-2 m-0">View and return equipment you are currently using.</p>
-    </div>
+  <div class="mb-5">
+    <h1 class="text-3xl font-bold text-900 m-0">My Borrowed Items</h1>
+    <p class="text-600 mt-2 m-0">View and return equipment you are currently using.</p>
+  </div>
 
-    <div class="surface-card p-4 shadow-2 border-round">
-        <p-table [value]="activeBorrowings()" [loading]="isLoading()" responsiveLayout="scroll" styleClass="p-datatable-sm md:p-datatable-lg">
-            <ng-template pTemplate="header">
-                <tr>
-                    <th>Asset Name</th>
-                    <th>Serial Number</th>
-                    <th>Borrowed Date</th>
-                    <th class="text-right">Actions</th>
-                </tr>
-            </ng-template>
+  <div class="surface-card p-4 shadow-2 border-round">
+    <p-table
+      [value]="activeBorrowings()"
+      [loading]="isLoading()"
+      responsiveLayout="scroll"
+      styleClass="p-datatable-sm md:p-datatable-lg"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th scope="col">Asset Name</th>
+          <th scope="col">Serial Number</th>
+          <th scope="col">Borrowed Date</th>
+          <th scope="col" class="text-right">Actions</th>
+        </tr>
+      </ng-template>
 
-            <ng-template pTemplate="body" let-borrowing>
-                <tr>
-                    <td class="font-medium text-800">{{ borrowing.assetName }}</td>
-                    <td class="text-600">{{ borrowing.serialNumber || 'N/A' }}</td>
-                    <td class="text-600">{{ borrowing.borrowedAt | date:'medium' }}</td>
-                    <td class="text-right">
-                        <button pButton label="Return" icon="pi pi-refresh" 
-                                class="p-button-sm p-button-outlined p-button-secondary"
-                                (click)="openReturnDialog(borrowing)"></button>
-                    </td>
-                </tr>
-            </ng-template>
+      <ng-template pTemplate="body" let-borrowing>
+        <tr>
+          <td class="font-medium text-800">{{ borrowing.assetName }}</td>
+          <td class="text-600">{{ borrowing.serialNumber || 'N/A' }}</td>
+          <td class="text-600">{{ borrowing.borrowedAt | date: 'medium' }}</td>
+          <td class="text-right">
+            <button
+              pButton
+              label="Return"
+              icon="pi pi-refresh"
+              class="p-button-sm p-button-outlined p-button-secondary"
+              (click)="openReturnDialog(borrowing)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
 
-            <ng-template pTemplate="emptymessage">
-                <tr>
-                    <td colspan="4" class="text-center p-5 text-600">You currently have no active borrowings.</td>
-                </tr>
-            </ng-template>
-        </p-table>
-    </div>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="4" class="text-center p-5 text-600">
+            You currently have no active borrowings.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
 </div>
 
-<p-dialog [(visible)]="returnDialog" [style]="{width: '450px'}" header="Return Asset" [modal]="true" styleClass="p-fluid">
-    <ng-template pTemplate="content">
-        <p class="mb-4">You are returning: <strong>{{ selectedAssetToReturn?.assetName }}</strong></p>
-        
-        <div class="field mb-4">
-            <label for="remarks" class="font-semibold block mb-2">Remarks (Optional)</label>
-            <textarea id="remarks" pInputTextarea [(ngModel)]="returnForm.remarks" rows="3" placeholder="Any notes about the usage or condition?"></textarea>
-        </div>
+<p-dialog
+  [(visible)]="returnDialog"
+  [style]="{ width: '450px' }"
+  header="Return Asset"
+  [modal]="true"
+  styleClass="p-fluid"
+>
+  <ng-template pTemplate="content">
+    <p class="mb-4">
+      You are returning: <strong>{{ selectedAssetToReturn?.assetName }}</strong>
+    </p>
 
-        <div class="field-checkbox mb-2">
-            <p-checkbox [(ngModel)]="returnForm.isDefective" [binary]="true" inputId="defective"></p-checkbox>
-            <label for="defective" class="ml-2 font-medium text-red-600">Report as Defective</label>
-        </div>
-        <small class="text-500 block ml-4">Check this if the equipment is broken or requires maintenance.</small>
-    </ng-template>
+    <div class="field mb-4">
+      <label for="remarks" class="font-semibold block mb-2">Remarks (Optional)</label>
+      <textarea
+        id="remarks"
+        pInputTextarea
+        [(ngModel)]="returnForm.remarks"
+        rows="3"
+        placeholder="Any notes about the usage or condition?"
+      ></textarea>
+    </div>
 
-    <ng-template pTemplate="footer">
-        <button pButton label="Cancel" icon="pi pi-times" class="p-button-text p-button-secondary font-bold" (click)="hideDialog()"></button>
-        <button pButton label="Confirm Return" icon="pi pi-check" class="bg-logo-green border-none font-bold shadow-2 hover:bg-green-700" (click)="submitReturn()"></button>
-    </ng-template>
+    <div class="field-checkbox mb-2">
+      <p-checkbox
+        [(ngModel)]="returnForm.isDefective"
+        [binary]="true"
+        inputId="defective"
+      ></p-checkbox>
+      <label for="defective" class="ml-2 font-medium text-red-600">Report as Defective</label>
+    </div>
+    <small class="text-500 block ml-4"
+      >Check this if the equipment is broken or requires maintenance.</small
+    >
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancel"
+      icon="pi pi-times"
+      class="p-button-text p-button-secondary font-bold"
+      (click)="hideDialog()"
+    ></button>
+    <button
+      pButton
+      label="Confirm Return"
+      icon="pi pi-check"
+      class="bg-logo-green border-none font-bold shadow-2 hover:bg-green-700"
+      (click)="submitReturn()"
+    ></button>
+  </ng-template>
 </p-dialog>

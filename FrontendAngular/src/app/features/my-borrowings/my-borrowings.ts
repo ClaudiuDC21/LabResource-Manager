@@ -23,8 +23,8 @@ import { ActiveBorrowingResponse, ReturnAssetRequest } from '../../core/models/b
   templateUrl: './my-borrowings.html'
 })
 export class MyBorrowingsComponent implements OnInit {
-  private authService = inject(AuthService);
-  private borrowingService = inject(BorrowingService);
+  private readonly authService = inject(AuthService);
+  private readonly borrowingService = inject(BorrowingService);
 
   activeBorrowings = signal<ActiveBorrowingResponse[]>([]);
   isLoading = signal<boolean>(true);
