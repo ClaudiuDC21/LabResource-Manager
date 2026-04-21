@@ -2,12 +2,13 @@
 using LabResource.VerticalApi.Common.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace LabResource.VerticalApi.Features.Borrowings;
 
 public static class ReturnAsset
 {
-    public record Command(Guid LabAssetId, string? Remarks, bool IsDefective) : IRequest<Result>;
+    public record Command([property: JsonRequired] Guid LabAssetId, string? Remarks, [property: JsonRequired] bool IsDefective) : IRequest<Result>;
 
     public record Result(Guid BorrowingRecordId, string AssetName, DateTime ReturnedAt, AssetStatus NewStatus);
 

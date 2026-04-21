@@ -3,12 +3,13 @@ using LabResource.VerticalApi.Common.Enums;
 using LabResource.VerticalApi.Common.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace LabResource.VerticalApi.Features.Borrowings;
 
 public static class BorrowAsset
 {
-    public record Command(Guid UserId, Guid LabAssetId) : IRequest<Result>;
+    public record Command([property: JsonRequired] Guid UserId, [property: JsonRequired] Guid LabAssetId) : IRequest<Result>;
 
     public record Result(Guid Id, Guid UserId, Guid LabAssetId, DateTime BorrowedAt, string AssetName, string UserName);
 

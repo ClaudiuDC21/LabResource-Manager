@@ -1,12 +1,13 @@
 ﻿using LabResource.VerticalApi.Common.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace LabResource.VerticalApi.Features.Users;
 
 public static class UpdatePassword
 {
-    public record Command(Guid Id, string CurrentPassword, string NewPassword) : IRequest<bool>;
+    public record Command([property: JsonRequired] Guid Id, string CurrentPassword, string NewPassword) : IRequest<bool>;
 
     public class Handler : IRequestHandler<Command, bool>
     {
