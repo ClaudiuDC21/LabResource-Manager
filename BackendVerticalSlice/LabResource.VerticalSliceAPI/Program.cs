@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using LabResource.VerticalApi.Common.Persistence;
+using LabResource.VerticalApi.Common.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
