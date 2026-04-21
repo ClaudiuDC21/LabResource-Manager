@@ -1,6 +1,8 @@
 ﻿using LabResource.VerticalApi.Common.Persistence;
+using LabResource.VerticalApi.Common.Settings;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -17,12 +19,12 @@ public static class Login
     public class Handler : IRequestHandler<Command, Result?>
     {
         private readonly ApplicationDbContext _dbContext;
-        private readonly IConfiguration _configuration;
+        private readonly JwtSettings _jwtSettings;
 
-        public Handler(ApplicationDbContext dbContext, IConfiguration configuration)
+        public Handler(ApplicationDbContext dbContext, IOptions<JwtSettings> jwtOptions)
         {
             _dbContext = dbContext;
-            _configuration = configuration;
+            _jwtSettings = jwtOptions.Value;
         }
 
         public async Task<Result?> Handle(Command request, CancellationToken cancellationToken)
@@ -34,7 +36,7 @@ public static class Login
                 return null;
             }
 
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
@@ -46,8 +48,8 @@ public static class Login
             };
 
             var token = new JwtSecurityToken(
-                _configuration["Jwt:Issuer"],
-                _configuration["Jwt:Audience"],
+                _jwtSettings.Issuer,
+                _jwtSettings.Audience,
                 claims,
                 expires: DateTime.UtcNow.AddHours(8),
                 signingCredentials: credentials);
