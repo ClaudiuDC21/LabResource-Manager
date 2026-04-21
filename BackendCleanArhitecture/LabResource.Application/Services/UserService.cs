@@ -120,35 +120,6 @@ public class UserService : IUserService
         return true;
     }
 
-    private static UserRole DetermineUserRole(string email)
-    {
-        if (email.EndsWith("@stud.ubbcluj.ro", StringComparison.OrdinalIgnoreCase))
-            return UserRole.Student;
-
-        if (email.EndsWith("@ubbcluj.ro", StringComparison.OrdinalIgnoreCase))
-            return UserRole.Teacher;
-
-        throw new ArgumentException("The email address must belong to the UBB domain (@stud.ubbcluj.ro or @ubbcluj.ro).");
-    }
-
-    private async Task<User> RegisterNewUserAsync(string fullName, string email, UserRole role)
-    {
-        var newUser = new User
-        {
-            Id = Guid.NewGuid(),
-            FullName = fullName,
-            Email = email,
-            Role = role,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        await _userRepository.AddAsync(newUser);
-        await _userRepository.SaveChangesAsync();
-
-        return newUser;
-    }
-
     private static UserResponse MapToResponse(User user)
     {
         return new UserResponse

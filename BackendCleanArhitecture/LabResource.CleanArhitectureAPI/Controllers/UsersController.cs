@@ -17,6 +17,20 @@ public class UsersController : ControllerBase
         _userService = userService;
     }
 
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] RegisterUserRequest request)
+    {
+        try
+        {
+            var result = await _userService.RegisterUserAsync(request);
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAllActive()
     {
