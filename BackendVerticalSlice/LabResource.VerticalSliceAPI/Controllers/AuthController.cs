@@ -1,4 +1,5 @@
 ﻿using LabResource.VerticalApi.Features.Auth;
+using LabResource.VerticalApi.Features.Users;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

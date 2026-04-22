@@ -4,7 +4,7 @@ using LabResource.VerticalApi.Common.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace LabResource.VerticalApi.Features.Auth;
+namespace LabResource.VerticalApi.Features.Users;
 
 public static class RegisterUser
 {
