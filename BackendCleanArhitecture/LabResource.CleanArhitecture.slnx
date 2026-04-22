@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="LabResource.Application.UnitTests/LabResource.Application.UnitTests.csproj" Id="a30fff26-8b54-4c19-a282-e4ffa1f59a77" />
   <Project Path="LabResource.Application/LabResource.Application.csproj" Id="2c30097e-a4b0-4908-93e4-2a78a8c9c30a" />
   <Project Path="LabResource.CleanArhitectureAPI/LabResource.CleanApi.csproj" />
   <Project Path="LabResource.Infrastructure/LabResource.Infrastructure.csproj" Id="7e7436d6-bf79-4edc-a47d-f12a9edbc970" />
