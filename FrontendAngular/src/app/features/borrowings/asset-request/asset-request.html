@@ -1,0 +1,140 @@
+<p-toast></p-toast>
+
+<div class="flex justify-content-center p-4 md:p-8">
+  <div class="w-full" style="max-width: 850px">
+    <div class="flex align-items-center gap-3 mb-5">
+      <p-button icon="pi pi-arrow-left" [text]="true" severity="secondary" [rounded]="true" routerLink="/dashboard"></p-button>
+      <h1 class="text-3xl font-bold m-0 text-900">Request Equipment</h1>
+    </div>
+
+    @if (isLoading()) {
+      <div class="flex justify-content-center p-8">
+        <p-progressSpinner ariaLabel="loading"></p-progressSpinner>
+      </div>
+    } @else if (asset()) {
+      <p-card styleClass="shadow-2 border-round-xl overflow-hidden border-none">
+        <div class="bg-bluegray-50 p-5 border-bottom-1 surface-border mb-5 -mt-3 -mx-3">
+          <div class="flex flex-column md:flex-row align-items-start md:align-items-center justify-content-between gap-3">
+            <div>
+              <h2 class="text-2xl font-bold text-900 m-0">{{ asset()?.name }}</h2>
+              <div class="flex align-items-center gap-2 mt-2 text-600 font-semibold">
+                <i class="pi pi-map-marker text-logo-green"></i>
+                <span>{{ asset()?.location || 'General Lab' }}</span>
+              </div>
+            </div>
+            <div class="bg-white p-3 border-round-lg border-1 surface-border shadow-sm">
+              <span class="text-xs font-bold text-500 uppercase block mb-1">Serial Number</span>
+              <span class="text-lg font-mono text-800">{{ asset()?.serialNumber || 'N/A' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-column gap-5 px-2">
+          
+          <div class="flex flex-column gap-3">
+            <div class="flex align-items-center gap-2 border-bottom-1 surface-border pb-2">
+                <i class="pi pi-calendar-plus text-logo-green text-2xl"></i>
+                <h3 class="text-xl font-bold text-800 m-0">Pick-up Details</h3>
+            </div>
+            <div class="grid mt-1">
+              <div class="col-12 md:col-8">
+                <label class="block font-bold text-700 mb-2">Pick-up Date</label>
+                <p-datepicker [ngModel]="pickUpDate()" (ngModelChange)="onPickUpDateChange($event)" [minDate]="minDate" appendTo="body" [showIcon]="true" styleClass="w-full" placeholder="Select Date">
+                  <ng-template pTemplate="date" let-date>
+                    <span [ngClass]="{
+                            'bg-red-100 text-red-600 opacity-50': getDayStatus(date) === 'full',
+                            'bg-orange-100 text-orange-700 font-bold': getDayStatus(date) === 'partial',
+                            'text-900': getDayStatus(date) === 'free'
+                          }" 
+                          class="w-full h-full flex align-items-center justify-content-center border-round">
+                      {{ date.day }}
+                    </span>
+                  </ng-template>
+                </p-datepicker>
+              </div>
+              <div class="col-12 md:col-4">
+                <label class="block font-bold text-700 mb-2">Pick-up Time</label>
+                <p-datepicker [ngModel]="pickUpTime()" (ngModelChange)="pickUpTime.set($event)" [timeOnly]="true" appendTo="body" [showIcon]="true" iconDisplay="input" styleClass="w-full" placeholder="Select Time">
+                  <ng-template pTemplate="inputicon">
+                    <i class="pi pi-clock"></i>
+                  </ng-template>
+                </p-datepicker>
+              </div>
+            </div>
+            
+            <div class="surface-50 border-round p-3 border-1 surface-border">
+              <span class="font-bold text-700 text-sm block mb-2">Agenda for selected date:</span>
+              @if (bookedSlots().length === 0) {
+                <p-tag severity="success" value="Available all day" icon="pi pi-check"></p-tag>
+              } @else {
+                <div class="flex flex-wrap gap-2">
+                  @for (slot of bookedSlots(); track $index) {
+                    <p-tag severity="danger" icon="pi pi-lock">
+                      {{ slot.start | date: 'HH:mm' }} - {{ slot.end | date: 'HH:mm' }}
+                    </p-tag>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="flex flex-column gap-3 mt-2">
+            <div class="flex align-items-center gap-2 border-bottom-1 surface-border pb-2">
+                <i class="pi pi-calendar-minus text-orange-500 text-2xl"></i>
+                <h3 class="text-xl font-bold text-800 m-0">Return Details</h3>
+            </div>
+            <div class="grid mt-1">
+              <div class="col-12 md:col-8">
+                <label class="block font-bold text-700 mb-2">Return Date</label>
+                <p-datepicker [ngModel]="returnDate()" (ngModelChange)="returnDate.set($event)" [minDate]="pickUpDate()" appendTo="body" [showIcon]="true" styleClass="w-full" placeholder="Select Date">
+                    <ng-template pTemplate="date" let-date>
+                        <span [ngClass]="{
+                                'bg-red-100 text-red-600 opacity-50': getDayStatus(date) === 'full',
+                                'bg-orange-100 text-orange-700 font-bold': getDayStatus(date) === 'partial',
+                                'text-900': getDayStatus(date) === 'free'
+                              }" 
+                              class="w-full h-full flex align-items-center justify-content-center border-round">
+                          {{ date.day }}
+                        </span>
+                      </ng-template>
+                </p-datepicker>
+              </div>
+              <div class="col-12 md:col-4">
+                <label class="block font-bold text-700 mb-2">Return Time</label>
+                <p-datepicker [ngModel]="returnTime()" (ngModelChange)="returnTime.set($event)" [timeOnly]="true" appendTo="body" [showIcon]="true" iconDisplay="input" styleClass="w-full" placeholder="Select Time">
+                  <ng-template pTemplate="inputicon">
+                    <i class="pi pi-clock"></i>
+                  </ng-template>
+                </p-datepicker>
+              </div>
+            </div>
+          </div>
+
+          <div class="surface-100 p-4 border-round-lg border-left-3 border-blue-500 bg-blue-50 mt-3">
+            <div class="flex gap-3 align-items-center">
+              <i class="pi pi-info-circle text-blue-600 text-2xl"></i>
+              <p class="m-0 text-700 line-height-3">
+                @if (authService.currentUser()?.id === asset()?.assignedTeacherId) {
+                  <span>
+                    As the <strong>assigned teacher</strong> for this equipment, your request will
+                    be <strong class="text-green-600">automatically approved</strong>.
+                  </span>
+                } @else {
+                  <span>
+                    Your request will be sent to
+                    <strong>{{ asset()?.assignedTeacherName || 'Simona Motogna' }}</strong> for
+                    approval. You will be notified once the equipment is ready for pick-up.
+                  </span>
+                }
+              </p>
+            </div>
+          </div>
+          
+          <div class="pt-2">
+            <p-button label="Confirm Reservation Request" icon="pi pi-check-circle" styleClass="w-full bg-logo-green border-none h-4rem font-bold text-xl shadow-2" [loading]="isSubmitting()" (click)="submitRequest()"></p-button>
+          </div>
+        </div>
+      </p-card>
+    }
+  </div>
+</div>
