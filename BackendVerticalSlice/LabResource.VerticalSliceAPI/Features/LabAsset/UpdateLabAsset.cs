@@ -7,11 +7,12 @@ namespace LabResource.VerticalApi.Features.LabAssets;
 
 public static class UpdateLabAsset
 {
-    // Aici punem atributul pentru a preveni "under-posting" la fel ca la Users
     public record Command(
         [property: JsonRequired] Guid Id,
         string Name,
-        string? SerialNumber) : IRequest<bool>;
+        string? SerialNumber,
+        string? Location,
+        Guid? AssignedTeacherId) : IRequest<bool>;
 
     public class Handler : IRequestHandler<Command, bool>
     {
@@ -32,7 +33,6 @@ public static class UpdateLabAsset
                 return false;
             }
 
-            // Verificăm dacă noul SerialNumber este deja folosit de alt aparat
             if (!string.IsNullOrWhiteSpace(request.SerialNumber) && request.SerialNumber != asset.SerialNumber)
             {
                 var existingAsset = await _context.LabAssets
@@ -46,6 +46,8 @@ public static class UpdateLabAsset
 
             asset.Name = request.Name;
             asset.SerialNumber = request.SerialNumber;
+            asset.Location = request.Location;
+            asset.AssignedTeacherId = request.AssignedTeacherId;
 
             await _context.SaveChangesAsync(cancellationToken);
 

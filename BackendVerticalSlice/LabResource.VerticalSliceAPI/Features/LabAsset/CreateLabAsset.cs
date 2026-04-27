@@ -8,9 +8,9 @@ namespace LabResource.VerticalApi.Features.LabAssets;
 
 public static class CreateLabAsset
 {
-    public record Command(string Name, string? SerialNumber) : IRequest<Result>;
+    public record Command(string Name, string? SerialNumber, string? Location, Guid? AssignedTeacherId) : IRequest<Result>;
 
-    public record Result(Guid Id, string Name, string? SerialNumber, AssetStatus Status, bool IsActive);
+    public record Result(Guid Id, string Name, string? SerialNumber, string? Location, Guid? AssignedTeacherId, AssetStatus Status, bool IsActive);
 
     public class Handler : IRequestHandler<Command, Result>
     {
@@ -39,6 +39,8 @@ public static class CreateLabAsset
                 Id = Guid.NewGuid(),
                 Name = request.Name,
                 SerialNumber = request.SerialNumber,
+                Location = request.Location,
+                AssignedTeacherId = request.AssignedTeacherId,
                 Status = AssetStatus.Available,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -47,7 +49,7 @@ public static class CreateLabAsset
             await _context.LabAssets.AddAsync(newAsset, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
-            return new Result(newAsset.Id, newAsset.Name, newAsset.SerialNumber, newAsset.Status, newAsset.IsActive);
+            return new Result(newAsset.Id, newAsset.Name, newAsset.SerialNumber, newAsset.Location, newAsset.AssignedTeacherId, newAsset.Status, newAsset.IsActive);
         }
     }
 }

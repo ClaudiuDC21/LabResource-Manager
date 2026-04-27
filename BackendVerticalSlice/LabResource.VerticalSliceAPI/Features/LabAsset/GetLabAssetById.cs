@@ -9,8 +9,17 @@ public static class GetLabAssetById
 {
     public record Query(Guid Id) : IRequest<Result?>;
 
-    // Adăugăm câmpul
-    public record Result(Guid Id, string Name, string? SerialNumber, AssetStatus Status, bool IsActive, string? CurrentBorrowerName);
+    public record Result(
+        Guid Id,
+        string Name,
+        string? SerialNumber,
+        string? Location,
+        Guid? AssignedTeacherId,
+        string? AssignedTeacherName,
+        AssetStatus Status,
+        bool IsActive,
+        string? CurrentBorrowerName,
+        DateTime? CurrentBorrowDate);
 
     public class Handler : IRequestHandler<Query, Result?>
     {
@@ -24,6 +33,7 @@ public static class GetLabAssetById
         public async Task<Result?> Handle(Query request, CancellationToken cancellationToken)
         {
             var asset = await _context.LabAssets
+                .Include(a => a.AssignedTeacher)
                 .Include(a => a.BorrowingRecords)
                     .ThenInclude(b => b.User)
                 .FirstOrDefaultAsync(a => a.Id == request.Id, cancellationToken);
@@ -33,10 +43,20 @@ public static class GetLabAssetById
                 return null;
             }
 
-            var borrowerName = asset.BorrowingRecords
-                .FirstOrDefault(b => b.ReturnedAt == null)?.User.FullName;
+            var activeBorrowing = asset.BorrowingRecords
+                .FirstOrDefault(b => b.ActualReturnedAt == null && b.Status == BorrowingStatus.Active);
 
-            return new Result(asset.Id, asset.Name, asset.SerialNumber, asset.Status, asset.IsActive, borrowerName);
+            return new Result(
+                asset.Id,
+                asset.Name,
+                asset.SerialNumber,
+                asset.Location,
+                asset.AssignedTeacherId,
+                asset.AssignedTeacher?.FullName,
+                asset.Status,
+                asset.IsActive,
+                activeBorrowing?.User?.FullName,
+                activeBorrowing?.ActualBorrowedAt);
         }
     }
 }
