@@ -105,7 +105,6 @@ public class LabAssetService : ILabAssetService
             AssignedTeacherId = asset.AssignedTeacherId,
             AssignedTeacherName = asset.AssignedTeacher?.FullName,
             CurrentBorrowerName = activeBorrowing?.User?.FullName,
-            CurrentBorrowDate = activeBorrowing?.ActualBorrowedAt // Corecție: ActualBorrowedAt
-        };
+            CurrentBorrowDate = activeBorrowing?.ActualBorrowedAt 
     }
 }
