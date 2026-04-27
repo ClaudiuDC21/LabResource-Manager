@@ -17,12 +17,12 @@ public class BorrowingsController : ControllerBase
         _borrowingService = borrowingService;
     }
 
-    [HttpPost("borrow")]
-    public async Task<IActionResult> Borrow([FromBody] BorrowAssetRequest request)
+    [HttpPost("request")]
+    public async Task<IActionResult> RequestAsset([FromBody] BorrowAssetRequest request)
     {
         try
         {
-            var result = await _borrowingService.BorrowAssetAsync(request);
+            var result = await _borrowingService.RequestAssetAsync(request);
             return Ok(result);
         }
         catch (ArgumentException ex)
@@ -31,16 +31,52 @@ public class BorrowingsController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            return Conflict(new { Error = ex.Message }); 
+            return Conflict(new { Error = ex.Message });
         }
     }
 
-    [HttpPost("return")]
-    public async Task<IActionResult> Return([FromBody] ReturnAssetRequest request)
+    [HttpPut("{borrowingId:guid}/review")]
+    public async Task<IActionResult> ReviewRequest(Guid borrowingId, [FromBody] ReviewBorrowingRequest request)
     {
         try
         {
-            var result = await _borrowingService.ReturnAssetAsync(request);
+            await _borrowingService.ReviewRequestAsync(borrowingId, request);
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(new { Error = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
+    [HttpPut("{borrowingId:guid}/pickup")]
+    public async Task<IActionResult> PickUpAsset(Guid borrowingId)
+    {
+        try
+        {
+            await _borrowingService.PickUpAssetAsync(borrowingId);
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(new { Error = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
+    [HttpPost("{borrowingId:guid}/return")]
+    public async Task<IActionResult> Return(Guid borrowingId, [FromBody] ReturnAssetRequest request)
+    {
+        try
+        {
+            var result = await _borrowingService.ReturnAssetAsync(borrowingId, request);
             return Ok(result);
         }
         catch (ArgumentException ex)
@@ -73,6 +109,34 @@ public class BorrowingsController : ControllerBase
         try
         {
             var result = await _borrowingService.GetAssetHistoryAsync(assetId);
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(new { Error = ex.Message });
+        }
+    }
+
+    [HttpGet("user/{userId:guid}/history")]
+    public async Task<IActionResult> GetUserHistory(Guid userId)
+    {
+        try
+        {
+            var result = await _borrowingService.GetUserHistoryAsync(userId);
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(new { Error = ex.Message });
+        }
+    }
+
+    [HttpGet("teacher/{teacherId:guid}/pending")]
+    public async Task<IActionResult> GetPendingForTeacher(Guid teacherId)
+    {
+        try
+        {
+            var result = await _borrowingService.GetPendingRequestsForTeacherAsync(teacherId);
             return Ok(result);
         }
         catch (ArgumentException ex)
