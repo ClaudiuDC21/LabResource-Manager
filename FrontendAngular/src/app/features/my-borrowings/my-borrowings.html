@@ -1,38 +1,130 @@
+<p-toast></p-toast>
+
 <div class="p-4 md:p-6 lg:p-8 transition-all transition-duration-300">
+  
   <div class="mb-5">
-    <h1 class="text-3xl font-bold text-900 m-0">My Borrowed Items</h1>
-    <p class="text-600 mt-2 m-0">View and return equipment you are currently using.</p>
+    <h1 class="text-3xl font-bold text-900 m-0 text-logo-green">My Borrowed Items</h1>
+    <p class="text-600 mt-2 m-0 font-medium">Monitor your active reservations and return equipment.</p>
   </div>
 
-  <div class="surface-card p-4 shadow-2 border-round">
-    <p-table
-      [value]="activeBorrowings()"
-      [loading]="isLoading()"
-      responsiveLayout="scroll"
-      styleClass="p-datatable-sm md:p-datatable-lg"
-    >
+  <div class="surface-card p-4 shadow-2 border-round-xl mb-6">
+    <p-table [value]="activeBorrowings()" [loading]="isLoadingActive()" responsiveLayout="scroll" styleClass="p-datatable-sm md:p-datatable-lg">
       <ng-template pTemplate="header">
         <tr>
-          <th scope="col">Asset Name</th>
-          <th scope="col">Serial Number</th>
-          <th scope="col">Borrowed Date</th>
-          <th scope="col" class="text-right">Actions</th>
+          <th scope="col" style="width: 20%">Asset Name</th>
+          <th scope="col" style="width: 15%">Pick-up Date</th>
+          <th scope="col" style="width: 15%">Due Date</th>
+          <th scope="col" style="width: 25%">Usage Progress</th>
+          <th scope="col" style="width: 10%">Status</th>
+          <th scope="col" class="text-right" style="width: 15%">Actions</th>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="body" let-borrowing>
         <tr>
-          <td class="font-medium text-800">{{ borrowing.assetName }}</td>
-          <td class="text-600">{{ borrowing.serialNumber || 'N/A' }}</td>
-          <td class="text-600">{{ borrowing.borrowedAt | date: 'medium' }}</td>
+          <td>
+            <span class="font-bold text-800 block">{{ borrowing.assetName }}</span>
+            <span class="text-500 text-sm font-mono mt-1 block">SN: {{ borrowing.serialNumber || 'N/A' }}</span>
+          </td>
+          
+          <td class="text-600 text-sm">
+            {{ borrowing.requestedStartDate | date: 'dd MMM yyyy, HH:mm' }}
+          </td>
+          
+          <td class="text-600 text-sm font-semibold" [ngClass]="{'text-red-500': borrowing.isExceeded}">
+            {{ borrowing.requestedEndDate | date: 'dd MMM yyyy, HH:mm' }}
+          </td>
+          
+          <td>
+            <div class="flex flex-column gap-2">
+              <div class="flex justify-content-between align-items-center text-sm">
+                <span class="text-500">{{ borrowing.progressValue }}%</span>
+                <span class="font-bold" [ngClass]="borrowing.isExceeded ? 'text-red-600' : 'text-logo-green'">
+                  {{ borrowing.timeLeftLabel }}
+                </span>
+              </div>
+              <p-progressbar 
+                [value]="borrowing.progressValue" 
+                [showValue]="false" 
+                [style]="{'height': '8px'}" 
+                [color]="borrowing.isExceeded ? '#ef4444' : (borrowing.status === BorrowingStatus.Approved ? '#fbbf24' : '#22c55e')">
+              </p-progressbar>
+            </div>
+          </td>
+
+          <td>
+            <p-tag [value]="borrowing.isExceeded ? 'Exceeded' : 'On Track'" [severity]="borrowing.isExceeded ? 'danger' : 'success'"></p-tag>
+          </td>
+
           <td class="text-right">
-            <button
-              pButton
-              label="Return"
-              icon="pi pi-refresh"
-              class="p-button-sm p-button-outlined p-button-secondary"
-              (click)="openReturnDialog(borrowing)"
-            ></button>
+            @if (borrowing.status === BorrowingStatus.Active) { 
+              <p-button label="Return" icon="pi pi-refresh" severity="secondary" [outlined]="true" size="small" (click)="openReturnDialog(borrowing)"></p-button>
+            } @else if (borrowing.status === BorrowingStatus.Approved) {
+              <p-button label="Pick Up" icon="pi pi-box" severity="success" size="small" class="shadow-2" (click)="pickUpAsset(borrowing)"></p-button>
+            } @else {
+              <span class="text-500 text-sm font-italic">Awaiting Approval</span>
+            }
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center p-5 text-600">
+            <div class="flex flex-column align-items-center gap-3">
+              <i class="pi pi-box text-4xl text-300"></i>
+              <span>You currently have no active or approved borrowings.</span>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <div class="mb-5 mt-6 border-top-1 surface-border pt-5">
+    <h2 class="text-2xl font-bold text-900 m-0">Requests & History</h2>
+    <p class="text-600 mt-2 m-0 font-medium">Track the status of your pending requests or view reasons for rejection.</p>
+  </div>
+
+  <div class="surface-card p-4 shadow-2 border-round-xl">
+    <p-table [value]="requestHistory()" [loading]="isLoadingHistory()" [paginator]="true" [rows]="5" responsiveLayout="scroll" styleClass="p-datatable-sm">
+      <ng-template pTemplate="header">
+        <tr>
+          <th scope="col" style="width: 25%">Asset Name</th>
+          <th scope="col" style="width: 25%">Requested Interval</th>
+          <th scope="col" style="width: 15%">Status</th>
+          <th scope="col" style="width: 35%">Reason / Remarks</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-req>
+        <tr>
+          <td>
+            <span class="font-bold text-800 block">{{ req.assetName }}</span>
+            <span class="text-500 text-sm font-mono mt-1 block">SN: {{ req.serialNumber || 'N/A' }}</span>
+          </td>
+          
+          <td class="text-600 text-sm">
+            <div class="flex flex-column gap-1">
+              <span>{{ req.requestedStartDate | date: 'dd MMM yyyy, HH:mm' }}</span>
+              <i class="pi pi-arrow-down text-300 text-xs"></i>
+              <span>{{ req.requestedEndDate | date: 'dd MMM yyyy, HH:mm' }}</span>
+            </div>
+          </td>
+          
+          <td>
+            <p-tag [value]="getStatusName(req.status)" [severity]="getStatusSeverity(req.status)"></p-tag>
+          </td>
+
+          <td>
+            @if (req.remarks) {
+              <div class="surface-100 p-2 border-round text-sm text-700" [ngClass]="{'border-left-2 border-red-500': req.status === BorrowingStatus.Rejected}">
+                <i class="pi pi-comment text-400 mr-1 text-xs"></i>
+                {{ req.remarks }}
+              </div>
+            } @else {
+              <span class="text-400 text-sm font-italic">No remarks</span>
+            }
           </td>
         </tr>
       </ng-template>
@@ -40,7 +132,7 @@
       <ng-template pTemplate="emptymessage">
         <tr>
           <td colspan="4" class="text-center p-5 text-600">
-            You currently have no active borrowings.
+            You have no request history.
           </td>
         </tr>
       </ng-template>
@@ -48,56 +140,32 @@
   </div>
 </div>
 
-<p-dialog
-  [(visible)]="returnDialog"
-  [style]="{ width: '450px' }"
-  header="Return Asset"
-  [modal]="true"
-  styleClass="p-fluid"
->
+<p-dialog [(visible)]="returnDialog" [style]="{ width: '500px' }" header="Return Asset" [modal]="true" styleClass="p-fluid">
   <ng-template pTemplate="content">
-    <p class="mb-4">
-      You are returning: <strong>{{ selectedAssetToReturn?.assetName }}</strong>
-    </p>
+    <div class="flex flex-column gap-4 pt-2">
+      <div class="surface-100 p-3 border-round border-left-3 border-logo-green">
+        <p class="m-0 text-700">You are returning: <strong class="text-900">{{ selectedAssetToReturn?.assetName }}</strong></p>
+      </div>
 
-    <div class="field mb-4">
-      <label for="remarks" class="font-semibold block mb-2">Remarks (Optional)</label>
-      <textarea
-        id="remarks"
-        pInputTextarea
-        [(ngModel)]="returnForm.remarks"
-        rows="3"
-        placeholder="Any notes about the usage or condition?"
-      ></textarea>
-    </div>
+      <div class="flex flex-column gap-2">
+        <label for="remarks" class="font-bold text-900">Remarks (Optional)</label>
+        <textarea id="remarks" pTextarea [(ngModel)]="returnForm.remarks" rows="4" placeholder="Any notes about the usage, issues encountered, or condition of the item?"></textarea>
+      </div>
 
-    <div class="field-checkbox mb-2">
-      <p-checkbox
-        [(ngModel)]="returnForm.isDefective"
-        [binary]="true"
-        inputId="defective"
-      ></p-checkbox>
-      <label for="defective" class="ml-2 font-medium text-red-600">Report as Defective</label>
+      <div class="flex flex-column gap-2 p-3 surface-50 border-round border-1 surface-border">
+        <div class="flex align-items-center gap-2">
+          <p-checkbox [(ngModel)]="returnForm.isDefective" [binary]="true" inputId="defective"></p-checkbox>
+          <label for="defective" class="font-bold text-red-600 cursor-pointer">Report as Defective</label>
+        </div>
+        <small class="text-500 ml-4 line-height-3">Check this ONLY if the equipment is broken, malfunctioning, or requires immediate maintenance. This will alert the lab administrators.</small>
+      </div>
     </div>
-    <small class="text-500 block ml-4"
-      >Check this if the equipment is broken or requires maintenance.</small
-    >
   </ng-template>
 
   <ng-template pTemplate="footer">
-    <button
-      pButton
-      label="Cancel"
-      icon="pi pi-times"
-      class="p-button-text p-button-secondary font-bold"
-      (click)="hideDialog()"
-    ></button>
-    <button
-      pButton
-      label="Confirm Return"
-      icon="pi pi-check"
-      class="bg-logo-green border-none font-bold shadow-2 hover:bg-green-700"
-      (click)="submitReturn()"
-    ></button>
+    <div class="flex justify-content-end gap-2 border-top-1 surface-border pt-3 mt-2">
+      <p-button label="Cancel" [text]="true" severity="secondary" (click)="hideDialog()"></p-button>
+      <p-button label="Confirm Return" icon="pi pi-check" severity="success" (click)="submitReturn()"></p-button>
+    </div>
   </ng-template>
 </p-dialog>
