@@ -1,26 +1,26 @@
 ﻿using LabResource.VerticalApi.Common.Enums;
 
-namespace LabResource.VerticalApi.Common.Entities
+namespace LabResource.VerticalApi.Common.Entities { 
+public class User
 {
-    public class User
-    {
-        public Guid Id { get; set; }
+    public Guid Id { get; set; }
 
-        public string FullName { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
 
-        public string Email { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
 
-        public string PasswordHash { get; set; } = string.Empty;
+    public string PasswordHash { get; set; } = string.Empty;
 
-        public UserRole Role { get; set; } 
+    public UserRole Role { get; set; }
 
-        public string? MatriculationNumber { get; set; }
+    public string? MatriculationNumber { get; set; }
 
-        public bool IsActive { get; set; } = true;
+    public bool IsActive { get; set; } = true;
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    public ICollection<BorrowingRecord> BorrowingRecords { get; set; } = new List<BorrowingRecord>();
 
-        public ICollection<BorrowingRecord> BorrowingRecords { get; set; } = new List<BorrowingRecord>();
-    }
+    public ICollection<LabAsset> ManagedAssets { get; set; } = new List<LabAsset>();
+}
 }
