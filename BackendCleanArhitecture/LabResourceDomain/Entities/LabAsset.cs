@@ -10,12 +10,16 @@ public class LabAsset
 
     public string? SerialNumber { get; set; }
 
+    public string? Location { get; set; }
+
     public AssetStatus Status { get; set; } = AssetStatus.Available;
 
-    public bool IsActive { get; set; } = true; 
+    public bool IsActive { get; set; } = true;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    public Guid? AssignedTeacherId { get; set; }
+    public User? AssignedTeacher { get; set; }
 
     public ICollection<BorrowingRecord> BorrowingRecords { get; set; } = new List<BorrowingRecord>();
 }

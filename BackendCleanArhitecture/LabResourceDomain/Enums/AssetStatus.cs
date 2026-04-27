@@ -3,6 +3,7 @@
 public enum AssetStatus
 {
     Available = 1,
-    Borrowed = 2,   
-    Defective = 3   
+    PendingApproval = 2, 
+    Borrowed = 3,
+    Defective = 4
 }

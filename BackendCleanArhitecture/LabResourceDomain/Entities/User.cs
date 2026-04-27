@@ -20,6 +20,7 @@ public class User
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-
     public ICollection<BorrowingRecord> BorrowingRecords { get; set; } = new List<BorrowingRecord>();
+
+    public ICollection<LabAsset> ManagedAssets { get; set; } = new List<LabAsset>();
 }
