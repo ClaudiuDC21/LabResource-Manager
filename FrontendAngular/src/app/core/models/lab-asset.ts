@@ -1,22 +1,23 @@
-export enum AssetStatus {
-  Available = 1,
-  Borrowed = 2,
-  Defective = 3
-}
+import { AssetStatus } from './enums';
 
 export interface LabAsset {
   id: string;
   name: string;
-  serialNumber?: string;
+  serialNumber?: string | null;
+  location?: string | null;
   status: AssetStatus;
   isActive: boolean;
-  
-  // Câmpurile noi pentru informațiile de împrumut
-  currentBorrowerName?: string;
-  currentBorrowDate?: string; // Va veni ca un ISO string (ex: "2026-04-20T10:00:00Z")
+  assignedTeacherId?: string | null;
+  assignedTeacherName?: string | null;
+  currentBorrowerName?: string | null;
+  currentBorrowDate?: string | null;
 }
+
+export interface LabAssetResponse extends LabAsset {}
 
 export interface CreateLabAssetRequest {
   name: string;
   serialNumber?: string | null;
+  location?: string | null;
+  assignedTeacherId?: string | null;
 }
