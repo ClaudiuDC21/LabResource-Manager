@@ -21,9 +21,7 @@ public class LabAssetService : ILabAssetService
         {
             var existingAsset = await _labAssetRepository.GetBySerialNumberAsync(request.SerialNumber);
             if (existingAsset != null)
-            {
                 throw new ArgumentException($"An asset with serial number '{request.SerialNumber}' already exists.");
-            }
         }
 
         var newAsset = new LabAsset
@@ -31,6 +29,8 @@ public class LabAssetService : ILabAssetService
             Id = Guid.NewGuid(),
             Name = request.Name,
             SerialNumber = request.SerialNumber,
+            Location = request.Location,
+            AssignedTeacherId = request.AssignedTeacherId,
             Status = AssetStatus.Available,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
@@ -51,29 +51,25 @@ public class LabAssetService : ILabAssetService
     public async Task<LabAssetResponse?> GetAssetByIdAsync(Guid id)
     {
         var asset = await _labAssetRepository.GetByIdAsync(id);
-
         return asset != null ? MapToResponse(asset) : null;
     }
 
     public async Task<bool> UpdateAssetAsync(Guid id, CreateLabAssetRequest request)
     {
         var asset = await _labAssetRepository.GetByIdAsync(id);
-        if (asset == null)
-        {
-            return false;
-        }
+        if (asset == null) return false;
 
         if (!string.IsNullOrWhiteSpace(request.SerialNumber) && request.SerialNumber != asset.SerialNumber)
         {
             var existingAsset = await _labAssetRepository.GetBySerialNumberAsync(request.SerialNumber);
             if (existingAsset != null)
-            {
                 throw new ArgumentException($"An asset with serial number '{request.SerialNumber}' already exists.");
-            }
         }
 
         asset.Name = request.Name;
         asset.SerialNumber = request.SerialNumber;
+        asset.Location = request.Location;
+        asset.AssignedTeacherId = request.AssignedTeacherId;
 
         await _labAssetRepository.UpdateAsync(asset);
         await _labAssetRepository.SaveChangesAsync();
@@ -84,13 +80,9 @@ public class LabAssetService : ILabAssetService
     public async Task<bool> DeactivateAssetAsync(Guid id)
     {
         var asset = await _labAssetRepository.GetByIdAsync(id);
-        if (asset == null)
-        {
-            return false;
-        }
+        if (asset == null) return false;
 
         asset.IsActive = false;
-
         await _labAssetRepository.UpdateAsync(asset);
         await _labAssetRepository.SaveChangesAsync();
 
@@ -99,17 +91,21 @@ public class LabAssetService : ILabAssetService
 
     private LabAssetResponse MapToResponse(LabAsset asset)
     {
-        var activeBorrowing = asset.BorrowingRecords?.FirstOrDefault(b => b.ReturnedAt == null);
+        var activeBorrowing = asset.BorrowingRecords?
+            .FirstOrDefault(b => b.ActualReturnedAt == null && b.Status == BorrowingStatus.Active);
 
         return new LabAssetResponse
         {
             Id = asset.Id,
             Name = asset.Name,
             SerialNumber = asset.SerialNumber,
+            Location = asset.Location,
             Status = asset.Status,
             IsActive = asset.IsActive,
+            AssignedTeacherId = asset.AssignedTeacherId,
+            AssignedTeacherName = asset.AssignedTeacher?.FullName,
             CurrentBorrowerName = activeBorrowing?.User?.FullName,
-            CurrentBorrowDate = activeBorrowing?.BorrowedAt // <-- AICI TRIMITEM DATA
+            CurrentBorrowDate = activeBorrowing?.ActualBorrowedAt // Corecție: ActualBorrowedAt
         };
     }
 }

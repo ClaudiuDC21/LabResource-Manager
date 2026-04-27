@@ -128,7 +128,8 @@ public class UserService : IUserService
             FullName = user.FullName,
             Email = user.Email,
             Role = user.Role,
-            MatriculationNumber = user.MatriculationNumber
+            MatriculationNumber = user.MatriculationNumber,
+            IsActive = user.IsActive
         };
     }
 }
