@@ -1,65 +1,142 @@
-<aside class="flex flex-column border-right-1 surface-border fixed left-0 z-4 shadow-1 transition-all transition-duration-300" 
-       [ngClass]="layoutService.isSidebarExpanded() ? 'w-15rem' : 'w-5rem'"
-       style="top: 80px; height: calc(100vh - 80px); background-color: #f0fdf4;">
-  <div class="py-4 flex-grow-1 flex flex-column" [ngClass]="layoutService.isSidebarExpanded() ? 'px-4' : 'px-2'">
+<aside
+  class="flex flex-column border-right-1 surface-border fixed left-0 z-4 shadow-1 transition-all transition-duration-300"
+  [ngClass]="layoutService.isSidebarExpanded() ? 'w-15rem' : 'w-5rem'"
+  style="top: 80px; height: calc(100vh - 80px); background-color: #f0fdf4"
+>
+  <div
+    class="py-4 flex-grow-1 flex flex-column"
+    [ngClass]="layoutService.isSidebarExpanded() ? 'px-4' : 'px-2'"
+  >
     <ul class="list-none p-0 m-0 flex-grow-1">
-      
       <li class="mb-3" [title]="layoutService.isSidebarExpanded() ? '' : 'Inventory'">
-        <a routerLink="/dashboard" 
-           routerLinkActive="bg-green-100 text-green-700 font-bold" 
-           [routerLinkActiveOptions]="{exact: true}"
-           class="flex align-items-center cursor-pointer border-round text-700 hover:surface-hover transition-all transition-duration-150 no-underline"
-           [ngClass]="layoutService.isSidebarExpanded() ? 'p-3' : 'w-3rem h-3rem justify-content-center mx-auto'">
-          <i class="pi pi-box text-xl" [ngClass]="layoutService.isSidebarExpanded() ? 'mr-3' : ''"></i>
+        <a
+          routerLink="/dashboard"
+          routerLinkActive="bg-green-100 text-green-700 font-bold"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex align-items-center cursor-pointer border-round text-700 hover:surface-hover transition-all transition-duration-150 no-underline"
+          [ngClass]="
+            layoutService.isSidebarExpanded()
+              ? 'p-3'
+              : 'w-3rem h-3rem justify-content-center mx-auto'
+          "
+        >
+          <i
+            class="pi pi-box text-xl"
+            [ngClass]="layoutService.isSidebarExpanded() ? 'mr-3' : ''"
+          ></i>
           @if (layoutService.isSidebarExpanded()) {
             <span class="font-medium text-lg white-space-nowrap">Inventory</span>
           }
         </a>
       </li>
-      
+
+      @if (authService.currentUser()?.role === 'Teacher' || authService.currentUser()?.role === 2) {
+        <li class="mb-3" [title]="layoutService.isSidebarExpanded() ? '' : 'Approvals'">
+          <a
+            routerLink="/approvals"
+            routerLinkActive="bg-green-100 text-green-700 font-bold"
+            class="flex align-items-center cursor-pointer border-round text-700 hover:surface-hover transition-all transition-duration-150 no-underline"
+            [ngClass]="
+              layoutService.isSidebarExpanded()
+                ? 'p-3'
+                : 'w-3rem h-3rem justify-content-center mx-auto'
+            "
+          >
+            <div class="relative" [ngClass]="layoutService.isSidebarExpanded() ? 'mr-3' : ''">
+              <i class="pi pi-check-square text-xl block"></i>
+              @if (pendingApprovalsCount() > 0) {
+                <span 
+                  class="absolute bg-red-500 text-white border-circle flex align-items-center justify-content-center text-xs font-bold" 
+                  style="top: -8px; right: -12px; width: 18px; height: 18px;">
+                  {{ pendingApprovalsCount() }}
+                </span>
+              }
+            </div>
+            
+            @if (layoutService.isSidebarExpanded()) {
+              <span class="font-medium text-lg white-space-nowrap">Approvals</span>
+            }
+          </a>
+        </li>
+      }
+
       <li class="mb-3" [title]="layoutService.isSidebarExpanded() ? '' : 'My Items'">
-        <a routerLink="/my-borrowings" 
-           routerLinkActive="bg-green-100 text-green-700 font-bold" 
-           class="flex align-items-center cursor-pointer border-round text-700 hover:surface-hover transition-all transition-duration-150 no-underline"
-           [ngClass]="layoutService.isSidebarExpanded() ? 'p-3' : 'w-3rem h-3rem justify-content-center mx-auto'">
-          <i class="pi pi-shopping-bag text-xl" [ngClass]="layoutService.isSidebarExpanded() ? 'mr-3' : ''"></i>
+        <a
+          routerLink="/my-borrowings"
+          routerLinkActive="bg-green-100 text-green-700 font-bold"
+          class="flex align-items-center cursor-pointer border-round text-700 hover:surface-hover transition-all transition-duration-150 no-underline"
+          [ngClass]="
+            layoutService.isSidebarExpanded()
+              ? 'p-3'
+              : 'w-3rem h-3rem justify-content-center mx-auto'
+          "
+        >
+          <i
+            class="pi pi-shopping-bag text-xl"
+            [ngClass]="layoutService.isSidebarExpanded() ? 'mr-3' : ''"
+          ></i>
           @if (layoutService.isSidebarExpanded()) {
             <span class="font-medium text-lg white-space-nowrap">My Items</span>
           }
         </a>
       </li>
 
-      <li class="mb-3" [title]="layoutService.isSidebarExpanded() ? '' : 'Users'">
-        <a routerLink="/users" 
-           routerLinkActive="bg-green-100 text-green-700 font-bold" 
-           class="flex align-items-center cursor-pointer border-round text-700 hover:surface-hover transition-all transition-duration-150 no-underline"
-           [ngClass]="layoutService.isSidebarExpanded() ? 'p-3' : 'w-3rem h-3rem justify-content-center mx-auto'">
-          <i class="pi pi-users text-xl" [ngClass]="layoutService.isSidebarExpanded() ? 'mr-3' : ''"></i>
-          @if (layoutService.isSidebarExpanded()) {
-            <span class="font-medium text-lg white-space-nowrap">Users</span>
-          }
-        </a>
-      </li>
+      @if (authService.currentUser()?.role === 'Teacher' || authService.currentUser()?.role === 2) {
+        <li class="mb-3" [title]="layoutService.isSidebarExpanded() ? '' : 'Users'">
+          <a
+            routerLink="/users"
+            routerLinkActive="bg-green-100 text-green-700 font-bold"
+            class="flex align-items-center cursor-pointer border-round text-700 hover:surface-hover transition-all transition-duration-150 no-underline"
+            [ngClass]="
+              layoutService.isSidebarExpanded()
+                ? 'p-3'
+                : 'w-3rem h-3rem justify-content-center mx-auto'
+            "
+          >
+            <i
+              class="pi pi-users text-xl"
+              [ngClass]="layoutService.isSidebarExpanded() ? 'mr-3' : ''"
+            ></i>
+            @if (layoutService.isSidebarExpanded()) {
+              <span class="font-medium text-lg white-space-nowrap">Users</span>
+            }
+          </a>
+        </li>
+      }
 
       <li [title]="layoutService.isSidebarExpanded() ? '' : 'My Profile'">
-        <a routerLink="/profile" 
-           routerLinkActive="bg-green-100 text-green-700 font-bold" 
-           class="flex align-items-center cursor-pointer border-round text-700 hover:surface-hover transition-all transition-duration-150 no-underline"
-           [ngClass]="layoutService.isSidebarExpanded() ? 'p-3' : 'w-3rem h-3rem justify-content-center mx-auto'">
-          <i class="pi pi-user text-xl" [ngClass]="layoutService.isSidebarExpanded() ? 'mr-3' : ''"></i>
+        <a
+          routerLink="/profile"
+          routerLinkActive="bg-green-100 text-green-700 font-bold"
+          class="flex align-items-center cursor-pointer border-round text-700 hover:surface-hover transition-all transition-duration-150 no-underline"
+          [ngClass]="
+            layoutService.isSidebarExpanded()
+              ? 'p-3'
+              : 'w-3rem h-3rem justify-content-center mx-auto'
+          "
+        >
+          <i
+            class="pi pi-user text-xl"
+            [ngClass]="layoutService.isSidebarExpanded() ? 'mr-3' : ''"
+          ></i>
           @if (layoutService.isSidebarExpanded()) {
             <span class="font-medium text-lg white-space-nowrap">My Profile</span>
           }
         </a>
       </li>
-
     </ul>
 
     <div class="mt-auto pt-3 border-top-1 surface-border">
-      <button 
+      <button
         class="p-link flex align-items-center justify-content-center w-full p-3 text-600 hover:text-900 hover:bg-green-100 border-round transition-colors"
-        (click)="layoutService.toggleSidebar()">
-        <i class="pi text-xl" [ngClass]="layoutService.isSidebarExpanded() ? 'pi-angle-double-left' : 'pi-angle-double-right'"></i>
+        (click)="layoutService.toggleSidebar()"
+      >
+        <i
+          class="pi text-xl"
+          [ngClass]="
+            layoutService.isSidebarExpanded() ? 'pi-angle-double-left' : 'pi-angle-double-right'
+          "
+        ></i>
       </button>
     </div>
   </div>
