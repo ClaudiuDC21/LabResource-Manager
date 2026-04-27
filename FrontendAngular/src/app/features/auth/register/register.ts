@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
-import { BackendConfigService } from '../../../core/services/backend-config';
-import { AuthService } from '../../../core/services/auth';
+import { BackendConfigService } from '../../../core/services/backend-config.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-register',

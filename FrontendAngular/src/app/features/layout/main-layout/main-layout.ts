@@ -5,7 +5,7 @@ import { HeaderComponent } from '../header/header';
 import { FooterComponent } from '../footer/footer';
 import { SidebarComponent } from '../sidebar/sidebar';
 import { LayoutService } from '../services/layout.service';
-import { AuthService } from '../../../core/services/auth';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-main-layout',

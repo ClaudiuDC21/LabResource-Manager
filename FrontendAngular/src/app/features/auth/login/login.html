@@ -31,14 +31,6 @@
         <small class="p-error block mb-3">Password is required.</small>
       } @else { <div class="mb-3"></div> }
 
-      <div class="flex align-items-center justify-content-between mb-6">
-        <div class="flex align-items-center">
-          <p-checkbox id="rememberme" formControlName="rememberme" [binary]="true" class="mr-2"></p-checkbox>
-          <label for="rememberme" class="text-700 cursor-pointer">Remember me</label>
-        </div>
-        <a class="font-medium no-underline text-logo-green text-sm cursor-pointer">Forgot password?</a>
-      </div>
-
       @if (errorMessage) {
         <div class="mb-4 p-3 border-round bg-red-50 text-red-600 border-1 border-red-200 text-sm">
           <i class="pi pi-exclamation-circle mr-2"></i>{{ errorMessage }}

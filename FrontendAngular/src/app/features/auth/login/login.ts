@@ -4,8 +4,8 @@ import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
-import { BackendConfigService } from '../../../core/services/backend-config';
-import { AuthService } from '../../../core/services/auth';
+import { BackendConfigService } from '../../../core/services/backend-config.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -43,9 +43,9 @@ export class LoginComponent {
     this.isLoading = true;
     this.errorMessage = '';
 
-    const { email, password } = this.loginForm.value;
+    const { email, password, rememberme } = this.loginForm.value;
 
-    this.authService.login({ email, password }).subscribe({
+    this.authService.login({ email, password }, rememberme).subscribe({
       next: () => {
         this.isLoading = false;
         this.router.navigate(['/dashboard']);
@@ -53,7 +53,6 @@ export class LoginComponent {
       error: (err) => {
         this.isLoading = false;
         this.errorMessage = err.error?.message || err.error?.Message || 'Invalid email or password.';
-        console.error('Login error:', err);
       }
     });
   }

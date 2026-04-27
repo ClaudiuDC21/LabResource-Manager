@@ -4,8 +4,8 @@ import { RouterLink, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog'; 
 import { ConfirmationService } from 'primeng/api';
-import { BackendConfigService } from '../../../core/services/backend-config';
-import { AuthService } from '../../../core/services/auth';
+import { BackendConfigService } from '../../../core/services/backend-config.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-header',
