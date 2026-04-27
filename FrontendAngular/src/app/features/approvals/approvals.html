@@ -1,0 +1,84 @@
+<p-toast></p-toast>
+
+<div class="p-4 md:p-6 lg:p-8 transition-all transition-duration-300">
+  <div class="mb-5">
+    <h1 class="text-3xl font-bold text-900 m-0 text-logo-green">Pending Approvals</h1>
+    <p class="text-600 mt-2 m-0 font-medium">Review and manage equipment requests from your students.</p>
+  </div>
+
+  <div class="surface-card p-4 shadow-2 border-round-xl">
+    <p-table [value]="pendingRequests()" [loading]="isLoading()" responsiveLayout="scroll" styleClass="p-datatable-sm md:p-datatable-lg">
+      <ng-template pTemplate="header">
+        <tr>
+          <th scope="col" style="width: 25%">Asset Details</th>
+          <th scope="col" style="width: 20%">Requester</th>
+          <th scope="col" style="width: 35%">Requested Interval</th>
+          <th scope="col" class="text-right" style="width: 20%">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-request>
+        <tr>
+          <td>
+            <span class="font-bold text-800 block">{{ request.assetName }}</span>
+            <span class="text-500 text-sm font-mono mt-1 block">SN: {{ request.serialNumber || 'N/A' }}</span>
+          </td>
+          
+          <td class="font-medium text-700">
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-user text-logo-green"></i>
+              {{ request.userName || 'Student' }}
+            </div>
+          </td>
+          
+          <td class="text-600 text-sm">
+            <div class="flex flex-column gap-1">
+              <span><strong>Start:</strong> {{ request.requestedStartDate | date: 'dd MMM yyyy, HH:mm' }}</span>
+              <span><strong>End:</strong> {{ request.requestedEndDate | date: 'dd MMM yyyy, HH:mm' }}</span>
+            </div>
+          </td>
+
+          <td class="text-right">
+            <p-button icon="pi pi-check" severity="success" [rounded]="true" [outlined]="true" class="mr-2" (click)="openReviewDialog(request, true)"></p-button>
+            <p-button icon="pi pi-times" severity="danger" [rounded]="true" [outlined]="true" (click)="openReviewDialog(request, false)"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="4" class="text-center p-5 text-600">
+            <div class="flex flex-column align-items-center gap-3">
+              <i class="pi pi-check-circle text-4xl text-green-500 opacity-50"></i>
+              <span>You have no pending requests to review.</span>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog [(visible)]="reviewDialog" [style]="{ width: '450px' }" [header]="isApproving ? 'Approve Request' : 'Reject Request'" [modal]="true" styleClass="p-fluid">
+  <ng-template pTemplate="content">
+    <div class="flex flex-column gap-4 pt-2">
+      <div class="surface-100 p-3 border-round" [ngClass]="isApproving ? 'border-left-3 border-green-500' : 'border-left-3 border-red-500'">
+        <p class="m-0 text-700">
+          You are about to <strong [ngClass]="isApproving ? 'text-green-600' : 'text-red-600'">{{ isApproving ? 'APPROVE' : 'REJECT' }}</strong> this request.
+        </p>
+      </div>
+
+      <div class="flex flex-column gap-2">
+        <label for="teacherNotes" class="font-bold text-900">Notes (Optional)</label>
+        <textarea id="teacherNotes" pTextarea [(ngModel)]="reviewForm.teacherNotes" rows="4" placeholder="Add any instructions, pickup details, or reasons for rejection here..."></textarea>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-end gap-2 border-top-1 surface-border pt-3 mt-2">
+      <p-button label="Cancel" [text]="true" severity="secondary" (click)="hideDialog()"></p-button>
+      <p-button [label]="isApproving ? 'Approve' : 'Reject'" [icon]="isApproving ? 'pi pi-check' : 'pi pi-times'" [severity]="isApproving ? 'success' : 'danger'" (click)="submitReview()"></p-button>
+    </div>
+  </ng-template>
+</p-dialog>
