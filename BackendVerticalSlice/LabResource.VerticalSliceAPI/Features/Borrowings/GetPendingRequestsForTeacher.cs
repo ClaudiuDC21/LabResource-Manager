@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LabResource.VerticalApi.Features.Borrowings;
 
-public static class GetActiveBorrowingsForUser
+public static class GetPendingRequestsForTeacher
 {
-    public record Query(Guid UserId) : IRequest<IEnumerable<Result>>;
+    public record Query(Guid TeacherId) : IRequest<IEnumerable<Result>>;
 
     public record Result(Guid BorrowingRecordId, Guid LabAssetId, string AssetName, string? SerialNumber, string? UserName, DateTime RequestedStartDate, DateTime RequestedEndDate, BorrowingStatus Status);
 
@@ -22,13 +22,11 @@ public static class GetActiveBorrowingsForUser
 
         public async Task<IEnumerable<Result>> Handle(Query request, CancellationToken cancellationToken)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
-            if (user == null) throw new ArgumentException("User not found.");
-
             return await _context.BorrowingRecords
                 .Include(b => b.LabAsset)
                 .Include(b => b.User)
-                .Where(b => b.UserId == request.UserId && b.ActualReturnedAt == null && (b.Status == BorrowingStatus.Active || b.Status == BorrowingStatus.Approved))
+                .Where(b => b.LabAsset.AssignedTeacherId == request.TeacherId && b.Status == BorrowingStatus.Pending)
+                .OrderBy(b => b.RequestedStartDate)
                 .Select(b => new Result(
                     b.Id,
                     b.LabAssetId,

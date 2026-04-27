@@ -1,4 +1,5 @@
-﻿using LabResource.VerticalApi.Common.Persistence;
+﻿using LabResource.VerticalApi.Common.Enums;
+using LabResource.VerticalApi.Common.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,7 +9,7 @@ public static class GetAssetHistory
 {
     public record Query(Guid LabAssetId) : IRequest<IEnumerable<Result>>;
 
-    public record Result(Guid BorrowingRecordId, string UserName, string? MatriculationNumber, DateTime BorrowedAt, DateTime? ReturnedAt, string? Remarks);
+    public record Result(Guid BorrowingRecordId, string UserName, string? MatriculationNumber, DateTime RequestedStartDate, DateTime RequestedEndDate, DateTime? ActualReturnedAt, BorrowingStatus Status, string? Remarks);
 
     public class Handler : IRequestHandler<Query, IEnumerable<Result>>
     {
@@ -22,21 +23,20 @@ public static class GetAssetHistory
         public async Task<IEnumerable<Result>> Handle(Query request, CancellationToken cancellationToken)
         {
             var assetExists = await _context.LabAssets.AnyAsync(a => a.Id == request.LabAssetId, cancellationToken);
-            if (!assetExists)
-            {
-                throw new ArgumentException("Asset not found.");
-            }
+            if (!assetExists) throw new ArgumentException("Asset not found.");
 
             return await _context.BorrowingRecords
                 .Include(b => b.User)
                 .Where(b => b.LabAssetId == request.LabAssetId)
-                .OrderByDescending(b => b.BorrowedAt)
+                .OrderByDescending(b => b.RequestedStartDate)
                 .Select(b => new Result(
                     b.Id,
                     b.User.FullName,
                     b.User.MatriculationNumber,
-                    b.BorrowedAt,
-                    b.ReturnedAt,
+                    b.RequestedStartDate,
+                    b.RequestedEndDate,
+                    b.ActualReturnedAt,
+                    b.Status,
                     b.Remarks
                 ))
                 .ToListAsync(cancellationToken);
