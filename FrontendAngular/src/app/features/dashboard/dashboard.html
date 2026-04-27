@@ -2,139 +2,72 @@
 <p-confirmDialog [style]="{ width: '450px' }"></p-confirmDialog>
 
 <div class="p-4 md:p-6 lg:p-8 transition-all transition-duration-300">
-  <div
-    class="flex flex-column md:flex-row md:align-items-center justify-content-between mb-5 gap-3"
-  >
+  <div class="flex flex-column md:flex-row md:align-items-center justify-content-between mb-5 gap-3">
     <div>
-      <h1 class="text-3xl font-bold text-900 m-0">Laboratory Inventory</h1>
-      <p class="text-600 mt-2 m-0">Browse and manage available lab resources.</p>
+      <h1 class="text-3xl font-bold text-900 m-0 text-logo-green">Laboratory Inventory</h1>
+      <p class="text-600 mt-2 m-0 font-medium">Browse resources and manage lab reservations.</p>
     </div>
 
     @if (isTeacher) {
-      <button
-        pButton
-        label="Add New Asset"
-        icon="pi pi-plus"
-        class="bg-logo-green border-none shadow-2"
-        (click)="openNew()"
-      ></button>
+      <p-button label="Add New Asset" icon="pi pi-plus" severity="success" (click)="openNew()" class="shadow-2"></p-button>
     }
   </div>
 
-  <div class="surface-card p-4 shadow-2 border-round">
-    <p-table
-      #dt
-      [value]="assets()"
-      [loading]="isLoading()"
-      [paginator]="true"
-      [rows]="10"
-      [globalFilterFields]="['name', 'serialNumber']"
-      responsiveLayout="scroll"
-      styleClass="p-datatable-sm md:p-datatable-lg"
-    >
+  <div class="surface-card p-4 shadow-2 border-round-xl">
+    <p-table #dt [value]="assets()" [loading]="isLoading()" [paginator]="true" [rows]="10" 
+             [globalFilterFields]="['name', 'serialNumber', 'location']" responsiveLayout="scroll" 
+             styleClass="p-datatable-sm">
+      
       <ng-template pTemplate="caption">
         <div class="flex justify-content-end">
-          <span class="p-input-icon-left w-full md:w-auto relative">
-            <i
-              class="pi pi-search absolute"
-              style="left: 0.75rem; top: 50%; transform: translateY(-50%)"
-            ></i>
-            <input
-              pInputText
-              type="text"
-              (input)="dt.filterGlobal($any($event.target).value, 'contains')"
-              placeholder="Search assets..."
-              class="w-full md:w-20rem"
-              style="padding-left: 2.5rem"
-            />
-          </span>
+          <p-iconfield iconPosition="left">
+            <p-inputicon class="pi pi-search"></p-inputicon>
+            <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" 
+                   placeholder="Search assets..." class="w-full md:w-20rem" />
+          </p-iconfield>
         </div>
       </ng-template>
 
       <ng-template pTemplate="header">
         <tr>
-          <th scope="col" pSortableColumn="name">
-            Asset Name <p-sortIcon field="name"></p-sortIcon>
-          </th>
-          <th scope="col" pSortableColumn="serialNumber">
-            Serial Number <p-sortIcon field="serialNumber"></p-sortIcon>
-          </th>
-          <th scope="col" pSortableColumn="status">
-            Status <p-sortIcon field="status"></p-sortIcon>
-          </th>
-
-          @if (isTeacher) {
-            <th scope="col">Borrowed By</th>
-          }
-
-          <th scope="col" class="text-right">Actions</th>
+          <th pSortableColumn="name">Asset Name <p-sortIcon field="name"></p-sortIcon></th>
+          <th pSortableColumn="location">Location <p-sortIcon field="location"></p-sortIcon></th>
+          <th pSortableColumn="status">Status <p-sortIcon field="status"></p-sortIcon></th>
+          <th>Responsible Teacher</th>
+          <th class="text-right">Actions</th>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="body" let-asset>
         <tr>
-          <td class="font-medium text-800">{{ asset.name }}</td>
-          <td class="text-600">{{ asset.serialNumber || 'N/A' }}</td>
-          <td>
-            <p-tag
-              [value]="getStatusName(asset.status)"
-              [severity]="getStatusSeverity(asset.status)"
-            ></p-tag>
+          <td class="font-bold text-800">{{ asset.name }}</td>
+          <td class="text-600">
+            <i class="pi pi-map-marker text-xs mr-1 text-logo-green"></i>
+            {{ asset.location || 'N/A' }}
           </td>
-
-          @if (isTeacher) {
-            <td>
-              @if (asset.currentBorrowerName) {
-                <div class="flex flex-column gap-1">
-                  <div class="flex align-items-center gap-2 font-medium text-700">
-                    <i class="pi pi-user text-logo-green text-sm"></i>
-                    <span>{{ asset.currentBorrowerName }}</span>
-                  </div>
-                  @if (asset.currentBorrowDate) {
-                    <div class="flex align-items-center gap-2 text-xs text-500">
-                      <i class="pi pi-calendar"></i>
-                      <span>Borrowed on: {{ asset.currentBorrowDate | date: 'dd MMM yyyy' }}</span>
-                    </div>
-                  }
-                </div>
-              } @else {
-                <span class="text-400">-</span>
-              }
-            </td>
-          }
-
+          <td>
+            <p-tag [value]="getStatusName(asset.status)" [severity]="getStatusSeverity(asset.status)"></p-tag>
+          </td>
+          <td class="text-700 font-medium">
+             <i class="pi pi-user text-xs mr-1"></i>
+             {{ asset.assignedTeacherName || '-' }}
+          </td>
           <td class="text-right">
-            <button
-              pButton
-              label="Borrow"
-              icon="pi pi-shopping-cart"
-              class="p-button-sm p-button-outlined border-logo-green text-logo-green mr-2"
-              [disabled]="asset.status !== 1"
-              (click)="borrowAsset(asset)"
-            ></button>
+            <p-button 
+              [label]="getBorrowButtonLabel(asset.status)" 
+              [icon]="getBorrowButtonIcon(asset.status)" 
+              [severity]="getBorrowButtonSeverity(asset.status)" 
+              [outlined]="true" 
+              size="small"
+              class="mr-2" 
+              [disabled]="!canBorrow(asset.status)" 
+              (click)="borrowAsset(asset)">
+            </p-button>
 
             @if (isTeacher) {
-              <button
-                pButton
-                icon="pi pi-pencil"
-                class="p-button-rounded p-button-text p-button-secondary mr-2"
-                (click)="editAsset(asset)"
-              ></button>
-              <button
-                pButton
-                icon="pi pi-trash"
-                class="p-button-rounded p-button-text p-button-danger"
-                (click)="deleteAsset(asset)"
-              ></button>
+              <p-button icon="pi pi-pencil" [text]="true" severity="secondary" [rounded]="true" (click)="editAsset(asset)"></p-button>
+              <p-button icon="pi pi-trash" [text]="true" severity="danger" [rounded]="true" (click)="deleteAsset(asset)"></p-button>
             }
-          </td>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td [attr.colspan]="isTeacher ? 5 : 4" class="text-center p-5 text-600">
-            No lab assets found.
           </td>
         </tr>
       </ng-template>
@@ -142,71 +75,50 @@
   </div>
 </div>
 
-<p-dialog
-  [(visible)]="assetDialog"
-  [style]="{ width: '500px' }"
-  [header]="isEditing ? 'Update Asset Details' : 'Register New Lab Asset'"
-  [modal]="true"
-  [draggable]="false"
-  [resizable]="false"
-  styleClass="p-fluid"
->
+<p-dialog [(visible)]="assetDialog" [style]="{ width: '550px' }" 
+          [header]="isEditing ? 'Update Equipment Details' : 'Register New Equipment'" 
+          [modal]="true" [draggable]="false" [resizable]="false" styleClass="p-fluid">
+  
   <ng-template pTemplate="content">
     <div class="flex flex-column gap-4 pt-3">
-      <div class="field">
-        <label for="name" class="font-semibold mb-2 block text-900">Asset Name *</label>
-        <input
-          type="text"
-          pInputText
-          id="name"
-          [(ngModel)]="assetForm.name"
-          placeholder="e.g. Oscilloscope Tektronix"
-          required
-          class="p-inputtext-lg w-full"
-        />
-
-        @if (!assetForm.name && assetDialog) {
-          <small class="p-error block mt-2 opacity-80 font-medium">A valid name is required.</small>
-        }
+      <div class="flex flex-column gap-2">
+        <label class="font-bold text-900">Equipment Name *</label>
+        <input pInputText [(ngModel)]="assetForm.name" placeholder="e.g. Oscilloscope Tektronix" />
       </div>
 
-      <div class="field">
-        <label for="serialNumber" class="font-semibold mb-2 block text-900"
-          >Serial Number (Optional)</label
-        >
-        <input
-          type="text"
-          pInputText
-          id="serialNumber"
-          [(ngModel)]="assetForm.serialNumber"
-          placeholder="UBB-XXXX-YYYY"
-          class="p-inputtext-lg w-full"
-        />
+      <div class="grid">
+        <div class="col-6 flex flex-column gap-2">
+          <label class="font-bold text-900">Serial Number</label>
+          <input pInputText [(ngModel)]="assetForm.serialNumber" placeholder="SN-XXXX" />
+        </div>
+        <div class="col-6 flex flex-column gap-2">
+          <label class="font-bold text-900">Laboratory Location</label>
+          <input pInputText [(ngModel)]="assetForm.location" placeholder="e.g. Room 302" />
+        </div>
+      </div>
 
-        <small class="text-500 block mt-2 opacity-70 font-medium"
-          >Leave blank if the asset doesn't have a specific serial code.</small
-        >
+      <div class="flex flex-column gap-2">
+        <label class="font-bold text-900">Responsible Teacher (Owner)</label>
+        <p-select [options]="teachers()" 
+                  [(ngModel)]="assetForm.assignedTeacherId" 
+                  optionLabel="fullName" 
+                  optionValue="id" 
+                  placeholder="Select teacher for assignment" 
+                  [showClear]="true" 
+                  appendTo="body"
+                  class="w-full"></p-select>
+        <small class="text-500">This teacher will approve/reject reservation requests for this asset.</small>
       </div>
     </div>
   </ng-template>
 
   <ng-template pTemplate="footer">
-    <div class="flex gap-2 justify-content-end border-top-1 surface-border pt-4 mt-2">
-      <button
-        pButton
-        label="Cancel"
-        icon="pi pi-times"
-        class="p-button-text p-button-secondary font-bold"
-        (click)="hideDialog()"
-      ></button>
-      <button
-        pButton
-        [label]="isEditing ? 'Save Changes' : 'Create Asset'"
-        [icon]="isEditing ? 'pi pi-save' : 'pi pi-plus'"
-        class="bg-logo-green border-none px-4 font-bold shadow-2 hover:bg-green-700"
-        (click)="saveAsset()"
-        [disabled]="!assetForm.name"
-      ></button>
+    <div class="flex justify-content-end gap-2 border-top-1 surface-border pt-3 mt-2">
+        <p-button label="Cancel" [text]="true" severity="secondary" (click)="hideDialog()"></p-button>
+        <p-button [label]="isEditing ? 'Save Changes' : 'Create Asset'" 
+                  severity="success" 
+                  (click)="saveAsset()" 
+                  [disabled]="!assetForm.name"></p-button>
     </div>
   </ng-template>
 </p-dialog>

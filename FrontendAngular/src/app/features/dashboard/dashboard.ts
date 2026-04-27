@@ -1,6 +1,8 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -8,11 +10,17 @@ import { DialogModule } from 'primeng/dialog';
 import { TagModule } from 'primeng/tag';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
+import { SelectModule } from 'primeng/select'; 
+import { IconFieldModule } from 'primeng/iconfield'; 
+import { InputIconModule } from 'primeng/inputicon';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { AuthService } from '../../core/services/auth';
-import { LabAssetService } from '../../core/services/lab-asset';
-import { BorrowingService } from '../../core/services/borrowing';
-import { LabAsset, CreateLabAssetRequest, AssetStatus } from '../../core/models/lab-asset';
+
+import { AuthService } from '../../core/services/auth.service';
+import { LabAssetService } from '../../core/services/lab-asset.service';
+import { UserService } from '../../core/services/user.service';
+import { LabAsset, CreateLabAssetRequest } from '../../core/models/lab-asset';
+import { UserResponse } from '../../core/models/user';
+import { AssetStatus } from '../../core/models/enums';
 
 @Component({
   selector: 'app-dashboard',
@@ -20,13 +28,16 @@ import { LabAsset, CreateLabAssetRequest, AssetStatus } from '../../core/models/
   imports: [
     CommonModule, 
     FormsModule, 
-    TableModule, 
-    ButtonModule, 
+    TableModule,
+    ButtonModule,
     InputTextModule, 
     DialogModule, 
     TagModule,
     ConfirmDialogModule,
-    ToastModule
+    ToastModule,
+    SelectModule,
+    IconFieldModule,
+    InputIconModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './dashboard.html'
@@ -34,11 +45,13 @@ import { LabAsset, CreateLabAssetRequest, AssetStatus } from '../../core/models/
 export class DashboardComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly assetService = inject(LabAssetService);
-  private readonly borrowingService = inject(BorrowingService);
+  private readonly userService = inject(UserService);
+  private readonly router = inject(Router);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
 
   assets = signal<LabAsset[]>([]);
+  teachers = signal<UserResponse[]>([]);
   isLoading = signal<boolean>(true);
 
   assetDialog = false;
@@ -47,11 +60,16 @@ export class DashboardComponent implements OnInit {
   
   assetForm: CreateLabAssetRequest = {
     name: '',
-    serialNumber: ''
+    serialNumber: '',
+    location: '',
+    assignedTeacherId: null
   };
 
   ngOnInit() {
     this.loadAssets();
+    if (this.isTeacher) {
+      this.loadTeachers();
+    }
   }
 
   loadAssets() {
@@ -61,20 +79,27 @@ export class DashboardComponent implements OnInit {
         this.assets.set(data);
         this.isLoading.set(false);
       },
-      error: (err) => {
-        console.error(err);
-        this.isLoading.set(false);
+      error: () => this.isLoading.set(false)
+    });
+  }
+
+  loadTeachers() {
+    this.userService.getAllActive().subscribe({
+      next: (users) => {
+        this.teachers.set(users.filter(u => u.role === 2 || u.role.toString() === 'Teacher'));
       }
     });
   }
 
   get isTeacher(): boolean {
-    return this.authService.currentUser()?.role === 'Teacher';
+    const role = this.authService.currentUser()?.role;
+    return role === 'Teacher' || role === 2;
   }
 
-  getStatusSeverity(status: AssetStatus): 'success' | 'warn' | 'danger' {
+  getStatusSeverity(status: AssetStatus): 'success' | 'info' | 'warn' | 'danger' {
     switch (status) {
       case AssetStatus.Available: return 'success';
+      case AssetStatus.PendingApproval: return 'info';
       case AssetStatus.Borrowed: return 'warn';
       case AssetStatus.Defective: return 'danger';
       default: return 'success';
@@ -84,21 +109,48 @@ export class DashboardComponent implements OnInit {
   getStatusName(status: AssetStatus): string {
     switch (status) {
       case AssetStatus.Available: return 'Available';
+      case AssetStatus.PendingApproval: return 'Pending Approval';
       case AssetStatus.Borrowed: return 'Borrowed';
       case AssetStatus.Defective: return 'Defective';
       default: return 'Unknown';
     }
   }
 
+  getBorrowButtonLabel(status: AssetStatus): string {
+    return status === AssetStatus.Available ? 'Borrow' : 'Schedule';
+  }
+
+  getBorrowButtonIcon(status: AssetStatus): string {
+    return status === AssetStatus.Available ? 'pi pi-calendar-plus' : 'pi pi-calendar-clock';
+  }
+
+  getBorrowButtonSeverity(status: AssetStatus): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+    return status === AssetStatus.Available ? 'success' : 'info';
+  }
+
+  canBorrow(status: AssetStatus): boolean {
+    return status !== AssetStatus.Defective;
+  }
+
   openNew() {
-    this.assetForm = { name: '', serialNumber: '' };
+    this.assetForm = { 
+      name: '', 
+      serialNumber: '', 
+      location: '', 
+      assignedTeacherId: null 
+    };
     this.isEditing = false;
     this.currentAssetId = null;
     this.assetDialog = true;
   }
 
   editAsset(asset: LabAsset) {
-    this.assetForm = { name: asset.name, serialNumber: asset.serialNumber };
+    this.assetForm = { 
+      name: asset.name, 
+      serialNumber: asset.serialNumber || '',
+      location: asset.location || '',
+      assignedTeacherId: asset.assignedTeacherId || null
+    };
     this.currentAssetId = asset.id;
     this.isEditing = true;
     this.assetDialog = true;
@@ -109,7 +161,7 @@ export class DashboardComponent implements OnInit {
   }
 
   saveAsset() {
-    if (!this.validateForm()) return;
+    if (!this.assetForm.name?.trim()) return;
 
     if (this.isEditing && this.currentAssetId) {
       this.assetService.update(this.currentAssetId, this.assetForm).subscribe({
@@ -118,7 +170,7 @@ export class DashboardComponent implements OnInit {
           this.hideDialog();
           this.messageService.add({ severity: 'success', summary: 'Updated', detail: 'Asset updated successfully.' });
         },
-        error: (err: any) => this.handleError(err) 
+        error: (err) => this.handleError(err)
       });
     } else {
       this.assetService.create(this.assetForm).subscribe({
@@ -127,66 +179,36 @@ export class DashboardComponent implements OnInit {
           this.hideDialog();
           this.messageService.add({ severity: 'success', summary: 'Created', detail: 'Asset created successfully.' });
         },
-        error: (err: any) => this.handleError(err) 
+        error: (err) => this.handleError(err)
       });
     }
   }
 
-  private validateForm(): boolean {
-    return !!this.assetForm.name && this.assetForm.name.trim().length > 0;
-  }
-
   private handleError(err: any) {
-    console.error(err);
-    this.messageService.add({ severity: 'error', summary: 'Error', detail: 'An error occurred. Please try again.' });
+    const detail = err.error?.Error || 'Action failed. Check console for details.';
+    this.messageService.add({ severity: 'error', summary: 'Error', detail: detail });
   }
 
   deleteAsset(asset: LabAsset) {
     this.confirmationService.confirm({
-      message: `Are you sure you want to delete ${asset.name}?`,
-      header: 'Confirm Deletion',
+      message: `Are you sure you want to deactivate ${asset.name}?`,
+      header: 'Confirm Deactivation',
       icon: 'pi pi-exclamation-triangle',
-      acceptButtonStyleClass: 'p-button-danger',
-      rejectButtonStyleClass: 'p-button-text p-button-secondary',
+      acceptButtonProps: { label: 'Deactivate', severity: 'danger' },
+      rejectButtonProps: { label: 'Cancel', severity: 'secondary', text: true },
       accept: () => {
         this.assetService.deactivate(asset.id).subscribe({
           next: () => {
             this.loadAssets();
-            this.messageService.add({ severity: 'success', summary: 'Deleted', detail: 'Asset successfully removed.' });
+            this.messageService.add({ severity: 'success', summary: 'Removed', detail: 'Asset deactivated.' });
           },
-          error: (err) => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete asset.' })
+          error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to deactivate asset.' })
         });
       }
     });
   }
 
   borrowAsset(asset: LabAsset) {
-    const user = this.authService.currentUser();
-    if (!user) return;
-
-    const request = {
-      userId: user.id,
-      labAssetId: asset.id
-    };
-
-    this.confirmationService.confirm({
-      message: `Do you want to borrow the ${asset.name}?`,
-      header: 'Confirm Borrow',
-      icon: 'pi pi-info-circle',
-      acceptButtonStyleClass: 'bg-logo-green border-none hover:bg-green-700',
-      rejectButtonStyleClass: 'p-button-text p-button-secondary',
-      accept: () => {
-        this.borrowingService.borrow(request).subscribe({
-          next: (response) => {
-            this.loadAssets();
-            this.messageService.add({ severity: 'success', summary: 'Success', detail: `Successfully borrowed ${response.assetName}!` });
-          },
-          error: (err) => {
-            console.error(err);
-            this.messageService.add({ severity: 'error', summary: 'Error', detail: err.error?.Error || 'Failed to borrow asset.' });
-          }
-        });
-      }
-    });
+    this.router.navigate(['/dashboard', asset.id, 'request']);
   }
 }
