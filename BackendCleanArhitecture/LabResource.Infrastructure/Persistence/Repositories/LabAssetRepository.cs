@@ -16,17 +16,23 @@ public class LabAssetRepository : ILabAssetRepository
 
     public async Task<LabAsset?> GetByIdAsync(Guid id)
     {
-        return await _context.LabAssets.FirstOrDefaultAsync(a => a.Id == id);
+        return await _context.LabAssets
+            .Include(a => a.AssignedTeacher)
+            .Include(a => a.BorrowingRecords)
+                .ThenInclude(b => b.User)
+            .FirstOrDefaultAsync(a => a.Id == id);
     }
 
     public async Task<LabAsset?> GetBySerialNumberAsync(string serialNumber)
     {
-        return await _context.LabAssets.FirstOrDefaultAsync(a => a.SerialNumber == serialNumber);
+        return await _context.LabAssets
+            .FirstOrDefaultAsync(a => a.SerialNumber == serialNumber);
     }
 
     public async Task<IEnumerable<LabAsset>> GetAllActiveAsync()
     {
         return await _context.LabAssets
+            .Include(a => a.AssignedTeacher)
             .Include(a => a.BorrowingRecords)
                 .ThenInclude(b => b.User)
             .Where(a => a.IsActive)
