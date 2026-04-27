@@ -1,0 +1,126 @@
+<div class="p-4 md:p-6 lg:p-8 transition-all transition-duration-300">
+  <div class="mb-5 flex align-items-center gap-3">
+    <button pButton icon="pi pi-arrow-left" class="p-button-rounded p-button-text p-button-secondary" (click)="goBack()"></button>
+    <div>
+      <h1 class="text-3xl font-bold text-900 m-0">User Details</h1>
+      <p class="text-600 mt-2 m-0">View profile information and active borrowings.</p>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="flex justify-content-center p-5">
+      <i class="pi pi-spin pi-spinner text-logo-green" style="font-size: 2rem"></i>
+    </div>
+  } @else if (user()) {
+    <div class="grid">
+      <div class="col-12 lg:col-4">
+        <div class="surface-card p-4 shadow-2 border-round-xl h-full">
+          <div class="flex flex-column align-items-center text-center mb-4">
+            <div class="w-6rem h-6rem border-circle bg-green-100 flex align-items-center justify-content-center mb-3">
+              <i class="pi pi-user text-4xl text-green-700"></i>
+            </div>
+            <span class="text-2xl font-bold text-900 mb-1">{{ user()?.fullName }}</span>
+            <p-tag [value]="getRoleName(user()!.role)" [severity]="getRoleSeverity(user()!.role)"></p-tag>
+          </div>
+          
+          <ul class="list-none p-0 m-0">
+            <li class="flex align-items-center py-3 px-2 border-top-1 surface-border">
+              <div class="text-500 w-4 font-medium">Email</div>
+              <div class="text-900 w-8 md:w-8">{{ user()?.email }}</div>
+            </li>
+            <li class="flex align-items-center py-3 px-2 border-top-1 surface-border">
+              <div class="text-500 w-4 font-medium">Matriculation</div>
+              <div class="text-900 w-8 md:w-8">{{ user()?.matriculationNumber || 'N/A' }}</div>
+            </li>
+            <li class="flex align-items-center py-3 px-2 border-top-1 surface-border">
+              <div class="text-500 w-4 font-medium">Status</div>
+              <div class="text-900 w-8 md:w-8">
+                <p-tag [value]="isUserActive(user()) ? 'Active' : 'Inactive'" [severity]="isUserActive(user()) ? 'success' : 'danger'"></p-tag>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col-12 lg:col-8">
+        <div class="surface-card p-4 shadow-2 border-round-xl h-full">
+          <h2 class="text-xl font-bold text-900 mb-4 mt-0">Current Borrowings & Reservations</h2>
+          
+          <p-table [value]="activeBorrowings()" responsiveLayout="scroll" styleClass="p-datatable-sm">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Asset Name</th>
+                <th>Start Date</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th>Time Log</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-asset>
+              <tr>
+                <td class="font-medium text-800">{{ asset.assetName }}</td>
+                <td class="text-600">{{ asset.requestedStartDate | date: 'dd MMM yyyy, HH:mm' }}</td>
+                <td class="text-600">{{ asset.requestedEndDate | date: 'dd MMM yyyy, HH:mm' }}</td>
+                <td>
+                  <p-tag [value]="getBorrowingStatusName(asset.status)" [severity]="getBorrowingSeverity(asset.status)"></p-tag>
+                </td>
+                <td>
+                  <p-tag [value]="getTimelinessStatus(asset.requestedEndDate)" [severity]="getTimelinessSeverity(asset.requestedEndDate)"></p-tag>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="5" class="text-center p-4 text-600">
+                  This user has no active borrowings or pending requests.
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+
+      <div class="col-12 mt-4">
+        <div class="surface-card p-4 shadow-2 border-round-xl">
+          <h2 class="text-xl font-bold text-900 mb-4 mt-0">Borrowing History</h2>
+          
+          <p-table [value]="historyBorrowings()" [paginator]="true" [rows]="10" responsiveLayout="scroll" styleClass="p-datatable-sm">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Asset Name</th>
+                <th>Start Date</th>
+                <th>Expected End</th>
+                <th>Actual Return</th>
+                <th>Status</th>
+                <th>Time Log</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-history>
+              <tr>
+                <td class="font-medium text-800">{{ history.assetName }}</td>
+                <td class="text-600 text-sm">{{ history.requestedStartDate | date: 'dd MMM yyyy, HH:mm' }}</td>
+                <td class="text-600 text-sm">{{ history.requestedEndDate | date: 'dd MMM yyyy, HH:mm' }}</td>
+                <td class="text-600 text-sm">
+                  {{ history.actualReturnedAt ? (history.actualReturnedAt | date: 'dd MMM yyyy, HH:mm') : '-' }}
+                </td>
+                <td>
+                  <p-tag [value]="getBorrowingStatusName(history.status)" [severity]="getBorrowingSeverity(history.status)"></p-tag>
+                </td>
+                <td>
+                  <p-tag [value]="getTimelinessStatus(history.requestedEndDate, history.actualReturnedAt)" [severity]="getTimelinessSeverity(history.requestedEndDate, history.actualReturnedAt)"></p-tag>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="6" class="text-center p-4 text-600">
+                  No borrowing history found for this user.
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+    </div>
+  }
+</div>
