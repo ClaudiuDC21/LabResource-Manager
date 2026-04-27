@@ -6,25 +6,52 @@ import { PasswordModule } from 'primeng/password';
 import { InputTextModule } from 'primeng/inputtext';
 import { DividerModule } from 'primeng/divider';
 import { MessageModule } from 'primeng/message';
-import { HttpClient } from '@angular/common/http';
-import { AuthService } from '../../core/services/auth';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ToastModule } from 'primeng/toast';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { AuthService } from '../../core/services/auth.service';
+import { UserService } from '../../core/services/user.service';
+import { BorrowingService } from '../../core/services/borrowing.service';
+import { UserResponse, UpdateUserRequest, UpdatePasswordRequest } from '../../core/models/user';
+import { ActiveBorrowingResponse, UserBorrowingHistoryResponse } from '../../core/models/borrowing';
+import { BorrowingStatus } from '../../core/models/enums';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule, PasswordModule, InputTextModule, DividerModule, MessageModule],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    ButtonModule, 
+    PasswordModule, 
+    InputTextModule, 
+    DividerModule, 
+    MessageModule,
+    ConfirmDialogModule,
+    ToastModule,
+    TableModule,
+    TagModule
+  ],
+  providers: [ConfirmationService, MessageService],
   templateUrl: './profile.html'
 })
 export class ProfileComponent implements OnInit {
   readonly authService = inject(AuthService);
-  private readonly http = inject(HttpClient);
+  private readonly userService = inject(UserService);
+  private readonly borrowingService = inject(BorrowingService);
+  private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
 
   isEditingProfile = signal<boolean>(false);
   isLoading = signal<boolean>(false);
+  userFromApi: UserResponse | null = null;
 
-  userFromApi: any = null;
+  activeBorrowings = signal<ActiveBorrowingResponse[]>([]);
+  borrowingHistory = signal<UserBorrowingHistoryResponse[]>([]);
 
-  profileForm = {
+  profileForm: UpdateUserRequest = {
     fullName: '',
     matriculationNumber: ''
   };
@@ -37,6 +64,7 @@ export class ProfileComponent implements OnInit {
 
   ngOnInit() {
     this.loadUserData();
+    this.loadBorrowings();
   }
 
   loadUserData() {
@@ -44,16 +72,29 @@ export class ProfileComponent implements OnInit {
     if (!userId) return;
 
     this.isLoading.set(true);
-    this.http.get<any>(`/api/users/${userId}`).subscribe({
+    this.userService.getById(userId).subscribe({
       next: (user) => {
         this.userFromApi = user;
         this.resetForm();
         this.isLoading.set(false);
       },
-      error: (err) => {
-        console.error('Error loading data', err);
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load profile data.' });
         this.isLoading.set(false);
       }
+    });
+  }
+
+  loadBorrowings() {
+    const userId = this.authService.currentUser()?.id;
+    if (!userId) return;
+
+    this.borrowingService.getActiveForUser(userId).subscribe({
+      next: (data) => this.activeBorrowings.set(data)
+    });
+
+    this.borrowingService.getUserHistory(userId).subscribe({
+      next: (data) => this.borrowingHistory.set(data)
     });
   }
 
@@ -78,21 +119,14 @@ export class ProfileComponent implements OnInit {
     const userId = this.authService.currentUser()?.id;
     if (!userId || !this.userFromApi) return;
 
-    const payload = {
-      id: userId,
-      fullName: this.profileForm.fullName,
-      matriculationNumber: this.profileForm.matriculationNumber
-    };
-
-    this.http.put(`/api/users/${userId}`, payload).subscribe({
+    this.userService.update(userId, this.profileForm).subscribe({
       next: () => {
-        alert('Profile updated successfully!');
+        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Profile updated successfully!' });
         this.isEditingProfile.set(false);
         this.loadUserData(); 
       },
       error: (err) => {
-        alert('An error occurred during the update. Please check your data.');
-        console.error(err);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: err.error?.Error || 'Update failed.' });
       }
     });
   }
@@ -102,37 +136,77 @@ export class ProfileComponent implements OnInit {
     if (!userId) return;
 
     if (this.passwords.newPassword !== this.passwords.confirmPassword) {
-      alert('The new passwords do not match!');
+      this.messageService.add({ severity: 'warn', summary: 'Warning', detail: 'The new passwords do not match!' });
       return;
     }
 
-    const payload = {
-      id: userId,
+    const payload: UpdatePasswordRequest = {
       currentPassword: this.passwords.currentPassword,
       newPassword: this.passwords.newPassword
     };
 
-    this.http.put(`/api/users/${userId}/password`, payload).subscribe({
+    this.userService.updatePassword(userId, payload).subscribe({
       next: () => {
-        alert('Password changed successfully!');
+        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Password changed successfully!' });
         this.passwords = { currentPassword: '', newPassword: '', confirmPassword: '' };
       },
-      error: (err) => alert('An error occurred. Please check your current password.')
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Check your current password.' });
+      }
     });
+  }
+
+  getStatusSeverity(status: BorrowingStatus): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+    switch (status) {
+      case BorrowingStatus.Active: return 'success';
+      case BorrowingStatus.Pending: return 'info';
+      case BorrowingStatus.Approved: return 'warn';
+      case BorrowingStatus.Returned: return 'secondary';
+      case BorrowingStatus.Rejected: return 'danger';
+      default: return 'info';
+    }
+  }
+
+  getStatusName(status: BorrowingStatus): string {
+    const names = {
+      [BorrowingStatus.Pending]: 'Pending',
+      [BorrowingStatus.Approved]: 'Approved',
+      [BorrowingStatus.Active]: 'Active',
+      [BorrowingStatus.Returned]: 'Returned',
+      [BorrowingStatus.Rejected]: 'Rejected'
+    };
+    return names[status] || 'Unknown';
+  }
+
+  getTimelinessStatus(endDate: string, actualReturnDate?: string | null): string {
+    const expected = new Date(endDate).getTime();
+    const actual = actualReturnDate ? new Date(actualReturnDate).getTime() : Date.now();
+    return actual > expected ? 'Exceeded' : 'On Time';
+  }
+
+  getTimelinessSeverity(endDate: string, actualReturnDate?: string | null): 'success' | 'danger' {
+    const expected = new Date(endDate).getTime();
+    const actual = actualReturnDate ? new Date(actualReturnDate).getTime() : Date.now();
+    return actual > expected ? 'danger' : 'success';
   }
 
   deactivateAccount() {
     const userId = this.authService.currentUser()?.id;
     if (!userId) return;
 
-    if (confirm('Are you sure you want to deactivate your account? This action is irreversible.')) {
-      this.http.delete(`/api/users/${userId}`).subscribe({
-        next: () => {
-          alert('Account deactivated. You will be logged out.');
-          this.authService.logout();
-        },
-        error: (err) => alert('Error deactivating account.')
-      });
-    }
+    this.confirmationService.confirm({
+      message: 'Are you sure you want to deactivate your account?',
+      header: 'Confirm Deactivation',
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonProps: { label: 'Deactivate', severity: 'danger' },
+      rejectButtonProps: { label: 'Cancel', severity: 'secondary', text: true },
+      accept: () => {
+        this.userService.deactivate(userId).subscribe({
+          next: () => {
+            this.authService.logout();
+          }
+        });
+      }
+    });
   }
 }
