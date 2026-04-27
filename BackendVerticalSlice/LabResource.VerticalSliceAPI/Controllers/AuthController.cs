@@ -1,5 +1,4 @@
 ﻿using LabResource.VerticalApi.Features.Auth;
-using LabResource.VerticalApi.Features.Users;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,20 +13,6 @@ public class AuthController : ControllerBase
     public AuthController(IMediator mediator)
     {
         _mediator = mediator;
-    }
-
-    [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterUser.Command command)
-    {
-        try
-        {
-            var result = await _mediator.Send(command);
-            return Ok(result);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
     }
 
     [HttpPost("login")]

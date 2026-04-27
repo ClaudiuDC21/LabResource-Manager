@@ -17,6 +17,21 @@ public class UsersController : ControllerBase
         _mediator = mediator;
     }
 
+    [AllowAnonymous] // Foarte important pentru a putea crea conturi fără token!
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] RegisterUser.Command command)
+    {
+        try
+        {
+            var result = await _mediator.Send(command);
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAllActive()
     {
