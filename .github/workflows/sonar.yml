@@ -28,7 +28,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          dotnet-sonarscanner begin /k:"LabResource-CleanArchitecture" /o:"claudiudc21" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io"
+          dotnet-sonarscanner begin /k:"LabResource-CleanArchitecture" /o:"claudiudc21" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.coverage.exclusions="**/*" /d:sonar.exclusions="**/*.ts,**/*.html,**/*.scss,**/*.css" /d:sonar.dotnet.excludeTestProjects=false
           dotnet build BackendCleanArhitecture/LabResource.CleanArhitecture.sln
           dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
 
@@ -53,6 +53,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          dotnet-sonarscanner begin /k:"LabResource-VerticalSlice" /o:"claudiudc21" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io"
+          dotnet-sonarscanner begin /k:"LabResource-VerticalSlice" /o:"claudiudc21" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.coverage.exclusions="**/*" /d:sonar.exclusions="**/*.ts,**/*.html,**/*.scss,**/*.css" /d:sonar.dotnet.excludeTestProjects=false
           dotnet build BackendVerticalSlice/LabResource.VerticalSlice.sln
           dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
