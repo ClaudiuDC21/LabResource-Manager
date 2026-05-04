@@ -16,6 +16,7 @@ import { BorrowingService } from '../../../core/services/borrowing.service';
 import { AssetStatus, BorrowingStatus } from '../../../core/models/enums';
 import { AssetHistoryResponse } from '../../../core/models/borrowing';
 import { LabAsset } from '../../../core/models/lab-asset';
+import { UIHelpers } from '../../../core/models/ui-helpers';
 
 export interface MappedAssetActive extends AssetHistoryResponse {
   progressValue: number;
@@ -53,6 +54,7 @@ export class AssetDetailsComponent implements OnInit {
 
   public readonly BorrowingStatus = BorrowingStatus;
   public readonly AssetStatus = AssetStatus;
+  public readonly UIHelpers = UIHelpers;
 
   asset = signal<LabAsset | null>(null);
   upcomingAndActive = signal<MappedAssetActive[]>([]);
@@ -177,47 +179,5 @@ export class AssetDetailsComponent implements OnInit {
 
   private showError(msg: string) {
     this.messageService.add({ severity: 'error', summary: 'Error', detail: msg });
-  }
-
-  getAssetStatusSeverity(status: AssetStatus): 'success' | 'info' | 'warn' | 'danger' {
-    switch (status) {
-      case AssetStatus.Available: return 'success';
-      case AssetStatus.PendingApproval: return 'info';
-      case AssetStatus.Borrowed: return 'warn';
-      case AssetStatus.Defective: return 'danger';
-      default: return 'success';
-    }
-  }
-
-  getAssetStatusName(status: AssetStatus): string {
-    const names = {
-      [AssetStatus.Available]: 'Available',
-      [AssetStatus.PendingApproval]: 'Pending Approval',
-      [AssetStatus.Borrowed]: 'Borrowed',
-      [AssetStatus.Defective]: 'Defective'
-    };
-    return names[status] || 'Unknown';
-  }
-
-  getBorrowingStatusName(status: BorrowingStatus): string {
-    const names = {
-      [BorrowingStatus.Pending]: 'Pending',
-      [BorrowingStatus.Approved]: 'Approved',
-      [BorrowingStatus.Active]: 'Active',
-      [BorrowingStatus.Returned]: 'Returned',
-      [BorrowingStatus.Rejected]: 'Rejected'
-    };
-    return names[status] || 'Unknown';
-  }
-
-  getBorrowingStatusSeverity(status: BorrowingStatus): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
-    switch (status) {
-      case BorrowingStatus.Pending: return 'info';
-      case BorrowingStatus.Approved: return 'warn';
-      case BorrowingStatus.Active: return 'success';
-      case BorrowingStatus.Returned: return 'secondary';
-      case BorrowingStatus.Rejected: return 'danger';
-      default: return 'info';
-    }
   }
 }

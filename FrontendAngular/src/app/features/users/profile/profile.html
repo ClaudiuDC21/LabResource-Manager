@@ -53,7 +53,7 @@
                         <div class="flex flex-column gap-3 mt-3 p-3 surface-50 border-round border-1 surface-border">
                             <div class="flex justify-content-between align-items-center">
                                 <span class="text-600 font-medium">Role:</span>
-                                <span class="font-bold uppercase text-green-700 bg-green-100 px-3 py-1 border-round text-sm">{{ authService.currentUser()?.role }}</span>
+                                <span class="font-bold uppercase text-green-700 bg-green-100 px-3 py-1 border-round text-sm">{{ UIHelpers.getRoleName(authService.currentUser()?.role) }}</span>
                             </div>
                             <div class="flex justify-content-between align-items-center">
                                 <span class="text-600 font-medium">Email:</span>
@@ -134,10 +134,10 @@
                                 <td class="text-600">{{ borrowing.requestedStartDate | date: 'dd MMM yyyy, HH:mm' }}</td>
                                 <td class="text-600 font-semibold">{{ borrowing.requestedEndDate | date: 'dd MMM yyyy, HH:mm' }}</td>
                                 <td>
-                                    <p-tag [value]="getStatusName(borrowing.status)" [severity]="getStatusSeverity(borrowing.status)"></p-tag>
+                                    <p-tag [value]="UIHelpers.getBorrowingStatusName(borrowing.status)" [severity]="UIHelpers.getBorrowingStatusSeverity(borrowing.status)"></p-tag>
                                 </td>
                                 <td>
-                                    <p-tag [value]="getTimelinessStatus(borrowing.requestedEndDate)" [severity]="getTimelinessSeverity(borrowing.requestedEndDate)"></p-tag>
+                                    <p-tag [value]="UIHelpers.getTimelinessStatus(borrowing.requestedEndDate)" [severity]="UIHelpers.getTimelinessSeverity(borrowing.requestedEndDate)"></p-tag>
                                 </td>
                             </tr>
                         </ng-template>
@@ -174,10 +174,10 @@
                                     {{ history.actualReturnedAt ? (history.actualReturnedAt | date: 'dd MMM yyyy, HH:mm') : '-' }}
                                 </td>
                                 <td>
-                                    <p-tag [value]="getStatusName(history.status)" [severity]="getStatusSeverity(history.status)"></p-tag>
+                                    <p-tag [value]="UIHelpers.getBorrowingStatusName(history.status)" [severity]="UIHelpers.getBorrowingStatusSeverity(history.status)"></p-tag>
                                 </td>
                                 <td>
-                                    <p-tag [value]="getTimelinessStatus(history.requestedEndDate, history.actualReturnedAt)" [severity]="getTimelinessSeverity(history.requestedEndDate, history.actualReturnedAt)"></p-tag>
+                                    <p-tag [value]="UIHelpers.getTimelinessStatus(history.requestedEndDate, history.actualReturnedAt)" [severity]="UIHelpers.getTimelinessSeverity(history.requestedEndDate, history.actualReturnedAt)"></p-tag>
                                 </td>
                             </tr>
                         </ng-template>

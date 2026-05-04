@@ -15,6 +15,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { BorrowingService } from '../../../core/services/borrowing.service';
 import { ActiveBorrowingResponse, ReturnAssetRequest, UserBorrowingHistoryResponse } from '../../../core/models/borrowing';
 import { BorrowingStatus } from '../../../core/models/enums';
+import { UIHelpers } from '../../../core/models/ui-helpers';
 
 export interface MappedBorrowing extends ActiveBorrowingResponse {
   progressValue: number;
@@ -45,8 +46,8 @@ export class MyBorrowingsComponent implements OnInit {
   private readonly borrowingService = inject(BorrowingService);
   private readonly messageService = inject(MessageService);
 
-  // Facem enum-ul disponibil în HTML
   public readonly BorrowingStatus = BorrowingStatus;
+  public readonly UIHelpers = UIHelpers;
 
   activeBorrowings = signal<MappedBorrowing[]>([]);
   requestHistory = signal<UserBorrowingHistoryResponse[]>([]);
@@ -70,7 +71,6 @@ export class MyBorrowingsComponent implements OnInit {
     const userId = this.authService.currentUser()?.id;
     if (!userId) return;
 
-    // Încarcă împrumuturile Active și Approved
     this.isLoadingActive.set(true);
     this.borrowingService.getActiveForUser(userId).subscribe({
       next: (data) => {
@@ -84,7 +84,6 @@ export class MyBorrowingsComponent implements OnInit {
       }
     });
 
-    // Încarcă tot istoricul (inclusiv Pending, Rejected, Returned)
     this.isLoadingHistory.set(true);
     this.borrowingService.getUserHistory(userId).subscribe({
       next: (data) => {
@@ -100,7 +99,6 @@ export class MyBorrowingsComponent implements OnInit {
     const end = new Date(borrowing.requestedEndDate).getTime();
     const now = Date.now();
 
-    // Dacă încă nu a fost preluat (Approved, dar nu Active), progresul e 0
     if (borrowing.status === BorrowingStatus.Approved) {
       return {
         ...borrowing,
@@ -145,28 +143,6 @@ export class MyBorrowingsComponent implements OnInit {
       timeLeftLabel: timeLeftLabel,
       isExceeded: isExceeded
     };
-  }
-
-  getStatusName(status: BorrowingStatus): string {
-    switch (status) {
-      case BorrowingStatus.Pending: return 'Pending Approval';
-      case BorrowingStatus.Approved: return 'Approved (Awaiting Pickup)';
-      case BorrowingStatus.Active: return 'Active';
-      case BorrowingStatus.Returned: return 'Returned';
-      case BorrowingStatus.Rejected: return 'Rejected';
-      default: return 'Unknown';
-    }
-  }
-
-  getStatusSeverity(status: BorrowingStatus): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
-    switch (status) {
-      case BorrowingStatus.Pending: return 'info';
-      case BorrowingStatus.Approved: return 'warn';
-      case BorrowingStatus.Active: return 'success';
-      case BorrowingStatus.Returned: return 'secondary';
-      case BorrowingStatus.Rejected: return 'danger';
-      default: return 'info';
-    }
   }
 
   pickUpAsset(borrowing: MappedBorrowing) {

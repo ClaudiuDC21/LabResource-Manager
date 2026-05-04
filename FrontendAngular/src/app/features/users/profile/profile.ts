@@ -14,9 +14,9 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { AuthService } from '../../../core/services/auth.service';
 import { UserService } from '../../../core/services/user.service';
 import { BorrowingService } from '../../../core/services/borrowing.service';
-import { BorrowingStatus } from '../../../core/models/enums';
 import { UpdatePasswordRequest, UpdateUserRequest, UserResponse } from '../../../core/models/user';
 import { ActiveBorrowingResponse, UserBorrowingHistoryResponse } from '../../../core/models/borrowing';
+import { UIHelpers } from '../../../core/models/ui-helpers';
 
 @Component({
   selector: 'app-profile',
@@ -43,6 +43,8 @@ export class ProfileComponent implements OnInit {
   private readonly borrowingService = inject(BorrowingService);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
+
+  public readonly UIHelpers = UIHelpers;
 
   isEditingProfile = signal<boolean>(false);
   isLoading = signal<boolean>(false);
@@ -154,40 +156,6 @@ export class ProfileComponent implements OnInit {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Check your current password.' });
       }
     });
-  }
-
-  getStatusSeverity(status: BorrowingStatus): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
-    switch (status) {
-      case BorrowingStatus.Active: return 'success';
-      case BorrowingStatus.Pending: return 'info';
-      case BorrowingStatus.Approved: return 'warn';
-      case BorrowingStatus.Returned: return 'secondary';
-      case BorrowingStatus.Rejected: return 'danger';
-      default: return 'info';
-    }
-  }
-
-  getStatusName(status: BorrowingStatus): string {
-    const names = {
-      [BorrowingStatus.Pending]: 'Pending',
-      [BorrowingStatus.Approved]: 'Approved',
-      [BorrowingStatus.Active]: 'Active',
-      [BorrowingStatus.Returned]: 'Returned',
-      [BorrowingStatus.Rejected]: 'Rejected'
-    };
-    return names[status] || 'Unknown';
-  }
-
-  getTimelinessStatus(endDate: string, actualReturnDate?: string | null): string {
-    const expected = new Date(endDate).getTime();
-    const actual = actualReturnDate ? new Date(actualReturnDate).getTime() : Date.now();
-    return actual > expected ? 'Exceeded' : 'On Time';
-  }
-
-  getTimelinessSeverity(endDate: string, actualReturnDate?: string | null): 'success' | 'danger' {
-    const expected = new Date(endDate).getTime();
-    const actual = actualReturnDate ? new Date(actualReturnDate).getTime() : Date.now();
-    return actual > expected ? 'danger' : 'success';
   }
 
   deactivateAccount() {

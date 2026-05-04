@@ -22,7 +22,7 @@
           <div>
             <div class="flex align-items-center gap-3 mb-2">
               <h2 class="text-2xl font-bold text-900 m-0">{{ asset()?.name }}</h2>
-              <p-tag [value]="getAssetStatusName(asset()!.status)" [severity]="getAssetStatusSeverity(asset()!.status)"></p-tag>
+              <p-tag [value]="UIHelpers.getAssetStatusName(asset()!.status)" [severity]="UIHelpers.getAssetStatusSeverity(asset()!.status)"></p-tag>
             </div>
             <div class="flex align-items-center gap-4 mt-3 text-700">
               <span class="flex align-items-center gap-2">
@@ -68,7 +68,7 @@
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-req>
-              <tr class="hover:surface-100 transition-colors transition-duration-150">
+              <tr class="hover:bg-gray-100 transition-colors transition-duration-150">
                 <td class="font-medium text-800">{{ req.userName }}</td>
                 <td class="text-600 font-medium">{{ req.requestedStartDate | date: 'dd MMM yyyy, HH:mm' }}</td>
                 <td class="text-600 font-medium" [ngClass]="{'text-red-500': req.isExceeded}">{{ req.requestedEndDate | date: 'dd MMM yyyy, HH:mm' }}</td>
@@ -89,7 +89,7 @@
                   </div>
                 </td>
                 <td>
-                  <p-tag [value]="getBorrowingStatusName(req.status)" [severity]="getBorrowingStatusSeverity(req.status)"></p-tag>
+                  <p-tag [value]="UIHelpers.getBorrowingStatusName(req.status)" [severity]="UIHelpers.getBorrowingStatusSeverity(req.status)"></p-tag>
                 </td>
               </tr>
             </ng-template>
@@ -121,7 +121,7 @@
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-req>
-              <tr class="hover:surface-100 transition-colors transition-duration-150">
+              <tr class="hover:bg-gray-100 transition-colors transition-duration-150">
                 <td class="font-medium text-800">
                   <span class="block">{{ req.userName }}</span>
                   <span class="text-500 text-sm mt-1 block">ID: {{ req.matriculationNumber || 'N/A' }}</span>
@@ -147,7 +147,7 @@
                   }
                 </td>
                 <td>
-                  <p-tag [value]="getBorrowingStatusName(req.status)" [severity]="getBorrowingStatusSeverity(req.status)"></p-tag>
+                  <p-tag [value]="UIHelpers.getBorrowingStatusName(req.status)" [severity]="UIHelpers.getBorrowingStatusSeverity(req.status)"></p-tag>
                 </td>
                 <td>
                   @if (req.remarks) {
