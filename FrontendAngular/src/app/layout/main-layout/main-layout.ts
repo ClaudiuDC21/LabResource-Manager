@@ -5,7 +5,7 @@ import { HeaderComponent } from '../header/header';
 import { FooterComponent } from '../footer/footer';
 import { SidebarComponent } from '../sidebar/sidebar';
 import { LayoutService } from '../services/layout.service';
-import { AuthService } from '../../../core/services/auth.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -16,8 +16,7 @@ import { AuthService } from '../../../core/services/auth.service';
 export class MainLayoutComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
-  readonly layoutService = inject(LayoutService); // Am injectat serviciul
-
+  readonly layoutService = inject(LayoutService); 
   get showSidebar(): boolean {
     return this.authService.isLoggedIn() && this.router.url !== '/';
   }

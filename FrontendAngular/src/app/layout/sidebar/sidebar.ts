@@ -4,8 +4,8 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { BadgeModule } from 'primeng/badge';
 import { LayoutService } from '../services/layout.service';
-import { AuthService } from '../../../core/services/auth.service';
-import { BorrowingService } from '../../../core/services/borrowing.service';
+import { AuthService } from '../../core/services/auth.service';
+import { BorrowingService } from '../../core/services/borrowing.service';
 
 @Component({
   selector: 'app-sidebar',
