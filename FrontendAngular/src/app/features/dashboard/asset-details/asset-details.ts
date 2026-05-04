@@ -11,11 +11,11 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
-import { LabAssetService } from '../../core/services/lab-asset.service';
-import { BorrowingService } from '../../core/services/borrowing.service';
-import { AssetStatus, BorrowingStatus } from '../../core/models/enums';
-import { AssetHistoryResponse } from '../../core/models/borrowing';
-import { LabAsset } from '../../core/models/lab-asset';
+import { LabAssetService } from '../../../core/services/lab-asset.service';
+import { BorrowingService } from '../../../core/services/borrowing.service';
+import { AssetStatus, BorrowingStatus } from '../../../core/models/enums';
+import { AssetHistoryResponse } from '../../../core/models/borrowing';
+import { LabAsset } from '../../../core/models/lab-asset';
 
 export interface MappedAssetActive extends AssetHistoryResponse {
   progressValue: number;

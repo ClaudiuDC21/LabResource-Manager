@@ -11,10 +11,10 @@ import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
-import { AuthService } from '../../core/services/auth.service';
-import { BorrowingService } from '../../core/services/borrowing.service';
-import { ActiveBorrowingResponse, ReturnAssetRequest, UserBorrowingHistoryResponse } from '../../core/models/borrowing';
-import { BorrowingStatus } from '../../core/models/enums';
+import { AuthService } from '../../../core/services/auth.service';
+import { BorrowingService } from '../../../core/services/borrowing.service';
+import { ActiveBorrowingResponse, ReturnAssetRequest, UserBorrowingHistoryResponse } from '../../../core/models/borrowing';
+import { BorrowingStatus } from '../../../core/models/enums';
 
 export interface MappedBorrowing extends ActiveBorrowingResponse {
   progressValue: number;

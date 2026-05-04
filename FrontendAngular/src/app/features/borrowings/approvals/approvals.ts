@@ -8,9 +8,9 @@ import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
-import { AuthService } from '../../core/services/auth.service';
-import { BorrowingService } from '../../core/services/borrowing.service';
-import { ActiveBorrowingResponse, ReviewBorrowingRequest } from '../../core/models/borrowing';
+import { AuthService } from '../../../core/services/auth.service';
+import { BorrowingService } from '../../../core/services/borrowing.service';
+import { ActiveBorrowingResponse, ReviewBorrowingRequest } from '../../../core/models/borrowing';
 
 @Component({
   selector: 'app-approvals',
