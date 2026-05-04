@@ -45,7 +45,7 @@
       </ng-template>
 
       <ng-template pTemplate="body" let-user>
-        <tr class="cursor-pointer hover:surface-hover transition-colors transition-duration-150" (click)="viewUserDetails(user)">
+        <tr class="cursor-pointer hover:surface-100 transition-colors transition-duration-150" (click)="viewUserDetails(user)">
           <td class="font-medium text-800">{{ user.fullName }}</td>
           <td class="text-600">{{ user.email }}</td>
           <td class="text-600">{{ user.matriculationNumber || '-' }}</td>

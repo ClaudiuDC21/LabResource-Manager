@@ -39,7 +39,7 @@
       </ng-template>
 
       <ng-template pTemplate="body" let-asset>
-        <tr>
+        <tr class="cursor-pointer hover:surface-100 transition-colors" (click)="viewAssetDetails(asset.id)">
           <td class="font-bold text-800">{{ asset.name }}</td>
           <td class="text-600">
             <i class="pi pi-map-marker text-xs mr-1 text-logo-green"></i>
@@ -61,12 +61,12 @@
               size="small"
               class="mr-2" 
               [disabled]="!canBorrow(asset.status)" 
-              (click)="borrowAsset(asset)">
+              (click)="borrowAsset(asset); $event.stopPropagation()">
             </p-button>
 
             @if (isTeacher) {
-              <p-button icon="pi pi-pencil" [text]="true" severity="secondary" [rounded]="true" (click)="editAsset(asset)"></p-button>
-              <p-button icon="pi pi-trash" [text]="true" severity="danger" [rounded]="true" (click)="deleteAsset(asset)"></p-button>
+              <p-button icon="pi pi-pencil" [text]="true" severity="secondary" [rounded]="true" (click)="editAsset(asset); $event.stopPropagation()"></p-button>
+              <p-button icon="pi pi-trash" [text]="true" severity="danger" [rounded]="true" (click)="deleteAsset(asset); $event.stopPropagation()"></p-button>
             }
           </td>
         </tr>

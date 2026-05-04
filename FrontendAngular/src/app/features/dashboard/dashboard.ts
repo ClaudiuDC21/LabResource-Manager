@@ -208,6 +208,10 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  viewAssetDetails(assetId: string) {
+    this.router.navigate(['/dashboard/asset', assetId]);
+  }
+
   borrowAsset(asset: LabAsset) {
     this.router.navigate(['/dashboard', asset.id, 'request']);
   }
