@@ -34,7 +34,7 @@ jobs:
             /d:sonar.token="$env:SONAR_TOKEN" `
             /d:sonar.host.url="https://sonarcloud.io" `
             /d:sonar.sources="BackendCleanArhitecture" `
-            /d:sonar.exclusions="BackendVerticalSlice/**"
+            /d:sonar.exclusions="BackendVerticalSlice/**,FrontendAngular/**,**/node_modules/**,**/bin/**,**/obj/**"
           dotnet build BackendCleanArhitecture/LabResource.CleanArhitecture.slnx
           dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
 
@@ -65,6 +65,6 @@ jobs:
             /d:sonar.token="$env:SONAR_TOKEN" `
             /d:sonar.host.url="https://sonarcloud.io" `
             /d:sonar.sources="BackendVerticalSlice" `
-            /d:sonar.exclusions="BackendCleanArhitecture/**"
+            /d:sonar.exclusions="BackendCleanArhitecture/**,FrontendAngular/**,**/node_modules/**,**/bin/**,**/obj/**"
           dotnet build BackendVerticalSlice/LabResource.VerticalSlice.slnx
           dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
