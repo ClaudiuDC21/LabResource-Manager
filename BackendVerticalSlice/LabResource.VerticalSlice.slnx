@@ -1,4 +1,4 @@
 <Solution>
   <Project Path="LabResource.VerticalApi.UnitTests/LabResource.VerticalApi.UnitTests.csproj" Id="4ee519f8-3103-485a-ad5f-77d757c472c4" />
-  <Project Path="LabResource.VerticalSliceAPI/LabResource.VerticalApi.csproj" />
+  <Project Path="LabResource.VerticalSliceAPI/LabResource.VerticalApi.csproj" Id="a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d" />
 </Solution>
