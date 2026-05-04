@@ -12,6 +12,7 @@ import { teacherGuard } from './core/guards/teacher.guard';
 import { UserDetailsComponent } from './features/users/user-details/user-details';
 import { AssetRequestComponent } from './features/borrowings/asset-request/asset-request';
 import { ApprovalsComponent } from './features/approvals/approvals';
+import { AssetDetailsComponent } from './features/asset-details/asset-details';
 
 export const routes: Routes = [
   {
@@ -55,6 +56,11 @@ export const routes: Routes = [
         path: 'approvals',
         component: ApprovalsComponent,
         canActivate: [authGuard, teacherGuard]
+      },
+      {
+        path: 'dashboard/asset/:id',
+        component: AssetDetailsComponent,
+        canActivate: [authGuard]
       }
     ]
   },

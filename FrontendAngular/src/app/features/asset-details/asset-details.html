@@ -1,0 +1,178 @@
+<p-toast></p-toast>
+
+<div class="flex justify-content-center p-4 md:p-6 lg:p-8">
+  <div class="w-full" style="max-width: 1200px">
+    
+    <div class="flex align-items-center gap-3 mb-5">
+      <p-button icon="pi pi-arrow-left" [text]="true" severity="secondary" [rounded]="true" routerLink="/dashboard"></p-button>
+      <div>
+        <h1 class="text-3xl font-bold m-0 text-900">Equipment Details</h1>
+        <p class="text-600 mt-1 m-0">View specifications, upcoming reservations, and usage history.</p>
+      </div>
+    </div>
+
+    @if (isLoading()) {
+      <div class="flex justify-content-center p-8">
+        <p-progressSpinner></p-progressSpinner>
+      </div>
+    } @else if (asset()) {
+      
+      <div class="surface-card p-5 shadow-2 border-round-xl mb-5">
+        <div class="flex flex-column md:flex-row justify-content-between md:align-items-center gap-4">
+          <div>
+            <div class="flex align-items-center gap-3 mb-2">
+              <h2 class="text-2xl font-bold text-900 m-0">{{ asset()?.name }}</h2>
+              <p-tag [value]="getAssetStatusName(asset()!.status)" [severity]="getAssetStatusSeverity(asset()!.status)"></p-tag>
+            </div>
+            <div class="flex align-items-center gap-4 mt-3 text-700">
+              <span class="flex align-items-center gap-2">
+                <i class="pi pi-barcode text-logo-green"></i>
+                <span class="font-mono">{{ asset()?.serialNumber || 'No SN' }}</span>
+              </span>
+              <span class="flex align-items-center gap-2">
+                <i class="pi pi-map-marker text-orange-500"></i>
+                <span>{{ asset()?.location || 'Unassigned Location' }}</span>
+              </span>
+              <span class="flex align-items-center gap-2">
+                <i class="pi pi-user text-blue-500"></i>
+                <span>Teacher: <span class="font-medium">{{ asset()?.assignedTeacherName || '-' }}</span></span>
+              </span>
+            </div>
+          </div>
+          
+          <div>
+            @if(asset()!.status === AssetStatus.Available) {
+               <p-button label="Borrow" icon="pi pi-calendar-plus" severity="success" class="shadow-2" [routerLink]="['/dashboard', asset()!.id, 'request']"></p-button>
+            } @else if(asset()!.status === AssetStatus.PendingApproval || asset()!.status === AssetStatus.Borrowed) {
+               <p-button label="Schedule" icon="pi pi-calendar-clock" severity="info" class="shadow-2" [routerLink]="['/dashboard', asset()!.id, 'request']"></p-button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-column gap-5">
+        
+        <div class="surface-card p-4 shadow-2 border-round-xl border-top-3 border-orange-400">
+          <h3 class="text-xl font-bold text-800 mt-0 mb-4 flex align-items-center gap-2">
+            <i class="pi pi-calendar-clock text-orange-500"></i> Future & Active Use
+          </h3>
+          
+          <p-table [value]="upcomingAndActive()" responsiveLayout="scroll" styleClass="p-datatable-sm md:p-datatable-lg" [paginator]="true" [rows]="5">
+            <ng-template pTemplate="header">
+              <tr>
+                <th scope="col" style="width: 25%">User</th>
+                <th scope="col" style="width: 15%">Pick-up Date</th>
+                <th scope="col" style="width: 15%">Due Date</th>
+                <th scope="col" style="width: 30%">Usage Progress</th>
+                <th scope="col" style="width: 15%">Status</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-req>
+              <tr class="hover:surface-100 transition-colors transition-duration-150">
+                <td class="font-medium text-800">{{ req.userName }}</td>
+                <td class="text-600 font-medium">{{ req.requestedStartDate | date: 'dd MMM yyyy, HH:mm' }}</td>
+                <td class="text-600 font-medium" [ngClass]="{'text-red-500': req.isExceeded}">{{ req.requestedEndDate | date: 'dd MMM yyyy, HH:mm' }}</td>
+                <td>
+                  <div class="flex flex-column gap-2">
+                    <div class="flex justify-content-between align-items-center text-sm">
+                      <span class="text-500">{{ req.progressValue }}%</span>
+                      <span class="font-bold" [ngClass]="req.isExceeded ? 'text-red-600' : 'text-logo-green'">
+                        {{ req.timeLeftLabel }}
+                      </span>
+                    </div>
+                    <p-progressbar 
+                      [value]="req.progressValue" 
+                      [showValue]="false" 
+                      [style]="{'height': '8px'}" 
+                      [color]="req.isExceeded ? '#ef4444' : (req.status === BorrowingStatus.Approved || req.status === BorrowingStatus.Pending ? '#fbbf24' : '#22c55e')">
+                    </p-progressbar>
+                  </div>
+                </td>
+                <td>
+                  <p-tag [value]="getBorrowingStatusName(req.status)" [severity]="getBorrowingStatusSeverity(req.status)"></p-tag>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="5" class="text-center p-5 text-500 font-italic">
+                  <i class="pi pi-calendar text-2xl block mb-2 text-300"></i>
+                  No upcoming or active reservations.
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+        <div class="surface-card p-4 shadow-2 border-round-xl border-top-3 border-blue-400">
+          <h3 class="text-xl font-bold text-800 mt-0 mb-4 flex align-items-center gap-2">
+            <i class="pi pi-history text-blue-500"></i> Past History
+          </h3>
+          
+          <p-table [value]="pastHistory()" responsiveLayout="scroll" styleClass="p-datatable-sm md:p-datatable-lg" [paginator]="true" [rows]="10">
+            <ng-template pTemplate="header">
+              <tr>
+                <th scope="col" style="width: 20%">User</th>
+                <th scope="col" style="width: 20%">Scheduled Interval</th>
+                <th scope="col" style="width: 15%">Actual Returned At</th>
+                <th scope="col" style="width: 10%">Timeliness</th>
+                <th scope="col" style="width: 10%">Status</th>
+                <th scope="col" style="width: 25%">Remarks</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-req>
+              <tr class="hover:surface-100 transition-colors transition-duration-150">
+                <td class="font-medium text-800">
+                  <span class="block">{{ req.userName }}</span>
+                  <span class="text-500 text-sm mt-1 block">ID: {{ req.matriculationNumber || 'N/A' }}</span>
+                </td>
+                <td class="text-600 text-sm">
+                  <div class="flex flex-column gap-1">
+                    <span><i class="pi pi-arrow-right text-300 text-xs mr-1"></i>{{ req.requestedStartDate | date: 'dd MMM yyyy, HH:mm' }}</span>
+                    <span><i class="pi pi-arrow-left text-300 text-xs mr-1"></i>{{ req.requestedEndDate | date: 'dd MMM yyyy, HH:mm' }}</span>
+                  </div>
+                </td>
+                <td class="text-600 font-medium">
+                  @if (req.actualReturnedAt) {
+                    {{ req.actualReturnedAt | date: 'dd MMM yyyy, HH:mm' }}
+                  } @else {
+                    <span class="text-400">-</span>
+                  }
+                </td>
+                <td>
+                  @if (req.timelinessLabel !== '-') {
+                    <p-tag [value]="req.timelinessLabel" [severity]="req.timelinessSeverity"></p-tag>
+                  } @else {
+                    <span class="text-400">-</span>
+                  }
+                </td>
+                <td>
+                  <p-tag [value]="getBorrowingStatusName(req.status)" [severity]="getBorrowingStatusSeverity(req.status)"></p-tag>
+                </td>
+                <td>
+                  @if (req.remarks) {
+                    <div class="surface-100 p-2 border-round text-sm text-700" [ngClass]="{'border-left-2 border-red-500': req.status === BorrowingStatus.Rejected}" style="max-width: 250px; word-wrap: break-word;">
+                      <i class="pi pi-comment text-400 mr-1 text-xs"></i>
+                      {{ req.remarks }}
+                    </div>
+                  } @else {
+                    <span class="text-400 text-sm font-italic">No remarks</span>
+                  }
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="6" class="text-center p-5 text-500 font-italic">
+                  <i class="pi pi-box text-2xl block mb-2 text-300"></i>
+                  No past history recorded for this equipment.
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+      </div>
+    }
+  </div>
+</div>
