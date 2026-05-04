@@ -5,9 +5,9 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>e35ab2ed-5c7e-4d87-9887-ca927b5bc376</UserSecretsId>
-    <SonarQubeTestProject>false</SonarQubeTestProject>
   </PropertyGroup>
 
+    <SonarQubeTestProject>false</SonarQubeTestProject>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.4">
