@@ -9,7 +9,9 @@
     </div>
 
     @if (isTeacher) {
-      <p-button label="Add New Asset" icon="pi pi-plus" severity="success" (click)="openNew()" class="shadow-2"></p-button>
+      <p-button label="Add New Asset" icon="pi pi-plus" severity="success" class="shadow-2" 
+                (click)="openNew()" 
+                (keydown.enter)="openNew()"></p-button>
     }
   </div>
 
@@ -30,16 +32,19 @@
 
       <ng-template pTemplate="header">
         <tr>
-          <th pSortableColumn="name">Asset Name <p-sortIcon field="name"></p-sortIcon></th>
-          <th pSortableColumn="location">Location <p-sortIcon field="location"></p-sortIcon></th>
-          <th pSortableColumn="status">Status <p-sortIcon field="status"></p-sortIcon></th>
-          <th>Responsible Teacher</th>
-          <th class="text-right">Actions</th>
+          <th scope="col" pSortableColumn="name">Asset Name <p-sortIcon field="name"></p-sortIcon></th>
+          <th scope="col" pSortableColumn="location">Location <p-sortIcon field="location"></p-sortIcon></th>
+          <th scope="col" pSortableColumn="status">Status <p-sortIcon field="status"></p-sortIcon></th>
+          <th scope="col">Responsible Teacher</th>
+          <th scope="col" class="text-right">Actions</th>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="body" let-asset>
-        <tr class="cursor-pointer hover:surface-100 transition-colors" (click)="viewAssetDetails(asset.id)">
+        <tr tabindex="0" class="cursor-pointer hover:surface-100 transition-colors" 
+            (click)="viewAssetDetails(asset.id)"
+            (keydown.enter)="viewAssetDetails(asset.id)">
+          
           <td class="font-bold text-800">{{ asset.name }}</td>
           <td class="text-600">
             <i class="pi pi-map-marker text-xs mr-1 text-logo-green"></i>
@@ -61,12 +66,17 @@
               size="small"
               class="mr-2" 
               [disabled]="!canBorrow(asset.status)" 
-              (click)="borrowAsset(asset); $event.stopPropagation()">
+              (click)="borrowAsset(asset); $event.stopPropagation()"
+              (keydown.enter)="borrowAsset(asset); $event.stopPropagation()">
             </p-button>
 
             @if (isTeacher) {
-              <p-button icon="pi pi-pencil" [text]="true" severity="secondary" [rounded]="true" (click)="editAsset(asset); $event.stopPropagation()"></p-button>
-              <p-button icon="pi pi-trash" [text]="true" severity="danger" [rounded]="true" (click)="deleteAsset(asset); $event.stopPropagation()"></p-button>
+              <p-button icon="pi pi-pencil" [text]="true" severity="secondary" [rounded]="true" 
+                        (click)="editAsset(asset); $event.stopPropagation()"
+                        (keydown.enter)="editAsset(asset); $event.stopPropagation()"></p-button>
+              <p-button icon="pi pi-trash" [text]="true" severity="danger" [rounded]="true" 
+                        (click)="deleteAsset(asset); $event.stopPropagation()"
+                        (keydown.enter)="deleteAsset(asset); $event.stopPropagation()"></p-button>
             }
           </td>
         </tr>
@@ -114,11 +124,14 @@
 
   <ng-template pTemplate="footer">
     <div class="flex justify-content-end gap-2 border-top-1 surface-border pt-3 mt-2">
-        <p-button label="Cancel" [text]="true" severity="secondary" (click)="hideDialog()"></p-button>
+        <p-button label="Cancel" [text]="true" severity="secondary" 
+                  (click)="hideDialog()" 
+                  (keydown.enter)="hideDialog()"></p-button>
         <p-button [label]="isEditing ? 'Save Changes' : 'Create Asset'" 
                   severity="success" 
+                  [disabled]="!assetForm.name"
                   (click)="saveAsset()" 
-                  [disabled]="!assetForm.name"></p-button>
+                  (keydown.enter)="saveAsset()"></p-button>
     </div>
   </ng-template>
 </p-dialog>

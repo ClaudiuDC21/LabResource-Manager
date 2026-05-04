@@ -22,7 +22,9 @@
                         @if (isEditingProfile()) {
                             <span class="text-sm bg-yellow-100 text-yellow-800 font-bold px-3 py-1 border-round">EDIT MODE</span>
                         } @else {
-                            <p-button label="Edit" icon="pi pi-pencil" [outlined]="true" severity="success" size="small" (click)="startEditing()"></p-button>
+                            <p-button label="Edit" icon="pi pi-pencil" [outlined]="true" severity="success" size="small" 
+                                      (click)="startEditing()" 
+                                      (keydown.enter)="startEditing()"></p-button>
                         }
                     </div>
                     <p-divider></p-divider>
@@ -62,8 +64,12 @@
 
                     @if (isEditingProfile()) {
                         <div class="flex gap-3 mt-5 pt-3 border-top-1 surface-border">
-                            <p-button label="Cancel" [text]="true" severity="secondary" class="flex-grow-1" (click)="cancelEditing()"></p-button>
-                            <p-button label="Save Changes" severity="success" class="flex-grow-1" (click)="updateProfile()"></p-button>
+                            <p-button label="Cancel" [text]="true" severity="secondary" class="flex-grow-1" 
+                                      (click)="cancelEditing()" 
+                                      (keydown.enter)="cancelEditing()"></p-button>
+                            <p-button label="Save Changes" severity="success" class="flex-grow-1" 
+                                      (click)="updateProfile()" 
+                                      (keydown.enter)="updateProfile()"></p-button>
                         </div>
                     }
                 </div>
@@ -89,7 +95,9 @@
                             <label class="text-700 font-medium">Confirm Password</label>
                             <p-password [(ngModel)]="passwords.confirmPassword" [feedback]="false" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full"></p-password>
                         </div>
-                        <p-button label="Update Password" [outlined]="true" severity="success" (click)="changePassword()"></p-button>
+                        <p-button label="Update Password" [outlined]="true" severity="success" 
+                                  (click)="changePassword()" 
+                                  (keydown.enter)="changePassword()"></p-button>
                     </div>
                 </div>
 
@@ -98,7 +106,9 @@
                         <i class="pi pi-exclamation-triangle mr-2"></i> Danger Zone
                     </div>
                     <p class="text-600 mb-4">Deactivating your account is irreversible.</p>
-                    <p-button label="Deactivate Account" severity="danger" [outlined]="true" (click)="deactivateAccount()"></p-button>
+                    <p-button label="Deactivate Account" severity="danger" [outlined]="true" 
+                              (click)="deactivateAccount()" 
+                              (keydown.enter)="deactivateAccount()"></p-button>
                 </div>
             </div>
 
@@ -111,11 +121,11 @@
                     <p-table [value]="activeBorrowings()" responsiveLayout="scroll" styleClass="p-datatable-sm mt-3">
                         <ng-template pTemplate="header">
                             <tr>
-                                <th>Asset Name</th>
-                                <th>Start Date</th>
-                                <th>Due Date</th>
-                                <th>Status</th>
-                                <th>Time Log</th>
+                                <th scope="col">Asset Name</th>
+                                <th scope="col">Start Date</th>
+                                <th scope="col">Due Date</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Time Log</th>
                             </tr>
                         </ng-template>
                         <ng-template pTemplate="body" let-borrowing>
@@ -147,12 +157,12 @@
                     <p-table [value]="borrowingHistory()" [paginator]="true" [rows]="10" styleClass="p-datatable-sm mt-3">
                         <ng-template pTemplate="header">
                             <tr>
-                                <th>Asset Name</th>
-                                <th>Start Date</th>
-                                <th>Expected End</th>
-                                <th>Actual Return</th>
-                                <th>Status</th>
-                                <th>Log</th>
+                                <th scope="col">Asset Name</th>
+                                <th scope="col">Start Date</th>
+                                <th scope="col">Expected End</th>
+                                <th scope="col">Actual Return</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Log</th>
                             </tr>
                         </ng-template>
                         <ng-template pTemplate="body" let-history>

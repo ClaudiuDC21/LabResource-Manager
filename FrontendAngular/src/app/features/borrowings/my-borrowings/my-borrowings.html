@@ -58,9 +58,13 @@
 
           <td class="text-right">
             @if (borrowing.status === BorrowingStatus.Active) { 
-              <p-button label="Return" icon="pi pi-refresh" severity="secondary" [outlined]="true" size="small" (click)="openReturnDialog(borrowing)"></p-button>
+              <p-button label="Return" icon="pi pi-refresh" severity="secondary" [outlined]="true" size="small" 
+                        (click)="openReturnDialog(borrowing)" 
+                        (keydown.enter)="openReturnDialog(borrowing)"></p-button>
             } @else if (borrowing.status === BorrowingStatus.Approved) {
-              <p-button label="Pick Up" icon="pi pi-box" severity="success" size="small" class="shadow-2" (click)="pickUpAsset(borrowing)"></p-button>
+              <p-button label="Pick Up" icon="pi pi-box" severity="success" size="small" class="shadow-2" 
+                        (click)="pickUpAsset(borrowing)" 
+                        (keydown.enter)="pickUpAsset(borrowing)"></p-button>
             } @else {
               <span class="text-500 text-sm font-italic">Awaiting Approval</span>
             }
@@ -164,8 +168,12 @@
 
   <ng-template pTemplate="footer">
     <div class="flex justify-content-end gap-2 border-top-1 surface-border pt-3 mt-2">
-      <p-button label="Cancel" [text]="true" severity="secondary" (click)="hideDialog()"></p-button>
-      <p-button label="Confirm Return" icon="pi pi-check" severity="success" (click)="submitReturn()"></p-button>
+      <p-button label="Cancel" [text]="true" severity="secondary" 
+                (click)="hideDialog()" 
+                (keydown.enter)="hideDialog()"></p-button>
+      <p-button label="Confirm Return" icon="pi pi-check" severity="success" 
+                (click)="submitReturn()" 
+                (keydown.enter)="submitReturn()"></p-button>
     </div>
   </ng-template>
 </p-dialog>

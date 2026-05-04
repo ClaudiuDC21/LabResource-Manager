@@ -1,6 +1,8 @@
 <div class="p-4 md:p-6 lg:p-8 transition-all transition-duration-300">
   <div class="mb-5 flex align-items-center gap-3">
-    <button pButton icon="pi pi-arrow-left" class="p-button-rounded p-button-text p-button-secondary" (click)="goBack()"></button>
+    <button pButton icon="pi pi-arrow-left" class="p-button-rounded p-button-text p-button-secondary" 
+            (click)="goBack()" 
+            (keydown.enter)="goBack()"></button>
     <div>
       <h1 class="text-3xl font-bold text-900 m-0">User Details</h1>
       <p class="text-600 mt-2 m-0">View profile information and active borrowings.</p>
@@ -49,11 +51,11 @@
           <p-table [value]="activeBorrowings()" responsiveLayout="scroll" styleClass="p-datatable-sm">
             <ng-template pTemplate="header">
               <tr>
-                <th>Asset Name</th>
-                <th>Start Date</th>
-                <th>Due Date</th>
-                <th>Status</th>
-                <th>Time Log</th>
+                <th scope="col">Asset Name</th>
+                <th scope="col">Start Date</th>
+                <th scope="col">Due Date</th>
+                <th scope="col">Status</th>
+                <th scope="col">Time Log</th>
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-asset>
@@ -87,12 +89,12 @@
           <p-table [value]="historyBorrowings()" [paginator]="true" [rows]="10" responsiveLayout="scroll" styleClass="p-datatable-sm">
             <ng-template pTemplate="header">
               <tr>
-                <th>Asset Name</th>
-                <th>Start Date</th>
-                <th>Expected End</th>
-                <th>Actual Return</th>
-                <th>Status</th>
-                <th>Time Log</th>
+                <th scope="col">Asset Name</th>
+                <th scope="col">Start Date</th>
+                <th scope="col">Expected End</th>
+                <th scope="col">Actual Return</th>
+                <th scope="col">Status</th>
+                <th scope="col">Time Log</th>
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-history>
