@@ -29,10 +29,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           dotnet new sln -n TempClean
-          dotnet sln TempClean.sln add BackendCleanArhitecture/LabResource.Domain/LabResource.Domain.csproj
-          dotnet sln TempClean.sln add BackendCleanArhitecture/LabResource.Application/LabResource.Application.csproj
-          dotnet sln TempClean.sln add BackendCleanArhitecture/LabResource.Infrastructure/LabResource.Infrastructure.csproj
-          dotnet sln TempClean.sln add BackendCleanArhitecture/LabResource.CleanArhitectureAPI/LabResource.CleanApi.csproj
+          Get-ChildItem -Path BackendCleanArhitecture -Recurse -Filter *.csproj | ForEach-Object { dotnet sln TempClean.sln add $_.FullName }
           dotnet-sonarscanner begin /k:"LabResource-CleanArchitecture" /o:"claudiudc21" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.coverage.exclusions="**/*" /d:sonar.exclusions="BackendVerticalSlice/**,FrontendAngular/**"
           dotnet build TempClean.sln
           dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
@@ -58,6 +55,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
+          dotnet new sln -n TempVertical
+          Get-ChildItem -Path BackendVerticalSlice -Recurse -Filter *.csproj | ForEach-Object { dotnet sln TempVertical.sln add $_.FullName }
           dotnet-sonarscanner begin /k:"LabResource-VerticalSlice" /o:"claudiudc21" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.coverage.exclusions="**/*" /d:sonar.exclusions="BackendCleanArhitecture/**,FrontendAngular/**"
-          dotnet build BackendVerticalSlice/LabResource.VerticalSliceAPI/LabResource.VerticalApi.csproj
+          dotnet build TempVertical.sln
           dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
