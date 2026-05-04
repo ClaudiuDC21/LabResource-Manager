@@ -8,8 +8,7 @@ namespace LabResource.VerticalApi.Features.Borrowings;
 
 public static class ReturnAsset
 {
-    public record Command(
-        [property: JsonIgnore] Guid BorrowingId,
+    public record Command( Guid BorrowingId,
         string? Remarks,
         bool IsDefective) : IRequest<Result>;
 

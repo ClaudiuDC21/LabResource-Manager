@@ -8,8 +8,7 @@ namespace LabResource.VerticalApi.Features.Borrowings;
 
 public static class ReviewRequest
 {
-    public record Command(
-        [property: JsonIgnore] Guid BorrowingId,
+    public record Command( Guid BorrowingId,
         bool IsApproved,
         string? TeacherNotes) : IRequest<bool>;
 
