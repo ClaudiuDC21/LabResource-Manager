@@ -3,7 +3,6 @@ import { HomeComponent } from './features/home/home';
 import { MainLayoutComponent } from './layout/main-layout/main-layout';
 import { LoginComponent } from './features/auth/login/login';
 import { RegisterComponent } from './features/auth/register/register';
-import { ProfileComponent } from './features/profile/profile';
 import { DashboardComponent } from './features/dashboard/dashboard';
 import { MyBorrowingsComponent } from './features/borrowings/my-borrowings/my-borrowings';
 import { UsersComponent } from './features/users/users';
@@ -13,6 +12,7 @@ import { UserDetailsComponent } from './features/users/user-details/user-details
 import { AssetRequestComponent } from './features/dashboard/asset-request/asset-request';
 import { ApprovalsComponent } from './features/borrowings/approvals/approvals';
 import { AssetDetailsComponent } from './features/dashboard/asset-details/asset-details';
+import { ProfileComponent } from './features/users/profile/profile';
 
 export const routes: Routes = [
   {

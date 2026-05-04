@@ -11,12 +11,12 @@ import { ToastModule } from 'primeng/toast';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { AuthService } from '../../core/services/auth.service';
-import { UserService } from '../../core/services/user.service';
-import { BorrowingService } from '../../core/services/borrowing.service';
-import { UserResponse, UpdateUserRequest, UpdatePasswordRequest } from '../../core/models/user';
-import { ActiveBorrowingResponse, UserBorrowingHistoryResponse } from '../../core/models/borrowing';
-import { BorrowingStatus } from '../../core/models/enums';
+import { AuthService } from '../../../core/services/auth.service';
+import { UserService } from '../../../core/services/user.service';
+import { BorrowingService } from '../../../core/services/borrowing.service';
+import { BorrowingStatus } from '../../../core/models/enums';
+import { UpdatePasswordRequest, UpdateUserRequest, UserResponse } from '../../../core/models/user';
+import { ActiveBorrowingResponse, UserBorrowingHistoryResponse } from '../../../core/models/borrowing';
 
 @Component({
   selector: 'app-profile',
