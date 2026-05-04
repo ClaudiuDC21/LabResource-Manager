@@ -28,12 +28,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          dotnet-sonarscanner begin /k:"LabResource-CleanArchitecture" /o:"claudiudc21" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.coverage.exclusions="**/*" /d:sonar.exclusions="FrontendAngular/**"
-          dotnet build BackendCleanArhitecture/LabResource.Domain/LabResource.Domain.csproj
-          dotnet build BackendCleanArhitecture/LabResource.Application/LabResource.Application.csproj
-          dotnet build BackendCleanArhitecture/LabResource.Infrastructure/LabResource.Infrastructure.csproj
-          dotnet build BackendCleanArhitecture/LabResource.CleanArhitectureAPI/LabResource.CleanApi.csproj
-          dotnet build BackendCleanArhitecture/LabResource.Application.UnitTests/LabResource.Application.UnitTests.csproj
+          dotnet new sln -n TempClean
+          dotnet sln TempClean.sln add BackendCleanArhitecture/LabResource.Domain/LabResource.Domain.csproj
+          dotnet sln TempClean.sln add BackendCleanArhitecture/LabResource.Application/LabResource.Application.csproj
+          dotnet sln TempClean.sln add BackendCleanArhitecture/LabResource.Infrastructure/LabResource.Infrastructure.csproj
+          dotnet sln TempClean.sln add BackendCleanArhitecture/LabResource.CleanArhitectureAPI/LabResource.CleanApi.csproj
+          dotnet-sonarscanner begin /k:"LabResource-CleanArchitecture" /o:"claudiudc21" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.coverage.exclusions="**/*" /d:sonar.exclusions="BackendVerticalSlice/**,FrontendAngular/**"
+          dotnet build TempClean.sln
           dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
 
   analyze-vertical:
@@ -57,7 +58,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          dotnet-sonarscanner begin /k:"LabResource-VerticalSlice" /o:"claudiudc21" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.coverage.exclusions="**/*" /d:sonar.exclusions="FrontendAngular/**"
+          dotnet-sonarscanner begin /k:"LabResource-VerticalSlice" /o:"claudiudc21" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.coverage.exclusions="**/*" /d:sonar.exclusions="BackendCleanArhitecture/**,FrontendAngular/**"
           dotnet build BackendVerticalSlice/LabResource.VerticalSliceAPI/LabResource.VerticalApi.csproj
-          dotnet build BackendVerticalSlice/LabResource.VerticalApi.UnitTests/LabResource.VerticalApi.UnitTests.csproj
           dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
