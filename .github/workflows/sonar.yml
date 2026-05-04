@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 
+          fetch-depth: 0
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -28,15 +28,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          # ZIDUL DE FIER: Includem doar folderul Clean Architecture. Excludem fișierele web pentru siguranță.
-          dotnet-sonarscanner begin /k:"LabResource-CleanArchitecture" /o:"claudiudc21" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.inclusions="BackendCleanArhitecture/**" /d:sonar.exclusions="**/*.ts,**/*.html,**/*.scss,**/*.css" /d:sonar.dotnet.excludeTestProjects=false
-          
-          # Forțăm compilarea individuală a fiecărui layer pentru a garanta că Sonar le vede
-          dotnet build BackendCleanArhitecture/LabResourceDomain/LabResource.Domain.csproj
-          dotnet build BackendCleanArhitecture/LabResource.Application/LabResource.Application.csproj
-          dotnet build BackendCleanArhitecture/LabResource.Infrastructure/LabResource.Infrastructure.csproj
-          dotnet build BackendCleanArhitecture/LabResource.CleanArhitectureAPI/LabResource.CleanApi.csproj
-          
+          dotnet-sonarscanner begin `
+            /k:"LabResource-CleanArchitecture" `
+            /o:"claudiudc21" `
+            /d:sonar.token="$env:SONAR_TOKEN" `
+            /d:sonar.host.url="https://sonarcloud.io" `
+            /d:sonar.sources="BackendCleanArhitecture" `
+            /d:sonar.exclusions="BackendVerticalSlice/**"
+          dotnet build BackendCleanArhitecture/LabResource.CleanArhitecture.sln
           dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
 
   analyze-vertical:
@@ -47,7 +46,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 
+          fetch-depth: 0
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -60,9 +59,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          # ZIDUL DE FIER: Includem doar folderul Vertical Slice. Excludem fișierele web.
-          dotnet-sonarscanner begin /k:"LabResource-VerticalSlice" /o:"claudiudc21" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.inclusions="BackendVerticalSlice/**" /d:sonar.exclusions="**/*.ts,**/*.html,**/*.scss,**/*.css" /d:sonar.dotnet.excludeTestProjects=false
-          
+          dotnet-sonarscanner begin `
+            /k:"LabResource-VerticalSlice" `
+            /o:"claudiudc21" `
+            /d:sonar.token="$env:SONAR_TOKEN" `
+            /d:sonar.host.url="https://sonarcloud.io" `
+            /d:sonar.sources="BackendVerticalSlice" `
+            /d:sonar.exclusions="BackendCleanArhitecture/**"
           dotnet build BackendVerticalSlice/LabResource.VerticalSlice.sln
-          
           dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
