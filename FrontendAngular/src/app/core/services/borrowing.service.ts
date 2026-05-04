@@ -29,7 +29,8 @@ export class BorrowingService {
   }
 
   reviewRequest(borrowingId: string, request: ReviewBorrowingRequest): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/${borrowingId}/review`, request);
+    const payload = { ...request, borrowingId: borrowingId };
+    return this.http.put<void>(`${this.apiUrl}/${borrowingId}/review`, payload);
   }
 
   pickUpAsset(borrowingId: string): Observable<void> {
@@ -37,7 +38,8 @@ export class BorrowingService {
   }
 
   returnAsset(borrowingId: string, request: ReturnAssetRequest): Observable<ReturnAssetResponse> {
-    return this.http.post<ReturnAssetResponse>(`${this.apiUrl}/${borrowingId}/return`, request);
+    const payload = { ...request, borrowingId: borrowingId };
+    return this.http.post<ReturnAssetResponse>(`${this.apiUrl}/${borrowingId}/return`, payload);
   }
 
   getActiveForUser(userId: string): Observable<ActiveBorrowingResponse[]> {

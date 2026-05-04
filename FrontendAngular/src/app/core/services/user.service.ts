@@ -26,11 +26,13 @@ export class UserService {
   }
 
   update(id: string, request: UpdateUserRequest): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/${id}`, request);
+    const payload = { ...request, id: id };
+    return this.http.put<void>(`${this.apiUrl}/${id}`, payload);
   }
 
   updatePassword(id: string, request: UpdatePasswordRequest): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/${id}/password`, request);
+    const payload = { ...request, id: id };
+    return this.http.put<void>(`${this.apiUrl}/${id}/password`, payload);
   }
 
   deactivate(id: string): Observable<void> {
