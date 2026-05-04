@@ -72,4 +72,53 @@ export class UIHelpers {
     if (!userObj) return false;
     return userObj.isActive === true || String(userObj.isActive).toLowerCase() === 'true';
   }
+
+  static calculateProgress(startDate: string, endDate: string, status: BorrowingStatus): { progressValue: number, timeLeftLabel: string, isExceeded: boolean } {
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+    const now = Date.now();
+
+    if (status === BorrowingStatus.Pending || status === BorrowingStatus.Approved) {
+      return {
+        progressValue: 0,
+        timeLeftLabel: status === BorrowingStatus.Pending ? 'Awaiting Approval' : 'Waiting for pick-up',
+        isExceeded: false
+      };
+    }
+
+    const totalDuration = end - start;
+    const elapsed = now - start;
+
+    let progress = 0;
+    if (totalDuration > 0) {
+        progress = Math.round((elapsed / totalDuration) * 100);
+    }
+    
+    progress = Math.max(0, Math.min(100, progress));
+    
+    const isExceeded = now > end;
+    let timeLeftLabel = '';
+
+    if (isExceeded) {
+      timeLeftLabel = 'Overdue';
+    } else if (now < start) {
+      timeLeftLabel = 'Not started yet';
+    } else {
+      const msLeft = end - now;
+      const hoursLeft = Math.floor(msLeft / (1000 * 60 * 60));
+      const daysLeft = Math.floor(hoursLeft / 24);
+
+      if (daysLeft > 0) {
+        timeLeftLabel = `${daysLeft}d ${hoursLeft % 24}h left`;
+      } else {
+        timeLeftLabel = `${hoursLeft}h left`;
+      }
+    }
+
+    return {
+      progressValue: progress,
+      timeLeftLabel: timeLeftLabel,
+      isExceeded: isExceeded
+    };
+  }
 }

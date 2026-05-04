@@ -74,7 +74,10 @@ export class MyBorrowingsComponent implements OnInit {
     this.isLoadingActive.set(true);
     this.borrowingService.getActiveForUser(userId).subscribe({
       next: (data) => {
-        const mappedData = data.map(b => this.calculateProgress(b));
+        const mappedData = data.map(b => ({
+          ...b,
+          ...UIHelpers.calculateProgress(b.requestedStartDate, b.requestedEndDate, b.status)
+        }));
         this.activeBorrowings.set(mappedData);
         this.isLoadingActive.set(false);
       },
@@ -92,57 +95,6 @@ export class MyBorrowingsComponent implements OnInit {
       },
       error: () => this.isLoadingHistory.set(false)
     });
-  }
-
-  private calculateProgress(borrowing: ActiveBorrowingResponse): MappedBorrowing {
-    const start = new Date(borrowing.requestedStartDate).getTime();
-    const end = new Date(borrowing.requestedEndDate).getTime();
-    const now = Date.now();
-
-    if (borrowing.status === BorrowingStatus.Approved) {
-      return {
-        ...borrowing,
-        progressValue: 0,
-        timeLeftLabel: 'Waiting for pick-up',
-        isExceeded: false
-      };
-    }
-
-    const totalDuration = end - start;
-    const elapsed = now - start;
-
-    let progress = 0;
-    if (totalDuration > 0) {
-        progress = Math.round((elapsed / totalDuration) * 100);
-    }
-    
-    progress = Math.max(0, Math.min(100, progress));
-    
-    const isExceeded = now > end;
-    let timeLeftLabel = '';
-
-    if (isExceeded) {
-      timeLeftLabel = 'Overdue';
-    } else if (now < start) {
-      timeLeftLabel = 'Not started yet';
-    } else {
-      const msLeft = end - now;
-      const hoursLeft = Math.floor(msLeft / (1000 * 60 * 60));
-      const daysLeft = Math.floor(hoursLeft / 24);
-
-      if (daysLeft > 0) {
-        timeLeftLabel = `${daysLeft}d ${hoursLeft % 24}h left`;
-      } else {
-        timeLeftLabel = `${hoursLeft}h left`;
-      }
-    }
-
-    return {
-      ...borrowing,
-      progressValue: progress,
-      timeLeftLabel: timeLeftLabel,
-      isExceeded: isExceeded
-    };
   }
 
   pickUpAsset(borrowing: MappedBorrowing) {

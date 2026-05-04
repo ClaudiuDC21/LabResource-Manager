@@ -90,8 +90,35 @@ export class AssetDetailsComponent implements OnInit {
           h.status === BorrowingStatus.Rejected
         );
 
-        this.upcomingAndActive.set(future.map(h => this.calculateProgress(h)));
-        this.pastHistory.set(past.map(h => this.calculateTimeliness(h)));
+        this.upcomingAndActive.set(future.map(h => ({
+          ...h,
+          ...UIHelpers.calculateProgress(h.requestedStartDate, h.requestedEndDate, h.status)
+        })));
+        
+        this.pastHistory.set(past.map(h => {
+          let label = '-';
+          let severity: 'success' | 'danger' | 'info' = 'info';
+
+          if (h.status === BorrowingStatus.Returned && h.actualReturnedAt) {
+             const expected = new Date(h.requestedEndDate).getTime();
+             const actual = new Date(h.actualReturnedAt).getTime();
+             if (actual > expected) {
+                label = 'Exceeded';
+                severity = 'danger';
+             } else {
+                label = 'On Time';
+                severity = 'success';
+             }
+          } else if (h.status === BorrowingStatus.Rejected) {
+             label = 'N/A';
+          }
+
+          return {
+              ...h,
+              timelinessLabel: label,
+              timelinessSeverity: severity
+          };
+        }));
         this.isLoading.set(false);
       },
       error: () => {
@@ -99,82 +126,6 @@ export class AssetDetailsComponent implements OnInit {
         this.isLoading.set(false);
       }
     });
-  }
-
-  private calculateProgress(borrowing: AssetHistoryResponse): MappedAssetActive {
-    const start = new Date(borrowing.requestedStartDate).getTime();
-    const end = new Date(borrowing.requestedEndDate).getTime();
-    const now = Date.now();
-
-    if (borrowing.status === BorrowingStatus.Pending || borrowing.status === BorrowingStatus.Approved) {
-      return {
-        ...borrowing,
-        progressValue: 0,
-        timeLeftLabel: borrowing.status === BorrowingStatus.Pending ? 'Awaiting Approval' : 'Waiting for pick-up',
-        isExceeded: false
-      };
-    }
-
-    const totalDuration = end - start;
-    const elapsed = now - start;
-
-    let progress = 0;
-    if (totalDuration > 0) {
-        progress = Math.round((elapsed / totalDuration) * 100);
-    }
-    
-    progress = Math.max(0, Math.min(100, progress));
-    
-    const isExceeded = now > end;
-    let timeLeftLabel = '';
-
-    if (isExceeded) {
-      timeLeftLabel = 'Overdue';
-    } else if (now < start) {
-      timeLeftLabel = 'Not started yet';
-    } else {
-      const msLeft = end - now;
-      const hoursLeft = Math.floor(msLeft / (1000 * 60 * 60));
-      const daysLeft = Math.floor(hoursLeft / 24);
-
-      if (daysLeft > 0) {
-        timeLeftLabel = `${daysLeft}d ${hoursLeft % 24}h left`;
-      } else {
-        timeLeftLabel = `${hoursLeft}h left`;
-      }
-    }
-
-    return {
-      ...borrowing,
-      progressValue: progress,
-      timeLeftLabel: timeLeftLabel,
-      isExceeded: isExceeded
-    };
-  }
-
-  private calculateTimeliness(history: AssetHistoryResponse): MappedAssetHistory {
-     let label = '-';
-     let severity: 'success' | 'danger' | 'info' = 'info';
-
-     if (history.status === BorrowingStatus.Returned && history.actualReturnedAt) {
-        const expected = new Date(history.requestedEndDate).getTime();
-        const actual = new Date(history.actualReturnedAt).getTime();
-        if (actual > expected) {
-           label = 'Exceeded';
-           severity = 'danger';
-        } else {
-           label = 'On Time';
-           severity = 'success';
-        }
-     } else if (history.status === BorrowingStatus.Rejected) {
-        label = 'N/A';
-     }
-
-     return {
-         ...history,
-         timelinessLabel: label,
-         timelinessSeverity: severity
-     };
   }
 
   private showError(msg: string) {
