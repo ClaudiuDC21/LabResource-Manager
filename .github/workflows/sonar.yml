@@ -29,7 +29,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           dotnet-sonarscanner begin /k:"LabResource-CleanArchitecture" /o:"claudiudc21" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.coverage.exclusions="**/*" /d:sonar.exclusions="FrontendAngular/**,BackendVerticalSlice/**"
-          dotnet build BackendCleanArhitecture/LabResource.CleanArhitecture.slnx
+          dotnet build BackendCleanArhitecture/LabResource.CleanArhitecture.sln
           dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
 
   analyze-vertical:
@@ -54,5 +54,5 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           dotnet-sonarscanner begin /k:"LabResource-VerticalSlice" /o:"claudiudc21" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.coverage.exclusions="**/*" /d:sonar.exclusions="FrontendAngular/**,BackendCleanArhitecture/**"
-          dotnet build BackendVerticalSlice/LabResource.VerticalSlice.slnx
+          dotnet build BackendVerticalSlice/LabResource.VerticalSlice.sln
           dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
