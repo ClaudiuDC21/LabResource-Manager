@@ -5,9 +5,9 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>61447f48-e53a-46fb-bfc3-61e46ff211c1</UserSecretsId>
+    <SonarQubeTestProject>false</SonarQubeTestProject>
   </PropertyGroup>
 
-    <SonarQubeTestProject>false</SonarQubeTestProject>
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageReference Include="FluentValidation" Version="12.1.1" />
