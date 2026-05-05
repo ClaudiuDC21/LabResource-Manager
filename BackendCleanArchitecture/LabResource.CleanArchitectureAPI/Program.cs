@@ -37,6 +37,7 @@ builder.Services.AddProblemDetails();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
 
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -66,7 +67,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
         };
     });
-
+builder.Services.AddHealthChecks().AddDbContextCheck<ApplicationDbContext>(); 
 builder.Services.AddAuthorization();
 
 builder.Services.AddSwaggerGen(c =>
@@ -102,5 +103,6 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks("/api/health");
 
 await app.RunAsync();

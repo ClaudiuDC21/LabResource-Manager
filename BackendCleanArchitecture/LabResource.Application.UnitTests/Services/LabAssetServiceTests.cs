@@ -1,246 +1,466 @@
-﻿//using FluentAssertions;
-//using LabResource.Application.DTOs.LabAssets;
-//using LabResource.Application.Interfaces.Repositories;
-//using LabResource.Application.Services;
-//using LabResource.Domain.Entities;
-//using LabResource.Domain.Enums;
-//using Moq;
-//using Xunit;
+﻿using FluentAssertions;
+using LabResource.Application.DTOs.LabAssets;
+using LabResource.Application.Interfaces.Repositories;
+using LabResource.Application.Services;
+using LabResource.Domain.Entities;
+using LabResource.Domain.Enums;
+using LabResource.Domain.Exceptions;
+using Moq;
+using Xunit;
 
-//namespace LabResource.Application.UnitTests.Services;
+namespace LabResource.Application.UnitTests.Services;
 
-//public class LabAssetServiceTests
-//{
-//    private readonly Mock<ILabAssetRepository> _labAssetRepositoryMock;
-//    private readonly LabAssetService _labAssetService;
+public class LabAssetServiceTests
+{
+    private readonly Mock<ILabAssetRepository> _labAssetRepositoryMock;
+    private readonly Mock<IUserRepository> _userRepositoryMock;
+    private readonly LabAssetService _labAssetService;
 
-//    public LabAssetServiceTests()
-//    {
-//        _labAssetRepositoryMock = new Mock<ILabAssetRepository>();
-//        _labAssetService = new LabAssetService(_labAssetRepositoryMock.Object);
-//    }
+    public LabAssetServiceTests()
+    {
+        _labAssetRepositoryMock = new Mock<ILabAssetRepository>();
+        _userRepositoryMock = new Mock<IUserRepository>();
+        _labAssetService = new LabAssetService(_labAssetRepositoryMock.Object, _userRepositoryMock.Object);
+    }
 
-//    [Fact]
-//    public async Task CreateAssetAsync_WithUniqueSerialNumber_ShouldCreateAndReturnAsset()
-//    {
-//        var request = new CreateLabAssetRequest { Name = "Oscilloscope", SerialNumber = "SN12345" };
+    [Fact]
+    public async Task Handle_WithValidDataAndNoTeacher_ShouldCreateAndReturnResult()
+    {
+        var request = new CreateLabAssetRequest
+        {
+            Name = "Oscilloscope",
+            SerialNumber = "SN-12345",
+            Location = "Room A",
+            AssignedTeacherId = null
+        };
 
-//        _labAssetRepositoryMock.Setup(repo => repo.GetBySerialNumberAsync(request.SerialNumber))
-//            .ReturnsAsync((LabAsset?)null);
+        _labAssetRepositoryMock.Setup(repo => repo.GetBySerialNumberAsync(request.SerialNumber))
+            .ReturnsAsync((LabAsset?)null);
 
-//        var result = await _labAssetService.CreateAssetAsync(request);
+        var result = await _labAssetService.CreateAssetAsync(request);
 
-//        result.Should().NotBeNull();
-//        result.Name.Should().Be("Oscilloscope");
-//        result.SerialNumber.Should().Be("SN12345");
-//        result.Status.Should().Be(AssetStatus.Available);
-//        result.IsActive.Should().BeTrue();
+        result.Should().NotBeNull();
+        result.Name.Should().Be("Oscilloscope");
+        result.SerialNumber.Should().Be("SN-12345");
+        result.Status.Should().Be(AssetStatus.Available);
+        result.IsActive.Should().BeTrue();
 
-//        _labAssetRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<LabAsset>()), Times.Once);
-//        _labAssetRepositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
-//    }
+        _labAssetRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<LabAsset>()), Times.Once);
+        _labAssetRepositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
+    }
 
-//    [Fact]
-//    public async Task CreateAssetAsync_WithExistingSerialNumber_ShouldThrowArgumentException()
-//    {
-//        var request = new CreateLabAssetRequest { Name = "Oscilloscope", SerialNumber = "SN12345" };
-//        var existingAsset = new LabAsset { Id = Guid.NewGuid(), SerialNumber = "SN12345" };
+    [Fact]
+    public async Task Handle_WithValidTeacher_ShouldCreateAndReturnResult()
+    {
+        var teacherId = Guid.NewGuid();
+        var teacher = new User { Id = teacherId, Role = UserRole.Teacher };
+        var request = new CreateLabAssetRequest
+        {
+            Name = "Oscilloscope",
+            SerialNumber = "SN-12345",
+            AssignedTeacherId = teacherId
+        };
 
-//        _labAssetRepositoryMock.Setup(repo => repo.GetBySerialNumberAsync(request.SerialNumber))
-//            .ReturnsAsync(existingAsset);
+        _userRepositoryMock.Setup(repo => repo.GetByIdAsync(teacherId))
+            .ReturnsAsync(teacher);
+        _labAssetRepositoryMock.Setup(repo => repo.GetBySerialNumberAsync(request.SerialNumber))
+            .ReturnsAsync((LabAsset?)null);
 
-//        Func<Task> action = async () => await _labAssetService.CreateAssetAsync(request);
+        var result = await _labAssetService.CreateAssetAsync(request);
 
-//        await action.Should().ThrowAsync<ArgumentException>().WithMessage($"An asset with serial number '{request.SerialNumber}' already exists.");
-//        _labAssetRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<LabAsset>()), Times.Never);
-//    }
+        result.Should().NotBeNull();
+        result.AssignedTeacherId.Should().Be(teacherId);
+    }
 
-//    [Fact]
-//    public async Task CreateAssetAsync_WithNullOrWhitespaceSerialNumber_ShouldNotCheckForDuplicates()
-//    {
-//        var request = new CreateLabAssetRequest { Name = "Cables", SerialNumber = " " };
+    [Fact]
+    public async Task Handle_WithInvalidTeacherId_ShouldThrowNotFoundException()
+    {
+        var teacherId = Guid.NewGuid();
+        var request = new CreateLabAssetRequest { Name = "Osc", AssignedTeacherId = teacherId };
 
-//        var result = await _labAssetService.CreateAssetAsync(request);
+        _userRepositoryMock.Setup(repo => repo.GetByIdAsync(teacherId))
+            .ReturnsAsync((User?)null);
 
-//        result.Should().NotBeNull();
-//        result.Name.Should().Be("Cables");
+        var act = async () => await _labAssetService.CreateAssetAsync(request);
 
-//        _labAssetRepositoryMock.Verify(repo => repo.GetBySerialNumberAsync(It.IsAny<string>()), Times.Never);
-//        _labAssetRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<LabAsset>()), Times.Once);
-//    }
+        await act.Should().ThrowAsync<NotFoundException>();
+    }
 
-//    [Fact]
-//    public async Task GetAllActiveAssetsAsync_ShouldReturnMappedAssets()
-//    {
-//        var activeBorrowing = new BorrowingRecord
-//        {
-//            Id = Guid.NewGuid(),
-//            ActualBorrowedAt = DateTime.UtcNow,
-//            ActualReturnedAt = null,
-//            User = new User { FullName = "John Doe" }
-//        };
+    [Fact]
+    public async Task Handle_WithNonTeacherRole_ShouldThrowBadRequestException()
+    {
+        var teacherId = Guid.NewGuid();
+        var student = new User { Id = teacherId, Role = UserRole.Student };
+        var request = new CreateLabAssetRequest { Name = "Osc", AssignedTeacherId = teacherId };
 
-//        var assets = new List<LabAsset>
-//        {
-//            new LabAsset
-//            {
-//                Id = Guid.NewGuid(),
-//                Name = "Asset 1",
-//                Status = AssetStatus.Borrowed,
-//                BorrowingRecords = new List<BorrowingRecord> { activeBorrowing }
-//            },
-//            new LabAsset { Id = Guid.NewGuid(), Name = "Asset 2", Status = AssetStatus.Available }
-//        };
+        _userRepositoryMock.Setup(repo => repo.GetByIdAsync(teacherId))
+            .ReturnsAsync(student);
 
-//        _labAssetRepositoryMock.Setup(repo => repo.GetAllActiveAsync())
-//            .ReturnsAsync(assets);
+        var act = async () => await _labAssetService.CreateAssetAsync(request);
 
-//        var result = await _labAssetService.GetAllActiveAssetsAsync();
+        await act.Should().ThrowAsync<BadRequestException>();
+    }
 
-//        result.Should().NotBeNull();
-//        result.Should().HaveCount(2);
+    [Fact]
+    public async Task Handle_WithExistingSerialNumber_ShouldThrowAlreadyExistsException()
+    {
+        var existingAsset = new LabAsset { Id = Guid.NewGuid(), SerialNumber = "DUPLICATE-SN" };
+        var request = new CreateLabAssetRequest { Name = "New Osc", SerialNumber = "DUPLICATE-SN" };
 
-//        var firstAsset = result.First(a => a.Name == "Asset 1");
-//        firstAsset.CurrentBorrowerName.Should().Be("John Doe");
-//        firstAsset.CurrentBorrowDate.Should().NotBeNull();
-//        firstAsset.CurrentBorrowDate.Should().Be(activeBorrowing.BorrowedAt);
-//    }
+        _labAssetRepositoryMock.Setup(repo => repo.GetBySerialNumberAsync(request.SerialNumber))
+            .ReturnsAsync(existingAsset);
 
-//    [Fact]
-//    public async Task GetAssetByIdAsync_WithValidId_ShouldReturnAsset()
-//    {
-//        var assetId = Guid.NewGuid();
-//        var asset = new LabAsset { Id = assetId, Name = "Asset 1" };
+        var act = async () => await _labAssetService.CreateAssetAsync(request);
 
-//        _labAssetRepositoryMock.Setup(repo => repo.GetByIdAsync(assetId))
-//            .ReturnsAsync(asset);
+        await act.Should().ThrowAsync<AlreadyExistsException>();
+    }
 
-//        var result = await _labAssetService.GetAssetByIdAsync(assetId);
+    [Fact]
+    public async Task Handle_WithNullSerialNumber_ShouldCreateAndReturnResult()
+    {
+        var request = new CreateLabAssetRequest { Name = "Pack of Resistors", SerialNumber = null };
 
-//        result.Should().NotBeNull();
-//        result!.Id.Should().Be(assetId);
-//        result.Name.Should().Be("Asset 1");
-//    }
+        var result = await _labAssetService.CreateAssetAsync(request);
 
-//    [Fact]
-//    public async Task GetAssetByIdAsync_WithInvalidId_ShouldReturnNull()
-//    {
-//        var assetId = Guid.NewGuid();
+        result.Should().NotBeNull();
+        result.SerialNumber.Should().BeNull();
 
-//        _labAssetRepositoryMock.Setup(repo => repo.GetByIdAsync(assetId))
-//            .ReturnsAsync((LabAsset?)null);
+        _labAssetRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<LabAsset>()), Times.Once);
+        _labAssetRepositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
+    }
 
-//        var result = await _labAssetService.GetAssetByIdAsync(assetId);
+    [Fact]
+    public async Task Handle_WithValidIdAndActiveBorrowing_ShouldReturnMappedResultWithBorrower()
+    {
+        var assetId = Guid.NewGuid();
+        var borrowDate = DateTime.UtcNow.AddDays(-1);
+        var user = new User { Id = Guid.NewGuid(), FullName = "Jane Doe" };
+        var activeBorrowing = new BorrowingRecord
+        {
+            Id = Guid.NewGuid(),
+            ActualReturnedAt = null,
+            Status = BorrowingStatus.Active,
+            ActualBorrowedAt = borrowDate,
+            User = user
+        };
 
-//        result.Should().BeNull();
-//    }
+        var asset = new LabAsset
+        {
+            Id = assetId,
+            Name = "Oscilloscope",
+            SerialNumber = "OSC-123",
+            Status = AssetStatus.Borrowed,
+            IsActive = true,
+            BorrowingRecords = new List<BorrowingRecord> { activeBorrowing }
+        };
 
-//    [Fact]
-//    public async Task UpdateAssetAsync_WithValidData_ShouldUpdateAndReturnTrue()
-//    {
-//        var assetId = Guid.NewGuid();
-//        var existingAsset = new LabAsset { Id = assetId, Name = "Old Name", SerialNumber = "OLD123" };
-//        var request = new CreateLabAssetRequest { Name = "New Name", SerialNumber = "NEW123" };
+        _labAssetRepositoryMock.Setup(repo => repo.GetByIdAsync(assetId))
+            .ReturnsAsync(asset);
 
-//        _labAssetRepositoryMock.Setup(repo => repo.GetByIdAsync(assetId))
-//            .ReturnsAsync(existingAsset);
+        var result = await _labAssetService.GetAssetByIdAsync(assetId);
 
-//        _labAssetRepositoryMock.Setup(repo => repo.GetBySerialNumberAsync(request.SerialNumber))
-//            .ReturnsAsync((LabAsset?)null);
+        result.Should().NotBeNull();
+        result.Id.Should().Be(assetId);
+        result.Name.Should().Be("Oscilloscope");
+        result.Status.Should().Be(AssetStatus.Borrowed);
+        result.CurrentBorrowerName.Should().Be("Jane Doe");
+        result.CurrentBorrowDate.Should().Be(borrowDate);
+    }
 
-//        var result = await _labAssetService.UpdateAssetAsync(assetId, request);
+    [Fact]
+    public async Task Handle_WithValidIdAndNoActiveBorrowing_ShouldReturnResultWithNullBorrower()
+    {
+        var assetId = Guid.NewGuid();
+        var pastBorrowing = new BorrowingRecord
+        {
+            Id = Guid.NewGuid(),
+            ActualReturnedAt = DateTime.UtcNow,
+            Status = BorrowingStatus.Returned,
+            User = new User { FullName = "Old Borrower" }
+        };
 
-//        result.Should().BeTrue();
-//        existingAsset.Name.Should().Be("New Name");
-//        existingAsset.SerialNumber.Should().Be("NEW123");
+        var asset = new LabAsset
+        {
+            Id = assetId,
+            Name = "Multimeter",
+            Status = AssetStatus.Available,
+            IsActive = true,
+            BorrowingRecords = new List<BorrowingRecord> { pastBorrowing }
+        };
 
-//        _labAssetRepositoryMock.Verify(repo => repo.UpdateAsync(existingAsset), Times.Once);
-//        _labAssetRepositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
-//    }
+        _labAssetRepositoryMock.Setup(repo => repo.GetByIdAsync(assetId))
+            .ReturnsAsync(asset);
 
-//    [Fact]
-//    public async Task UpdateAssetAsync_WithDuplicateSerialNumber_ShouldThrowArgumentException()
-//    {
-//        var assetId = Guid.NewGuid();
-//        var existingAsset = new LabAsset { Id = assetId, Name = "Old Name", SerialNumber = "OLD123" };
-//        var request = new CreateLabAssetRequest { Name = "New Name", SerialNumber = "DUPLICATE" };
-//        var anotherAsset = new LabAsset { Id = Guid.NewGuid(), SerialNumber = "DUPLICATE" };
+        var result = await _labAssetService.GetAssetByIdAsync(assetId);
 
-//        _labAssetRepositoryMock.Setup(repo => repo.GetByIdAsync(assetId))
-//            .ReturnsAsync(existingAsset);
+        result.Should().NotBeNull();
+        result.Id.Should().Be(assetId);
+        result.CurrentBorrowerName.Should().BeNull();
+        result.CurrentBorrowDate.Should().BeNull();
+    }
 
-//        _labAssetRepositoryMock.Setup(repo => repo.GetBySerialNumberAsync(request.SerialNumber))
-//            .ReturnsAsync(anotherAsset);
+    [Fact]
+    public async Task Handle_WithInvalidId_ShouldThrowNotFoundException()
+    {
+        var assetId = Guid.NewGuid();
 
-//        Func<Task> action = async () => await _labAssetService.UpdateAssetAsync(assetId, request);
+        _labAssetRepositoryMock.Setup(repo => repo.GetByIdAsync(assetId))
+            .ReturnsAsync((LabAsset?)null);
 
-//        await action.Should().ThrowAsync<ArgumentException>().WithMessage($"An asset with serial number '{request.SerialNumber}' already exists.");
-//        _labAssetRepositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<LabAsset>()), Times.Never);
-//    }
+        var act = async () => await _labAssetService.GetAssetByIdAsync(assetId);
 
-//    [Fact]
-//    public async Task UpdateAssetAsync_WithSameSerialNumber_ShouldNotThrowException()
-//    {
-//        var assetId = Guid.NewGuid();
-//        var existingAsset = new LabAsset { Id = assetId, Name = "Old Name", SerialNumber = "SAME123" };
-//        var request = new CreateLabAssetRequest { Name = "New Name", SerialNumber = "SAME123" };
+        await act.Should().ThrowAsync<NotFoundException>();
+    }
 
-//        _labAssetRepositoryMock.Setup(repo => repo.GetByIdAsync(assetId))
-//            .ReturnsAsync(existingAsset);
+    [Fact]
+    public async Task Handle_ShouldReturnOnlyActiveAssets_AndMapBorrowerAndTeacherCorrectly()
+    {
+        var teacher = new User { Id = Guid.NewGuid(), FullName = "Dr. Smith" };
+        var student = new User { Id = Guid.NewGuid(), FullName = "John Doe" };
+        var borrowDate = DateTime.UtcNow.AddDays(-1);
 
-//        var result = await _labAssetService.UpdateAssetAsync(assetId, request);
+        var activeBorrowing = new BorrowingRecord
+        {
+            Id = Guid.NewGuid(),
+            ActualReturnedAt = null,
+            ActualBorrowedAt = borrowDate,
+            Status = BorrowingStatus.Active,
+            User = student
+        };
 
-//        result.Should().BeTrue();
-//        existingAsset.Name.Should().Be("New Name");
+        var pastBorrowing = new BorrowingRecord
+        {
+            Id = Guid.NewGuid(),
+            ActualReturnedAt = DateTime.UtcNow.AddDays(-5),
+            ActualBorrowedAt = DateTime.UtcNow.AddDays(-10),
+            Status = BorrowingStatus.Returned,
+            User = new User { FullName = "Old Borrower" }
+        };
 
-//        _labAssetRepositoryMock.Verify(repo => repo.GetBySerialNumberAsync(It.IsAny<string>()), Times.Never);
-//        _labAssetRepositoryMock.Verify(repo => repo.UpdateAsync(existingAsset), Times.Once);
-//    }
+        var assets = new List<LabAsset>
+    {
+        new LabAsset
+        {
+            Id = Guid.NewGuid(),
+            Name = "Borrowed Oscilloscope",
+            Status = AssetStatus.Borrowed,
+            IsActive = true,
+            AssignedTeacher = teacher,
+            AssignedTeacherId = teacher.Id,
+            BorrowingRecords = new List<BorrowingRecord> { pastBorrowing, activeBorrowing }
+        },
+        new LabAsset
+        {
+            Id = Guid.NewGuid(),
+            Name = "Available Multimeter",
+            Status = AssetStatus.Available,
+            IsActive = true,
+            BorrowingRecords = new List<BorrowingRecord> { pastBorrowing }
+        }
+    };
 
-//    [Fact]
-//    public async Task UpdateAssetAsync_WithInvalidId_ShouldReturnFalse()
-//    {
-//        var assetId = Guid.NewGuid();
-//        var request = new CreateLabAssetRequest { Name = "New Name" };
+        _labAssetRepositoryMock.Setup(repo => repo.GetAllActiveAsync())
+            .ReturnsAsync(assets);
 
-//        _labAssetRepositoryMock.Setup(repo => repo.GetByIdAsync(assetId))
-//            .ReturnsAsync((LabAsset?)null);
+        var result = await _labAssetService.GetAllActiveAssetsAsync();
 
-//        var result = await _labAssetService.UpdateAssetAsync(assetId, request);
+        result.Should().NotBeNull();
+        result.Should().HaveCount(2);
 
-//        result.Should().BeFalse();
-//        _labAssetRepositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<LabAsset>()), Times.Never);
-//    }
+        var borrowedAsset = result.First(a => a.Name == "Borrowed Oscilloscope");
+        borrowedAsset.CurrentBorrowerName.Should().Be("John Doe");
+        borrowedAsset.CurrentBorrowDate.Should().Be(borrowDate);
+        borrowedAsset.AssignedTeacherName.Should().Be("Dr. Smith");
 
-//    [Fact]
-//    public async Task DeactivateAssetAsync_WithValidId_ShouldSetIsActiveToFalseAndReturnTrue()
-//    {
-//        var assetId = Guid.NewGuid();
-//        var existingAsset = new LabAsset { Id = assetId, IsActive = true };
+        var availableAsset = result.First(a => a.Name == "Available Multimeter");
+        availableAsset.CurrentBorrowerName.Should().BeNull();
+        availableAsset.CurrentBorrowDate.Should().BeNull();
+        availableAsset.AssignedTeacherName.Should().BeNull();
+    }
 
-//        _labAssetRepositoryMock.Setup(repo => repo.GetByIdAsync(assetId))
-//            .ReturnsAsync(existingAsset);
+    [Fact]
+    public async Task Handle_WhenNoActiveAssetsExist_ShouldReturnEmptyList()
+    {
+        _labAssetRepositoryMock.Setup(repo => repo.GetAllActiveAsync())
+            .ReturnsAsync(new List<LabAsset>());
 
-//        var result = await _labAssetService.DeactivateAssetAsync(assetId);
+        var result = await _labAssetService.GetAllActiveAssetsAsync();
 
-//        result.Should().BeTrue();
-//        existingAsset.IsActive.Should().BeFalse();
+        result.Should().NotBeNull();
+        result.Should().BeEmpty();
+    }
 
-//        _labAssetRepositoryMock.Verify(repo => repo.UpdateAsync(existingAsset), Times.Once);
-//        _labAssetRepositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
-//    }
+    [Fact]
+    public async Task Handle_WhenDatabaseIsEmpty_ShouldReturnEmptyList()
+    {
+        _labAssetRepositoryMock.Setup(repo => repo.GetAllActiveAsync())
+            .ReturnsAsync(new List<LabAsset>());
 
-//    [Fact]
-//    public async Task DeactivateAssetAsync_WithInvalidId_ShouldReturnFalse()
-//    {
-//        var assetId = Guid.NewGuid();
+        var result = await _labAssetService.GetAllActiveAssetsAsync();
 
-//        _labAssetRepositoryMock.Setup(repo => repo.GetByIdAsync(assetId))
-//            .ReturnsAsync((LabAsset?)null);
+        result.Should().NotBeNull();
+        result.Should().BeEmpty();
+    }
 
-//        var result = await _labAssetService.DeactivateAssetAsync(assetId);
+    [Fact]
+    public async Task UpdateAssetAsync_WithValidData_UpdatesAssetSuccessfully()
+    {
+        var assetId = Guid.NewGuid();
+        var existingAsset = new LabAsset { Id = assetId, Name = "Old Name", SerialNumber = "OLD-123" };
+        var request = new UpdateLabAssetRequest { Name = "New Name", SerialNumber = "NEW-456", Location = "New Location", AssignedTeacherId = null, IsActive = true };
 
-//        result.Should().BeFalse();
-//        _labAssetRepositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<LabAsset>()), Times.Never);
-//    }
-//}
+        _labAssetRepositoryMock.Setup(repo => repo.GetByIdAsync(assetId)).ReturnsAsync(existingAsset);
+        _labAssetRepositoryMock.Setup(repo => repo.GetBySerialNumberAsync("NEW-456")).ReturnsAsync((LabAsset?)null);
+
+        await _labAssetService.UpdateAssetAsync(assetId, request);
+
+        existingAsset.Name.Should().Be("New Name");
+        existingAsset.SerialNumber.Should().Be("NEW-456");
+        existingAsset.Location.Should().Be("New Location");
+        _labAssetRepositoryMock.Verify(repo => repo.UpdateAsync(existingAsset), Times.Once);
+        _labAssetRepositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateAssetAsync_WithValidTeacherId_UpdatesAssignedTeacher()
+    {
+        var assetId = Guid.NewGuid();
+        var teacherId = Guid.NewGuid();
+        var teacher = new User { Id = teacherId, Role = UserRole.Teacher };
+        var existingAsset = new LabAsset { Id = assetId, Name = "Asset", SerialNumber = "SN-1" };
+        var request = new UpdateLabAssetRequest { Name = "Name", SerialNumber = "SN-1", Location = "Loc", AssignedTeacherId = teacherId, IsActive = true };
+
+        _labAssetRepositoryMock.Setup(repo => repo.GetByIdAsync(assetId)).ReturnsAsync(existingAsset);
+        _userRepositoryMock.Setup(repo => repo.GetByIdAsync(teacherId)).ReturnsAsync(teacher);
+
+        await _labAssetService.UpdateAssetAsync(assetId, request);
+
+        existingAsset.AssignedTeacherId.Should().Be(teacherId);
+        _labAssetRepositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateAssetAsync_DuplicateSerialNumber_ThrowsAlreadyExistsException()
+    {
+        var assetId = Guid.NewGuid();
+        var existingAsset = new LabAsset { Id = assetId, Name = "Asset 1", SerialNumber = "SN-001" };
+        var otherAsset = new LabAsset { Id = Guid.NewGuid(), Name = "Asset 2", SerialNumber = "DUPLICATE" };
+        var request = new UpdateLabAssetRequest { Name = "Updated Asset 1", SerialNumber = "DUPLICATE", Location = "Loc", AssignedTeacherId = null, IsActive = true };
+
+        _labAssetRepositoryMock.Setup(repo => repo.GetByIdAsync(assetId)).ReturnsAsync(existingAsset);
+        _labAssetRepositoryMock.Setup(repo => repo.GetBySerialNumberAsync("DUPLICATE")).ReturnsAsync(otherAsset);
+
+        var act = async () => await _labAssetService.UpdateAssetAsync(assetId, request);
+
+        await act.Should().ThrowAsync<AlreadyExistsException>();
+        _labAssetRepositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateAssetAsync_NonExistentId_ThrowsNotFoundException()
+    {
+        var assetId = Guid.NewGuid();
+        var request = new UpdateLabAssetRequest { Name = "New Name", SerialNumber = "NEW-123", Location = "Loc", AssignedTeacherId = null, IsActive = true };
+
+        _labAssetRepositoryMock.Setup(repo => repo.GetByIdAsync(assetId)).ReturnsAsync((LabAsset?)null);
+
+        var act = async () => await _labAssetService.UpdateAssetAsync(assetId, request);
+
+        await act.Should().ThrowAsync<NotFoundException>();
+        _labAssetRepositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateAssetAsync_UserIsNotTeacher_ThrowsBadRequestException()
+    {
+        var assetId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var student = new User { Id = userId, Role = UserRole.Student };
+        var existingAsset = new LabAsset { Id = assetId, Name = "Asset", SerialNumber = "SN-1" };
+        var request = new UpdateLabAssetRequest { Name = "Name", SerialNumber = "SN-1", Location = "Loc", AssignedTeacherId = userId, IsActive = true };
+
+        _labAssetRepositoryMock.Setup(repo => repo.GetByIdAsync(assetId)).ReturnsAsync(existingAsset);
+        _userRepositoryMock.Setup(repo => repo.GetByIdAsync(userId)).ReturnsAsync(student);
+
+        var act = async () => await _labAssetService.UpdateAssetAsync(assetId, request);
+
+        await act.Should().ThrowAsync<BadRequestException>();
+    }
+
+    [Fact]
+    public async Task DeactivateAssetAsync_ValidAvailableAsset_DeactivatesSuccessfully()
+    {
+        var assetId = Guid.NewGuid();
+        var existingAsset = new LabAsset
+        {
+            Id = assetId,
+            IsActive = true,
+            Status = AssetStatus.Available
+        };
+
+        _labAssetRepositoryMock.Setup(repo => repo.GetByIdAsync(assetId))
+            .ReturnsAsync(existingAsset);
+
+        await _labAssetService.DeactivateAssetAsync(assetId);
+
+        existingAsset.IsActive.Should().BeFalse();
+        _labAssetRepositoryMock.Verify(repo => repo.UpdateAsync(existingAsset), Times.Once);
+        _labAssetRepositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeactivateAssetAsync_NonExistentAsset_ThrowsNotFoundException()
+    {
+        var assetId = Guid.NewGuid();
+        _labAssetRepositoryMock.Setup(repo => repo.GetByIdAsync(assetId))
+            .ReturnsAsync((LabAsset?)null);
+
+        var act = async () => await _labAssetService.DeactivateAssetAsync(assetId);
+
+        await act.Should().ThrowAsync<NotFoundException>();
+        _labAssetRepositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeactivateAssetAsync_AssetAlreadyInactive_ThrowsConflictException()
+    {
+        var assetId = Guid.NewGuid();
+        var existingAsset = new LabAsset
+        {
+            Id = assetId,
+            IsActive = false,
+            Status = AssetStatus.Available
+        };
+
+        _labAssetRepositoryMock.Setup(repo => repo.GetByIdAsync(assetId))
+            .ReturnsAsync(existingAsset);
+
+        var act = async () => await _labAssetService.DeactivateAssetAsync(assetId);
+
+        await act.Should().ThrowAsync<ConflictException>()
+            .WithMessage("This asset is already deactivated.");
+        _labAssetRepositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeactivateAssetAsync_AssetIsBorrowed_ThrowsConflictException()
+    {
+        var assetId = Guid.NewGuid();
+        var existingAsset = new LabAsset
+        {
+            Id = assetId,
+            IsActive = true,
+            Status = AssetStatus.Borrowed
+        };
+
+        _labAssetRepositoryMock.Setup(repo => repo.GetByIdAsync(assetId))
+            .ReturnsAsync(existingAsset);
+
+        var act = async () => await _labAssetService.DeactivateAssetAsync(assetId);
+
+        await act.Should().ThrowAsync<ConflictException>()
+            .WithMessage("Cannot deactivate an asset that is currently borrowed.");
+        _labAssetRepositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Never);
+    }
+
+}
