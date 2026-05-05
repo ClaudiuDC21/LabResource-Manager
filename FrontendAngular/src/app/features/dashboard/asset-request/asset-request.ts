@@ -115,11 +115,9 @@ export class AssetRequestComponent implements OnInit {
     });
   }
 
-  // --- FUNCȚIA NOUĂ: Sincronizează Pick-Up cu Return ---
   onPickUpDateChange(newDate: Date) {
     if (!newDate) return;
     this.pickUpDate.set(newDate);
-    // Setăm data de return pe exact aceeași zi, instanțiind un obiect nou de Date
     this.returnDate.set(new Date(newDate.getTime()));
   }
 
@@ -196,7 +194,7 @@ export class AssetRequestComponent implements OnInit {
       },
       error: (err) => {
         this.isSubmitting.set(false);
-        const errorDetail = err.error?.Error || 'The equipment is already reserved for the selected interval.';
+        const errorDetail = err.error?.detail || 'The equipment is already reserved for the selected interval.';
         this.messageService.add({ severity: 'error', summary: 'Request Failed', detail: errorDetail });
       }
     });

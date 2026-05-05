@@ -53,7 +53,8 @@ export class ApprovalsComponent implements OnInit {
     if (!user) return;
 
     this.isLoading.set(true);
-    this.borrowingService.getPendingForTeacher(user.id).subscribe({
+
+    this.borrowingService.getPendingForTeacher().subscribe({
       next: (data) => {
         this.pendingRequests.set(data);
         this.isLoading.set(false);
@@ -94,7 +95,7 @@ export class ApprovalsComponent implements OnInit {
         this.borrowingService.notifyPendingCountChanged(); 
       },
       error: (err) => {
-        const detail = err.error?.Error || 'Failed to process the request.';
+        const detail = err.error?.detail || 'Failed to process the request.';
         this.messageService.add({ severity: 'error', summary: 'Error', detail: detail });
       }
     });

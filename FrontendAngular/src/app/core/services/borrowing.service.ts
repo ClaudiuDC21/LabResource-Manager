@@ -25,21 +25,19 @@ export class BorrowingService {
   }
 
   requestAsset(request: BorrowAssetRequest): Observable<BorrowingResponse> {
-    return this.http.post<BorrowingResponse>(`${this.apiUrl}/request`, request);
+    return this.http.post<BorrowingResponse>(this.apiUrl, request);
   }
 
   reviewRequest(borrowingId: string, request: ReviewBorrowingRequest): Observable<void> {
-    const payload = { ...request, borrowingId: borrowingId };
-    return this.http.put<void>(`${this.apiUrl}/${borrowingId}/review`, payload);
+    return this.http.post<void>(`${this.apiUrl}/${borrowingId}/review`, request);
   }
 
   pickUpAsset(borrowingId: string): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/${borrowingId}/pickup`, {});
+    return this.http.post<void>(`${this.apiUrl}/${borrowingId}/pickup`, {});
   }
 
   returnAsset(borrowingId: string, request: ReturnAssetRequest): Observable<ReturnAssetResponse> {
-    const payload = { ...request, borrowingId: borrowingId };
-    return this.http.post<ReturnAssetResponse>(`${this.apiUrl}/${borrowingId}/return`, payload);
+    return this.http.post<ReturnAssetResponse>(`${this.apiUrl}/${borrowingId}/return`, request);
   }
 
   getActiveForUser(userId: string): Observable<ActiveBorrowingResponse[]> {
@@ -54,7 +52,7 @@ export class BorrowingService {
     return this.http.get<UserBorrowingHistoryResponse[]>(`${this.apiUrl}/user/${userId}/history`);
   }
 
-  getPendingForTeacher(teacherId: string): Observable<ActiveBorrowingResponse[]> {
-    return this.http.get<ActiveBorrowingResponse[]>(`${this.apiUrl}/teacher/${teacherId}/pending`);
+  getPendingForTeacher(): Observable<ActiveBorrowingResponse[]> {
+    return this.http.get<ActiveBorrowingResponse[]>(`${this.apiUrl}/teacher/pending`);
   }
 }

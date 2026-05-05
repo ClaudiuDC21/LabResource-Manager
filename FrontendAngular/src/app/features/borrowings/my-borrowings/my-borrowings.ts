@@ -111,7 +111,7 @@ export class MyBorrowingsComponent implements OnInit {
         this.messageService.add({ 
           severity: 'error', 
           summary: 'Error', 
-          detail: err.error?.Error || 'Failed to pick up the asset.' 
+          detail: err.error?.detail || 'Failed to pick up the asset.' 
         });
       }
     });
@@ -144,7 +144,7 @@ export class MyBorrowingsComponent implements OnInit {
         this.hideDialog();
       },
       error: (err) => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: err.error?.Error || 'Error returning asset.' });
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: err.error?.detail || 'Error returning asset.' });
       }
     });
   }
