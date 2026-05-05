@@ -17,19 +17,12 @@ public class UsersController : ControllerBase
         _mediator = mediator;
     }
 
-    [AllowAnonymous] // Foarte important pentru a putea crea conturi fără token!
+    [AllowAnonymous]
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterUser.Command command)
     {
-        try
-        {
-            var result = await _mediator.Send(command);
-            return Ok(result);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
+        var result = await _mediator.Send(command);
+        return Ok(result);
     }
 
     [HttpGet]
@@ -43,11 +36,6 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> GetById(Guid id)
     {
         var result = await _mediator.Send(new GetUserById.Query(id));
-        if (result == null)
-        {
-            return NotFound();
-        }
-
         return Ok(result);
     }
 
@@ -59,12 +47,7 @@ public class UsersController : ControllerBase
             return BadRequest();
         }
 
-        var success = await _mediator.Send(command);
-        if (!success)
-        {
-            return NotFound();
-        }
-
+        await _mediator.Send(command);
         return NoContent();
     }
 
@@ -73,35 +56,17 @@ public class UsersController : ControllerBase
     {
         if (id != command.Id)
         {
-            return BadRequest(new { Error = "Id mismatch." });
+            return BadRequest();
         }
 
-        try
-        {
-            var success = await _mediator.Send(command);
-
-            if (!success)
-            {
-                return NotFound(new { Message = "User not found." });
-            }
-
-            return NoContent();
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
+        await _mediator.Send(command);
+        return NoContent();
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Deactivate(Guid id)
     {
-        var success = await _mediator.Send(new DeactivateUser.Command(id));
-        if (!success)
-        {
-            return NotFound();
-        }
-
+        await _mediator.Send(new DeactivateUser.Command(id));
         return NoContent();
     }
 }

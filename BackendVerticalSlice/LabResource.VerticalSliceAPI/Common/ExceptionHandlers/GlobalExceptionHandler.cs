@@ -6,23 +6,23 @@ namespace LabResource.VerticalApi.Common.ExceptionHandlers;
 
 public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
-    public async ValueTask<bool> TryHandleAsync(
-        HttpContext httpContext,
-        Exception exception,
-        CancellationToken cancellationToken)
+    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
-        // 1. Log the exception using Serilog
         logger.LogError(exception, "An unhandled exception occurred: {Message}", exception.Message);
 
-        // 2. Map the exception to a standardized format (RFC 7807 - Problem Details)
         var problemDetails = new ProblemDetails
         {
             Instance = httpContext.Request.Path
         };
 
-        // 3. Determine the HTTP status code based on the exception type
         switch (exception)
         {
+            case ValidationException validationEx:
+                problemDetails.Status = StatusCodes.Status400BadRequest;
+                problemDetails.Title = "Validation Failed";
+                problemDetails.Detail = "One or more validation errors occurred.";
+                problemDetails.Extensions["errors"] = validationEx.Errors.Select(e => new { e.PropertyName, e.ErrorMessage });
+                break;
             case NotFoundException notFoundEx:
                 problemDetails.Status = StatusCodes.Status404NotFound;
                 problemDetails.Title = "Resource Not Found";
@@ -60,7 +60,6 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
                 break;
         }
 
-        // 4. Return the structured response to the client
         httpContext.Response.StatusCode = problemDetails.Status.Value;
         await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
 

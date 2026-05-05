@@ -1,4 +1,6 @@
-﻿using LabResource.VerticalApi.Common.Persistence;
+﻿using FluentValidation;
+using LabResource.VerticalApi.Common.Exceptions;
+using LabResource.VerticalApi.Common.Persistence;
 using LabResource.VerticalApi.Common.Settings;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -12,11 +14,24 @@ namespace LabResource.VerticalApi.Features.Auth;
 
 public static class Login
 {
-    public record Command(string Email, string Password) : IRequest<Result?>;
+    public record Command(string Email, string Password) : IRequest<Result>;
 
     public record Result(string Token, string Email, string FullName);
 
-    public class Handler : IRequestHandler<Command, Result?>
+    public class Validator : AbstractValidator<Command>
+    {
+        public Validator()
+        {
+            RuleFor(x => x.Email)
+                .NotEmpty().WithMessage("Email is required.")
+                .EmailAddress().WithMessage("A valid email address is required.");
+
+            RuleFor(x => x.Password)
+                .NotEmpty().WithMessage("Password is required.");
+        }
+    }
+
+    public class Handler : IRequestHandler<Command, Result>
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly JwtSettings _jwtSettings;
@@ -27,13 +42,18 @@ public static class Login
             _jwtSettings = jwtOptions.Value;
         }
 
-        public async Task<Result?> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(Command request, CancellationToken cancellationToken)
         {
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
 
-            if (user == null || !user.IsActive || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             {
-                return null;
+                throw new BadRequestException("Invalid email or password.");
+            }
+
+            if (!user.IsActive)
+            {
+                throw new ForbiddenAccessException("Your account has been deactivated.");
             }
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
@@ -47,7 +67,7 @@ public static class Login
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
             };
 
-            var token = new JwtSecurityToken(
+            var tokenDescriptor = new JwtSecurityToken(
                 _jwtSettings.Issuer,
                 _jwtSettings.Audience,
                 claims,
@@ -55,7 +75,7 @@ public static class Login
                 signingCredentials: credentials);
 
             return new Result(
-                new JwtSecurityTokenHandler().WriteToken(token),
+                new JwtSecurityTokenHandler().WriteToken(tokenDescriptor),
                 user.Email,
                 user.FullName
             );

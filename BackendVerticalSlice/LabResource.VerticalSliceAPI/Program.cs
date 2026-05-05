@@ -1,7 +1,9 @@
 ﻿using FluentValidation;
+using LabResource.VerticalApi.Common.Behaviors;
 using LabResource.VerticalApi.Common.ExceptionHandlers;
 using LabResource.VerticalApi.Common.Persistence;
 using LabResource.VerticalApi.Common.Settings;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -12,28 +14,26 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Logging Configuration (Serilog)
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateLogger();
-
 builder.Host.UseSerilog();
 
-// 2. Base Services & Exception Handling
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
-// 3. Persistence, MediatR & Validation (Vertical Slice Core)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
+    cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>)); // Injects FluentValidation into MediatR
+});
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
-// 4. Security Configuration (CORS, Auth, JWT)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularApp", policy =>
@@ -45,7 +45,6 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
-
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -60,37 +59,30 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
         };
     });
-
 builder.Services.AddAuthorization();
 
-// 5. Swagger Configuration
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "LabResource Manager - Vertical Slice API",
-        Version = "v1",
-        Description = "API for Vertical Slice Architecture"
+        Version = "v1"
     });
 
     c.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header. Example: 'Bearer {token}'",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey
     });
 
     c.OperationFilter<SecurityRequirementsOperationFilter>();
-
-    // This is crucial for Vertical Slice to avoid schema naming conflicts with nested classes
     c.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
 });
 
-// 6. Build App & Middleware Pipeline
 var app = builder.Build();
 
-app.UseExceptionHandler(); // Must be configured early in the pipeline
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
@@ -99,12 +91,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAngularApp");
-
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 await app.RunAsync();

@@ -1,5 +1,6 @@
 ﻿using LabResource.VerticalApi.Features.Auth;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LabResource.VerticalApi.Controllers;
@@ -15,15 +16,11 @@ public class AuthController : ControllerBase
         _mediator = mediator;
     }
 
+    [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] Login.Command command)
     {
         var result = await _mediator.Send(command);
-        if (result == null)
-        {
-            return Unauthorized(new { Message = "invalid email or password" });
-        }
-
         return Ok(result);
     }
 }
