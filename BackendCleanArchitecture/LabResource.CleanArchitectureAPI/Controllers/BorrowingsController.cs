@@ -2,6 +2,7 @@
 using LabResource.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace LabResource.CleanApi.Controllers;
 
@@ -17,131 +18,77 @@ public class BorrowingsController : ControllerBase
         _borrowingService = borrowingService;
     }
 
-    [HttpPost("request")]
+    [HttpPost]
     public async Task<IActionResult> RequestAsset([FromBody] BorrowAssetRequest request)
     {
-        try
-        {
-            var result = await _borrowingService.RequestAssetAsync(request);
-            return Ok(result);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { Error = ex.Message });
-        }
+        var result = await _borrowingService.RequestAssetAsync(request);
+        return Ok(result);
     }
 
-    [HttpPut("{borrowingId:guid}/review")]
-    public async Task<IActionResult> ReviewRequest(Guid borrowingId, [FromBody] ReviewBorrowingRequest request)
+    [HttpPost("{id:guid}/review")]
+    [Authorize(Roles = "Teacher")]
+    public async Task<IActionResult> ReviewRequest(Guid id, [FromBody] ReviewBorrowingRequest request)
     {
-        try
+        var teacherIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!Guid.TryParse(teacherIdString, out Guid teacherId))
         {
-            await _borrowingService.ReviewRequestAsync(borrowingId, request);
-            return NoContent();
+            return Unauthorized(new { Message = "Invalid token format." });
         }
-        catch (ArgumentException ex)
-        {
-            return NotFound(new { Error = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
+
+        await _borrowingService.ReviewRequestAsync(id, teacherId, request);
+        return NoContent();
     }
 
-    [HttpPut("{borrowingId:guid}/pickup")]
-    public async Task<IActionResult> PickUpAsset(Guid borrowingId)
+    [HttpPost("{id:guid}/pickup")]
+    public async Task<IActionResult> PickUpAsset(Guid id)
     {
-        try
-        {
-            await _borrowingService.PickUpAssetAsync(borrowingId);
-            return NoContent();
-        }
-        catch (ArgumentException ex)
-        {
-            return NotFound(new { Error = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
+        await _borrowingService.PickUpAssetAsync(id);
+        return NoContent();
     }
 
-    [HttpPost("{borrowingId:guid}/return")]
-    public async Task<IActionResult> Return(Guid borrowingId, [FromBody] ReturnAssetRequest request)
+    [HttpPost("{id:guid}/return")]
+    public async Task<IActionResult> ReturnAsset(Guid id, [FromBody] ReturnAssetRequest request)
     {
-        try
-        {
-            var result = await _borrowingService.ReturnAssetAsync(borrowingId, request);
-            return Ok(result);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return NotFound(new { Error = ex.Message });
-        }
+        var result = await _borrowingService.ReturnAssetAsync(id, request);
+        return Ok(result);
     }
 
     [HttpGet("user/{userId:guid}/active")]
-    public async Task<IActionResult> GetActiveForUser(Guid userId)
+    public async Task<IActionResult> GetActiveBorrowingsForUser(Guid userId)
     {
-        try
-        {
-            var result = await _borrowingService.GetActiveBorrowingsForUserAsync(userId);
-            return Ok(result);
-        }
-        catch (ArgumentException ex)
-        {
-            return NotFound(new { Error = ex.Message });
-        }
-    }
-
-    [HttpGet("asset/{assetId:guid}/history")]
-    public async Task<IActionResult> GetAssetHistory(Guid assetId)
-    {
-        try
-        {
-            var result = await _borrowingService.GetAssetHistoryAsync(assetId);
-            return Ok(result);
-        }
-        catch (ArgumentException ex)
-        {
-            return NotFound(new { Error = ex.Message });
-        }
+        var result = await _borrowingService.GetActiveBorrowingsForUserAsync(userId);
+        return Ok(result);
     }
 
     [HttpGet("user/{userId:guid}/history")]
     public async Task<IActionResult> GetUserHistory(Guid userId)
     {
-        try
-        {
-            var result = await _borrowingService.GetUserHistoryAsync(userId);
-            return Ok(result);
-        }
-        catch (ArgumentException ex)
-        {
-            return NotFound(new { Error = ex.Message });
-        }
+        var result = await _borrowingService.GetUserHistoryAsync(userId);
+        return Ok(result);
     }
 
-    [HttpGet("teacher/{teacherId:guid}/pending")]
-    public async Task<IActionResult> GetPendingForTeacher(Guid teacherId)
+    [HttpGet("asset/{assetId:guid}/history")]
+    [Authorize(Roles = "Teacher")]
+    public async Task<IActionResult> GetAssetHistory(Guid assetId)
     {
-        try
+        var result = await _borrowingService.GetAssetHistoryAsync(assetId);
+        return Ok(result);
+    }
+
+    [HttpGet("teacher/pending")]
+    [Authorize(Roles = "Teacher")]
+    public async Task<IActionResult> GetMyPendingRequests()
+    {
+        // Automatically fetch pending requests for the currently logged-in teacher
+        var teacherIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!Guid.TryParse(teacherIdString, out Guid teacherId))
         {
-            var result = await _borrowingService.GetPendingRequestsForTeacherAsync(teacherId);
-            return Ok(result);
+            return Unauthorized();
         }
-        catch (ArgumentException ex)
-        {
-            return NotFound(new { Error = ex.Message });
-        }
+
+        var result = await _borrowingService.GetPendingRequestsForTeacherAsync(teacherId);
+        return Ok(result);
     }
 }

@@ -1,8 +1,10 @@
 ﻿using LabResource.Application.DTOs.Borrowings;
 using LabResource.Application.Interfaces.Repositories;
 using LabResource.Application.Interfaces.Services;
+using LabResource.Application.Mappings;
 using LabResource.Domain.Entities;
 using LabResource.Domain.Enums;
+using LabResource.Domain.Exceptions;
 
 namespace LabResource.Application.Services;
 
@@ -25,15 +27,26 @@ public class BorrowingService : IBorrowingService
     public async Task<BorrowingResponse> RequestAssetAsync(BorrowAssetRequest request)
     {
         var user = await _userRepository.GetByIdAsync(request.UserId);
-        if (user == null || !user.IsActive) throw new ArgumentException("User not found or inactive.");
+        if (user == null || !user.IsActive)
+        {
+            throw new NotFoundException("User", request.UserId);
+        }
 
         var asset = await _assetRepository.GetByIdAsync(request.LabAssetId);
-        if (asset == null || !asset.IsActive) throw new ArgumentException("Asset not found or inactive.");
+        if (asset == null || !asset.IsActive)
+        {
+            throw new NotFoundException("LabAsset", request.LabAssetId);
+        }
+
+        if (asset.Status == AssetStatus.Defective)
+        {
+            throw new ConflictException("Cannot request an asset that is currently marked as defective.");
+        }
 
         bool hasOverlap = await _borrowingRepository.HasOverlappingReservationsAsync(asset.Id, request.RequestedStartDate, request.RequestedEndDate);
         if (hasOverlap)
         {
-            throw new InvalidOperationException("The asset is already booked for the requested period.");
+            throw new ConflictException("The asset is already booked for the requested period.");
         }
 
         bool isAssignedTeacher = asset.AssignedTeacherId == user.Id;
@@ -48,39 +61,35 @@ public class BorrowingService : IBorrowingService
             Status = isAssignedTeacher ? BorrowingStatus.Approved : BorrowingStatus.Pending
         };
 
-        if (isAssignedTeacher)
-        {
-            asset.Status = AssetStatus.Borrowed;
-        }
-        else
-        {
-            asset.Status = AssetStatus.PendingApproval;
-        }
+        asset.Status = isAssignedTeacher ? AssetStatus.Borrowed : AssetStatus.PendingApproval;
 
         await _borrowingRepository.AddAsync(borrowingRecord);
         await _assetRepository.UpdateAsync(asset);
         await _borrowingRepository.SaveChangesAsync();
 
-        return new BorrowingResponse
-        {
-            Id = borrowingRecord.Id,
-            UserId = user.Id,
-            LabAssetId = asset.Id,
-            AssetName = asset.Name,
-            UserName = user.FullName,
-            RequestedStartDate = borrowingRecord.RequestedStartDate,
-            RequestedEndDate = borrowingRecord.RequestedEndDate,
-            Status = borrowingRecord.Status
-        };
+        return borrowingRecord.ToBorrowingResponse(user.FullName, asset.Name);
     }
 
-    public async Task ReviewRequestAsync(Guid borrowingId, ReviewBorrowingRequest request)
+    public async Task ReviewRequestAsync(Guid borrowingId, Guid teacherId, ReviewBorrowingRequest request)
     {
         var record = await _borrowingRepository.GetByIdAsync(borrowingId);
-        if (record == null) throw new ArgumentException("Borrowing record not found.");
-        if (record.Status != BorrowingStatus.Pending) throw new InvalidOperationException("Only pending requests can be reviewed.");
+        if (record == null)
+        {
+            throw new NotFoundException("BorrowingRecord", borrowingId);
+        }
+
+        if (record.Status != BorrowingStatus.Pending)
+        {
+            throw new ConflictException("Only pending requests can be reviewed.");
+        }
 
         var asset = await _assetRepository.GetByIdAsync(record.LabAssetId);
+
+        // Security check: Only the teacher assigned to the asset can approve/reject its requests
+        if (asset != null && asset.AssignedTeacherId != teacherId)
+        {
+            throw new ForbiddenAccessException("You are not authorized to review requests for this asset.");
+        }
 
         if (request.IsApproved)
         {
@@ -91,8 +100,12 @@ public class BorrowingService : IBorrowingService
         {
             record.Status = BorrowingStatus.Rejected;
             record.Remarks = request.TeacherNotes;
-            asset!.Status = AssetStatus.Available;
-            await _assetRepository.UpdateAsync(asset);
+
+            if (asset != null)
+            {
+                asset.Status = AssetStatus.Available;
+                await _assetRepository.UpdateAsync(asset);
+            }
         }
 
         await _borrowingRepository.UpdateAsync(record);
@@ -102,25 +115,49 @@ public class BorrowingService : IBorrowingService
     public async Task PickUpAssetAsync(Guid borrowingId)
     {
         var record = await _borrowingRepository.GetByIdAsync(borrowingId);
-        if (record == null || record.Status != BorrowingStatus.Approved)
-            throw new InvalidOperationException("Reservation is not approved yet.");
+        if (record == null)
+        {
+            throw new NotFoundException("BorrowingRecord", borrowingId);
+        }
+
+        if (record.Status != BorrowingStatus.Approved)
+        {
+            throw new ConflictException("Reservation must be approved before pickup.");
+        }
 
         var asset = await _assetRepository.GetByIdAsync(record.LabAssetId);
+
+        // Ensure the asset has actually been returned by the previous borrower before handing it out
+        if (asset != null && asset.Status != AssetStatus.Available)
+        {
+            throw new ConflictException($"Asset cannot be picked up because its current status is {asset.Status}.");
+        }
 
         record.Status = BorrowingStatus.Active;
         record.ActualBorrowedAt = DateTime.UtcNow;
 
-        asset!.Status = AssetStatus.Borrowed;
+        if (asset != null)
+        {
+            asset.Status = AssetStatus.Borrowed;
+            await _assetRepository.UpdateAsync(asset);
+        }
 
         await _borrowingRepository.UpdateAsync(record);
-        await _assetRepository.UpdateAsync(asset);
         await _borrowingRepository.SaveChangesAsync();
     }
 
     public async Task<ReturnAssetResponse> ReturnAssetAsync(Guid borrowingId, ReturnAssetRequest request)
     {
         var activeBorrowing = await _borrowingRepository.GetByIdAsync(borrowingId);
-        if (activeBorrowing == null) throw new InvalidOperationException("Borrowing record not found.");
+        if (activeBorrowing == null)
+        {
+            throw new NotFoundException("BorrowingRecord", borrowingId);
+        }
+
+        if (activeBorrowing.Status != BorrowingStatus.Active)
+        {
+            throw new ConflictException("Cannot return an asset that is not currently active.");
+        }
 
         var asset = await _assetRepository.GetByIdAsync(activeBorrowing.LabAssetId);
 
@@ -130,94 +167,63 @@ public class BorrowingService : IBorrowingService
             ? request.Remarks
             : $"{activeBorrowing.Remarks} | Return Note: {request.Remarks}";
 
-        asset!.Status = request.IsDefective ? AssetStatus.Defective : AssetStatus.Available;
+        if (asset != null)
+        {
+            asset.Status = request.IsDefective ? AssetStatus.Defective : AssetStatus.Available;
+            await _assetRepository.UpdateAsync(asset);
+        }
 
         await _borrowingRepository.UpdateAsync(activeBorrowing);
-        await _assetRepository.UpdateAsync(asset);
         await _borrowingRepository.SaveChangesAsync();
 
         return new ReturnAssetResponse
         {
             BorrowingRecordId = activeBorrowing.Id,
-            AssetName = asset.Name,
+            AssetName = asset?.Name ?? "Unknown",
             ReturnedAt = activeBorrowing.ActualReturnedAt.Value,
-            NewStatus = asset.Status
+            NewStatus = asset?.Status ?? AssetStatus.Available
         };
     }
 
     public async Task<IEnumerable<ActiveBorrowingResponse>> GetActiveBorrowingsForUserAsync(Guid userId)
     {
         var user = await _userRepository.GetByIdAsync(userId);
-        if (user == null) throw new ArgumentException("User not found.");
+        if (user == null)
+        {
+            throw new NotFoundException("User", userId);
+        }
 
         var activeBorrowings = await _borrowingRepository.GetActiveBorrowingsByUserIdAsync(userId);
-
-        return activeBorrowings.Select(b => new ActiveBorrowingResponse
-        {
-            BorrowingRecordId = b.Id,
-            LabAssetId = b.LabAssetId,
-            AssetName = b.LabAsset.Name,
-            SerialNumber = b.LabAsset.SerialNumber,
-            RequestedStartDate = b.RequestedStartDate,
-            RequestedEndDate = b.RequestedEndDate,
-            Status = b.Status
-        });
+        return activeBorrowings.Select(b => b.ToActiveBorrowingResponse());
     }
 
     public async Task<IEnumerable<AssetHistoryResponse>> GetAssetHistoryAsync(Guid labAssetId)
     {
         var asset = await _assetRepository.GetByIdAsync(labAssetId);
-        if (asset == null) throw new ArgumentException("Asset not found.");
+        if (asset == null)
+        {
+            throw new NotFoundException("LabAsset", labAssetId);
+        }
 
         var history = await _borrowingRepository.GetHistoryByAssetIdAsync(labAssetId);
-
-        return history.Select(b => new AssetHistoryResponse
-        {
-            BorrowingRecordId = b.Id,
-            UserName = b.User.FullName,
-            MatriculationNumber = b.User.MatriculationNumber,
-            RequestedStartDate = b.RequestedStartDate,
-            RequestedEndDate = b.RequestedEndDate,
-            ActualReturnedAt = b.ActualReturnedAt,
-            Status = b.Status,
-            Remarks = b.Remarks
-        });
+        return history.Select(b => b.ToAssetHistoryResponse());
     }
 
     public async Task<IEnumerable<UserBorrowingHistoryResponse>> GetUserHistoryAsync(Guid userId)
     {
         var user = await _userRepository.GetByIdAsync(userId);
-        if (user == null) throw new ArgumentException("User not found.");
+        if (user == null)
+        {
+            throw new NotFoundException("User", userId);
+        }
 
         var history = await _borrowingRepository.GetHistoryByUserIdAsync(userId);
-
-        return history.Select(b => new UserBorrowingHistoryResponse
-        {
-            AssetName = b.LabAsset.Name,
-            SerialNumber = b.LabAsset.SerialNumber,
-            RequestedStartDate = b.RequestedStartDate,
-            RequestedEndDate = b.RequestedEndDate,
-            ActualReturnedAt = b.ActualReturnedAt,
-            Status = b.Status,
-            IsDefective = b.LabAsset.Status == AssetStatus.Defective,
-            Remarks = b.Remarks
-        });
+        return history.Select(b => b.ToUserBorrowingHistoryResponse());
     }
 
     public async Task<IEnumerable<ActiveBorrowingResponse>> GetPendingRequestsForTeacherAsync(Guid teacherId)
     {
         var pendingRequests = await _borrowingRepository.GetPendingRequestsForTeacherAsync(teacherId);
-
-        return pendingRequests.Select(b => new ActiveBorrowingResponse
-        {
-            BorrowingRecordId = b.Id,
-            LabAssetId = b.LabAssetId,
-            AssetName = b.LabAsset.Name,
-            SerialNumber = b.LabAsset.SerialNumber,
-            RequestedStartDate = b.RequestedStartDate,
-            RequestedEndDate = b.RequestedEndDate,
-            Status = b.Status,
-            UserName = b.User.FullName
-        });
+        return pendingRequests.Select(b => b.ToActiveBorrowingResponse());
     }
 }
