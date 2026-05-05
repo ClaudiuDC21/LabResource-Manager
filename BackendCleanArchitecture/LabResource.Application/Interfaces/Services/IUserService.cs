@@ -8,7 +8,7 @@ public interface IUserService
 
     Task<IEnumerable<UserResponse>> GetAllActiveUsersAsync();
 
-    Task<UserResponse?> GetUserByIdAsync(Guid id);
+    Task<UserResponse> GetUserByIdAsync(Guid id);
 
     Task<bool> UpdateUserAsync(Guid id, UpdateUserRequest request);
 

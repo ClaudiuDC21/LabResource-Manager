@@ -7,7 +7,7 @@ using LabResource.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Serilog;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
@@ -23,6 +23,11 @@ builder.Host.UseSerilog();
 
 // 2. Base Services & Exception Handling
 builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<LabResource.CleanApi.Filters.ValidationFilterAttribute>();
+});
+builder.Services.AddValidatorsFromAssemblyContaining<LabResource.Application.Services.UserService>();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();

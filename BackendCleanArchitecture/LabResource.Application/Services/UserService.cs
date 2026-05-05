@@ -1,8 +1,10 @@
 ﻿using LabResource.Application.DTOs.Users;
 using LabResource.Application.Interfaces.Repositories;
 using LabResource.Application.Interfaces.Services;
+using LabResource.Application.Mappings;
 using LabResource.Domain.Entities;
 using LabResource.Domain.Enums;
+using LabResource.Domain.Exceptions;
 
 namespace LabResource.Application.Services;
 
@@ -18,14 +20,15 @@ public class UserService : IUserService
     public async Task<UserResponse> RegisterUserAsync(RegisterUserRequest request)
     {
         var existingUser = await _userRepository.GetByEmailAsync(request.Email);
+
         if (existingUser != null)
         {
-            throw new ArgumentException("Email is already in use.");
+            throw new AlreadyExistsException("User", request.Email);
         }
 
         var assignedRole = request.Email.EndsWith("@ubbcluj.ro", StringComparison.OrdinalIgnoreCase)
-            ? Domain.Enums.UserRole.Teacher 
-            : Domain.Enums.UserRole.Student; 
+            ? UserRole.Teacher
+            : UserRole.Student;
 
         var newUser = new User
         {
@@ -36,42 +39,51 @@ public class UserService : IUserService
             Role = assignedRole,
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
+            // Hash the password using BCrypt before storing it in the database
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password)
         };
 
         await _userRepository.AddAsync(newUser);
         await _userRepository.SaveChangesAsync();
 
-        return new UserResponse
-        {
-            Id = newUser.Id,
-            FullName = newUser.FullName,
-            Email = newUser.Email,
-            Role = newUser.Role,
-            IsActive = newUser.IsActive,
-            MatriculationNumber = newUser.MatriculationNumber
-        };
+        return newUser.ToResponse();
     }
 
     public async Task<IEnumerable<UserResponse>> GetAllActiveUsersAsync()
     {
         var users = await _userRepository.GetAllActiveAsync();
-        return users.Select(MapToResponse);
+        return users.Select(user => user.ToResponse());
     }
 
-    public async Task<UserResponse?> GetUserByIdAsync(Guid id)
+    public async Task<UserResponse> GetUserByIdAsync(Guid id)
     {
+        if (id == Guid.Empty)
+        {
+            throw new BadRequestException("The provided user ID is invalid.");
+        }
+
         var user = await _userRepository.GetByIdAsync(id);
 
-        return user != null ? MapToResponse(user) : null;
+        if (user == null)
+        {
+            throw new NotFoundException("User", id);
+        }
+
+        return user.ToResponse();
     }
 
     public async Task<bool> UpdateUserAsync(Guid id, UpdateUserRequest request)
     {
+        if (id == Guid.Empty)
+        {
+            throw new BadRequestException("The provided user ID is invalid.");
+        }
+
         var user = await _userRepository.GetByIdAsync(id);
+
         if (user == null)
         {
-            return false;
+            throw new NotFoundException("User", id);
         }
 
         user.FullName = request.FullName;
@@ -85,15 +97,27 @@ public class UserService : IUserService
 
     public async Task<bool> UpdatePasswordAsync(Guid id, UpdatePasswordRequest request)
     {
+        if (id == Guid.Empty)
+        {
+            throw new BadRequestException("The provided user ID is invalid.");
+        }
+
         var user = await _userRepository.GetByIdAsync(id);
+
         if (user == null)
         {
-            return false;
+            throw new NotFoundException("User", id);
         }
 
         if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
         {
-            throw new ArgumentException("Invalid current password.");
+            throw new BadRequestException("Invalid current password.");
+        }
+
+        // Prevent updating if the new password is the same as the old one
+        if (BCrypt.Net.BCrypt.Verify(request.NewPassword, user.PasswordHash))
+        {
+            throw new ConflictException("The new password cannot be the same as the current password.");
         }
 
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
@@ -106,10 +130,22 @@ public class UserService : IUserService
 
     public async Task<bool> DeactivateUserAsync(Guid id)
     {
+        if (id == Guid.Empty)
+        {
+            throw new BadRequestException("The provided user ID is invalid.");
+        }
+
         var user = await _userRepository.GetByIdAsync(id);
+
         if (user == null)
         {
-            return false;
+            throw new NotFoundException("User", id);
+        }
+
+        // Prevent deactivating an already deactivated user
+        if (!user.IsActive)
+        {
+            throw new ConflictException("This user is already deactivated.");
         }
 
         user.IsActive = false;
@@ -118,18 +154,5 @@ public class UserService : IUserService
         await _userRepository.SaveChangesAsync();
 
         return true;
-    }
-
-    private static UserResponse MapToResponse(User user)
-    {
-        return new UserResponse
-        {
-            Id = user.Id,
-            FullName = user.FullName,
-            Email = user.Email,
-            Role = user.Role,
-            MatriculationNumber = user.MatriculationNumber,
-            IsActive = user.IsActive
-        };
     }
 }

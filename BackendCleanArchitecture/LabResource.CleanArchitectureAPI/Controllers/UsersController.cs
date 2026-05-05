@@ -17,18 +17,12 @@ public class UsersController : ControllerBase
         _userService = userService;
     }
 
+    [AllowAnonymous]
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterUserRequest request)
     {
-        try
-        {
-            var result = await _userService.RegisterUserAsync(request);
-            return Ok(result);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
+        var result = await _userService.RegisterUserAsync(request);
+        return Ok(result);
     }
 
     [HttpGet]
@@ -42,55 +36,27 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> GetById(Guid id)
     {
         var user = await _userService.GetUserByIdAsync(id);
-        if (user == null)
-        {
-            return NotFound();
-        }
-
         return Ok(user);
     }
 
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserRequest request)
     {
-        var success = await _userService.UpdateUserAsync(id, request);
-        if (!success)
-        {
-            return NotFound();
-        }
-
+        await _userService.UpdateUserAsync(id, request);
         return NoContent();
     }
 
     [HttpPut("{id:guid}/password")]
     public async Task<IActionResult> UpdatePassword(Guid id, [FromBody] UpdatePasswordRequest request)
     {
-        try
-        {
-            var success = await _userService.UpdatePasswordAsync(id, request);
-
-            if (!success)
-            {
-                return NotFound(new { Message = "User not found." });
-            }
-
-            return NoContent();
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
+        await _userService.UpdatePasswordAsync(id, request);
+        return NoContent();
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Deactivate(Guid id)
     {
-        var success = await _userService.DeactivateUserAsync(id);
-        if (!success)
-        {
-            return NotFound();
-        }
-
+        await _userService.DeactivateUserAsync(id);
         return NoContent();
     }
 }
