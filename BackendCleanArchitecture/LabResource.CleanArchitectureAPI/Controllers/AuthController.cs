@@ -1,6 +1,6 @@
 ﻿using LabResource.Application.DTOs.Auth;
-using LabResource.Application.DTOs.Users;
 using LabResource.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LabResource.CleanApi.Controllers;
@@ -16,15 +16,11 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
+    [AllowAnonymous] 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var response = await _authService.LoginAsync(request);
-        if (response == null)
-        {
-            return Unauthorized(new { Message = "invalid email or password" });
-        }
-
+         var response = await _authService.LoginAsync(request);
         return Ok(response);
     }
 }

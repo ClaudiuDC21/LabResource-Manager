@@ -27,9 +27,10 @@ builder.Services.AddControllers(options =>
 {
     options.Filters.Add<LabResource.CleanApi.Filters.ValidationFilterAttribute>();
 });
-builder.Services.AddValidatorsFromAssemblyContaining<LabResource.Application.Services.UserService>();
-builder.Services.AddEndpointsApiExplorer();
 
+builder.Services.AddValidatorsFromAssemblyContaining<LabResource.Application.Services.UserService>();
+
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
