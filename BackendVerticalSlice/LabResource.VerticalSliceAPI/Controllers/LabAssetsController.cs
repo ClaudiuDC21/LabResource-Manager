@@ -22,15 +22,8 @@ public class LabAssetsController : ControllerBase
     [Authorize(Roles = nameof(UserRole.Teacher))]
     public async Task<IActionResult> Create([FromBody] CreateLabAsset.Command command)
     {
-        try
-        {
-            var result = await _mediator.Send(command);
-            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
+        var result = await _mediator.Send(command);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
     [HttpGet]
@@ -44,11 +37,6 @@ public class LabAssetsController : ControllerBase
     public async Task<IActionResult> GetById(Guid id)
     {
         var result = await _mediator.Send(new GetLabAssetById.Query(id));
-        if (result == null)
-        {
-            return NotFound();
-        }
-
         return Ok(result);
     }
 
@@ -61,32 +49,15 @@ public class LabAssetsController : ControllerBase
             return BadRequest();
         }
 
-        try
-        {
-            var success = await _mediator.Send(command);
-            if (!success)
-            {
-                return NotFound();
-            }
-
-            return NoContent();
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
+        await _mediator.Send(command);
+        return NoContent();
     }
 
     [HttpDelete("{id:guid}")]
     [Authorize(Roles = nameof(UserRole.Teacher))]
     public async Task<IActionResult> Deactivate(Guid id)
     {
-        var success = await _mediator.Send(new DeactivateLabAsset.Command(id));
-        if (!success)
-        {
-            return NotFound();
-        }
-
+        await _mediator.Send(new DeactivateLabAsset.Command(id));
         return NoContent();
     }
 }
