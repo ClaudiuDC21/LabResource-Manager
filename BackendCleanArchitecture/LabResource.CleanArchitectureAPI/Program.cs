@@ -2,6 +2,7 @@ using FluentValidation;
 using LabResource.Application;
 using LabResource.Application.Settings;
 using LabResource.CleanApi.ExceptionHandlers;
+using LabResource.CleanApi.Filters;
 using LabResource.Infrastructure;
 using LabResource.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -14,36 +15,31 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Logging Configuration (Serilog)
 Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
     .WriteTo.Console()
+    .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
 builder.Host.UseSerilog();
 
-// 2. Base Services & Exception Handling
-builder.Services.AddControllers();
 builder.Services.AddControllers(options =>
 {
-    options.Filters.Add<LabResource.CleanApi.Filters.ValidationFilterAttribute>();
+    options.Filters.Add<ValidationFilterAttribute>();
+    options.Filters.Add<LoggingFilterAttribute>();
 });
 
 builder.Services.AddValidatorsFromAssemblyContaining<LabResource.Application.Services.UserService>();
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
-// 3. Clean Architecture Layers & Persistence
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
-
-// 4. Security Configuration (CORS, Auth, JWT)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularApp", policy =>
@@ -73,19 +69,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// 5. Swagger Configuration
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "LabResource Manager - Clean Architecture API",
-        Version = "v1",
-        Description = "API for Clean Architecture"
+        Version = "v1"
     });
 
     c.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header. Example: 'Bearer {token}'",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey
@@ -94,10 +87,9 @@ builder.Services.AddSwaggerGen(c =>
     c.OperationFilter<SecurityRequirementsOperationFilter>();
 });
 
-// 6. Build App & Middleware Pipeline
 var app = builder.Build();
 
-app.UseExceptionHandler(); // Must be configured early in the pipeline
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
@@ -106,12 +98,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAngularApp");
-
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 await app.RunAsync();
