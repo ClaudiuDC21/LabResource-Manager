@@ -185,7 +185,7 @@ export class DashboardComponent implements OnInit {
   }
 
   private handleError(err: any) {
-    const detail = err.error?.Error || 'Action failed. Check console for details.';
+    const detail = err.error?.detail || 'Action failed. Check console for details.';
     this.messageService.add({ severity: 'error', summary: 'Error', detail: detail });
   }
 

@@ -64,8 +64,7 @@ export class RegisterComponent {
       },
       error: (err) => {
         this.isLoading = false;
-        // Prindem eroarea din C#: new { Error = ex.Message }
-        this.errorMessage = err.error?.error || err.error?.Error || 'Registration failed. Email might already be in use.';
+        this.errorMessage = err.error?.detail || 'Registration failed. Email might already be in use.';
         console.error('Register error:', err);
       }
     });

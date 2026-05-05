@@ -128,7 +128,7 @@ export class ProfileComponent implements OnInit {
         this.loadUserData(); 
       },
       error: (err) => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: err.error?.Error || 'Update failed.' });
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: err.error?.detail || 'Update failed.' });
       }
     });
   }

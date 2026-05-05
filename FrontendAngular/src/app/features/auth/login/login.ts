@@ -52,7 +52,7 @@ export class LoginComponent {
       },
       error: (err) => {
         this.isLoading = false;
-        this.errorMessage = err.error?.message || err.error?.Message || 'Invalid email or password.';
+        this.errorMessage = err.error?.detail || 'Invalid email or password.';
       }
     });
   }
