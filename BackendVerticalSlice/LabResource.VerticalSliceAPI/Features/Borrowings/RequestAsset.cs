@@ -1,5 +1,7 @@
-﻿using LabResource.VerticalApi.Common.Entities;
+﻿using FluentValidation;
+using LabResource.VerticalApi.Common.Entities;
 using LabResource.VerticalApi.Common.Enums;
+using LabResource.VerticalApi.Common.Exceptions;
 using LabResource.VerticalApi.Common.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +27,21 @@ public static class RequestAsset
         DateTime RequestedEndDate,
         BorrowingStatus Status);
 
+    public class Validator : AbstractValidator<Command>
+    {
+        public Validator()
+        {
+            RuleFor(x => x.UserId).NotEmpty();
+            RuleFor(x => x.LabAssetId).NotEmpty();
+            RuleFor(x => x.RequestedStartDate)
+                .NotEmpty()
+                .GreaterThanOrEqualTo(DateTime.UtcNow.Date).WithMessage("Start date cannot be in the past.");
+            RuleFor(x => x.RequestedEndDate)
+                .NotEmpty()
+                .GreaterThan(x => x.RequestedStartDate).WithMessage("End date must be after the start date.");
+        }
+    }
+
     public class Handler : IRequestHandler<Command, Result>
     {
         private readonly ApplicationDbContext _context;
@@ -37,10 +54,12 @@ public static class RequestAsset
         public async Task<Result> Handle(Command request, CancellationToken cancellationToken)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
-            if (user == null || !user.IsActive) throw new ArgumentException("User not found or inactive.");
+            if (user == null || !user.IsActive) throw new NotFoundException("User", request.UserId);
 
             var asset = await _context.LabAssets.FirstOrDefaultAsync(a => a.Id == request.LabAssetId, cancellationToken);
-            if (asset == null || !asset.IsActive) throw new ArgumentException("Asset not found or inactive.");
+            if (asset == null || !asset.IsActive) throw new NotFoundException("LabAsset", request.LabAssetId);
+
+            if (asset.Status == AssetStatus.Defective) throw new ConflictException("Asset is defective.");
 
             bool hasOverlap = await _context.BorrowingRecords.AnyAsync(b =>
                 b.LabAssetId == asset.Id &&
@@ -48,7 +67,7 @@ public static class RequestAsset
                 b.RequestedStartDate < request.RequestedEndDate &&
                 b.RequestedEndDate > request.RequestedStartDate, cancellationToken);
 
-            if (hasOverlap) throw new InvalidOperationException("The asset is already booked for the requested period.");
+            if (hasOverlap) throw new ConflictException("Asset is already booked for this period.");
 
             bool isAssignedTeacher = asset.AssignedTeacherId == user.Id;
 
@@ -64,19 +83,11 @@ public static class RequestAsset
 
             asset.Status = isAssignedTeacher ? AssetStatus.Borrowed : AssetStatus.PendingApproval;
 
-            await _context.BorrowingRecords.AddAsync(borrowingRecord, cancellationToken);
+            _context.BorrowingRecords.Add(borrowingRecord);
             await _context.SaveChangesAsync(cancellationToken);
 
-            return new Result(
-                borrowingRecord.Id,
-                user.Id,
-                asset.Id,
-                asset.Name,
-                user.FullName,
-                borrowingRecord.RequestedStartDate,
-                borrowingRecord.RequestedEndDate,
-                borrowingRecord.Status
-            );
+            return new Result(borrowingRecord.Id, user.Id, asset.Id, asset.Name, user.FullName,
+                borrowingRecord.RequestedStartDate, borrowingRecord.RequestedEndDate, borrowingRecord.Status);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using LabResource.VerticalApi.Common.Exceptions;
+﻿using FluentValidation;
+using LabResource.VerticalApi.Common.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,6 +24,7 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
                 problemDetails.Detail = "One or more validation errors occurred.";
                 problemDetails.Extensions["errors"] = validationEx.Errors.Select(e => new { e.PropertyName, e.ErrorMessage });
                 break;
+
             case NotFoundException notFoundEx:
                 problemDetails.Status = StatusCodes.Status404NotFound;
                 problemDetails.Title = "Resource Not Found";

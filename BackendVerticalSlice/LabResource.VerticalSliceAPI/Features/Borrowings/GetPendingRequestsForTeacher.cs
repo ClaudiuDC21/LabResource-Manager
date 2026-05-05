@@ -27,16 +27,7 @@ public static class GetPendingRequestsForTeacher
                 .Include(b => b.User)
                 .Where(b => b.LabAsset.AssignedTeacherId == request.TeacherId && b.Status == BorrowingStatus.Pending)
                 .OrderBy(b => b.RequestedStartDate)
-                .Select(b => new Result(
-                    b.Id,
-                    b.LabAssetId,
-                    b.LabAsset.Name,
-                    b.LabAsset.SerialNumber,
-                    b.User.FullName,
-                    b.RequestedStartDate,
-                    b.RequestedEndDate,
-                    b.Status
-                ))
+                .Select(b => new Result(b.Id, b.LabAssetId, b.LabAsset.Name, b.LabAsset.SerialNumber, b.User.FullName, b.RequestedStartDate, b.RequestedEndDate, b.Status))
                 .ToListAsync(cancellationToken);
         }
     }

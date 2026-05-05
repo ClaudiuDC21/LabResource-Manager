@@ -1,4 +1,6 @@
-﻿using LabResource.VerticalApi.Common.Enums;
+﻿using FluentValidation;
+using LabResource.VerticalApi.Common.Enums;
+using LabResource.VerticalApi.Common.Exceptions;
 using LabResource.VerticalApi.Common.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -8,11 +10,21 @@ namespace LabResource.VerticalApi.Features.Borrowings;
 
 public static class ReviewRequest
 {
-    public record Command( Guid BorrowingId,
+    public record Command(
+        [property: JsonIgnore] Guid BorrowingId,
+        [property: JsonIgnore] Guid TeacherId,
         bool IsApproved,
-        string? TeacherNotes) : IRequest<bool>;
+        string? TeacherNotes) : IRequest;
 
-    public class Handler : IRequestHandler<Command, bool>
+    public class Validator : AbstractValidator<Command>
+    {
+        public Validator()
+        {
+            RuleFor(x => x.TeacherNotes).MaximumLength(500);
+        }
+    }
+
+    public class Handler : IRequestHandler<Command>
     {
         private readonly ApplicationDbContext _context;
 
@@ -21,13 +33,14 @@ public static class ReviewRequest
             _context = context;
         }
 
-        public async Task<bool> Handle(Command request, CancellationToken cancellationToken)
+        public async Task Handle(Command request, CancellationToken cancellationToken)
         {
             var record = await _context.BorrowingRecords.FirstOrDefaultAsync(b => b.Id == request.BorrowingId, cancellationToken);
-            if (record == null) throw new ArgumentException("Borrowing record not found.");
-            if (record.Status != BorrowingStatus.Pending) throw new InvalidOperationException("Only pending requests can be reviewed.");
+            if (record == null) throw new NotFoundException("BorrowingRecord", request.BorrowingId);
+            if (record.Status != BorrowingStatus.Pending) throw new ConflictException("Only pending requests can be reviewed.");
 
             var asset = await _context.LabAssets.FirstOrDefaultAsync(a => a.Id == record.LabAssetId, cancellationToken);
+            if (asset != null && asset.AssignedTeacherId != request.TeacherId) throw new ForbiddenAccessException("Not authorized for this asset.");
 
             if (request.IsApproved)
             {
@@ -42,7 +55,6 @@ public static class ReviewRequest
             }
 
             await _context.SaveChangesAsync(cancellationToken);
-            return true;
         }
     }
 }

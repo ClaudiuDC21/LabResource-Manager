@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace LabResource.VerticalApi.Controllers;
 
@@ -17,141 +18,75 @@ public class BorrowingsController : ControllerBase
         _mediator = mediator;
     }
 
-    [HttpPost("request")]
+    [HttpPost]
     public async Task<IActionResult> RequestAsset([FromBody] RequestAsset.Command command)
     {
-        try
-        {
-            var result = await _mediator.Send(command);
-            return Ok(result);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { Error = ex.Message });
-        }
+        var result = await _mediator.Send(command);
+        return Ok(result);
     }
 
-    [HttpPut("{borrowingId:guid}/review")]
-    public async Task<IActionResult> ReviewRequest(Guid borrowingId, [FromBody] ReviewRequest.Command command)
+    [HttpPost("{id:guid}/review")]
+    [Authorize(Roles = "Teacher")]
+    public async Task<IActionResult> ReviewRequest(Guid id, [FromBody] ReviewRequest.Command command)
     {
-        if (borrowingId != command.BorrowingId)
+        var teacherIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(teacherIdString, out Guid teacherId))
         {
-            return BadRequest(new { Error = "Id mismatch." });
+            return Unauthorized();
         }
 
-        try
-        {
-            await _mediator.Send(command);
-            return NoContent();
-        }
-        catch (ArgumentException ex)
-        {
-            return NotFound(new { Error = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
+        // Ne asigurăm că ID-ul din URL ajunge în comandă
+        await _mediator.Send(command with { BorrowingId = id, TeacherId = teacherId });
+        return NoContent();
     }
 
-    [HttpPut("{borrowingId:guid}/pickup")]
-    public async Task<IActionResult> PickUpAsset(Guid borrowingId)
+    [HttpPost("{id:guid}/pickup")]
+    public async Task<IActionResult> PickUpAsset(Guid id)
     {
-        try
-        {
-            await _mediator.Send(new PickUpAsset.Command(borrowingId));
-            return NoContent();
-        }
-        catch (ArgumentException ex)
-        {
-            return NotFound(new { Error = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
+        await _mediator.Send(new PickUpAsset.Command(id));
+        return NoContent();
     }
 
-    [HttpPost("{borrowingId:guid}/return")]
-    public async Task<IActionResult> Return(Guid borrowingId, [FromBody] ReturnAsset.Command command)
+    [HttpPost("{id:guid}/return")]
+    public async Task<IActionResult> ReturnAsset(Guid id, [FromBody] ReturnAsset.Command command)
     {
-        if (borrowingId != command.BorrowingId)
-        {
-            return BadRequest(new { Error = "Id mismatch." });
-        }
-
-        try
-        {
-            var result = await _mediator.Send(command);
-            return Ok(result);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return NotFound(new { Error = ex.Message });
-        }
+        var result = await _mediator.Send(command with { BorrowingId = id });
+        return Ok(result);
     }
 
     [HttpGet("user/{userId:guid}/active")]
-    public async Task<IActionResult> GetActiveForUser(Guid userId)
+    public async Task<IActionResult> GetActiveBorrowingsForUser(Guid userId)
     {
-        try
-        {
-            var result = await _mediator.Send(new GetActiveBorrowingsForUser.Query(userId));
-            return Ok(result);
-        }
-        catch (ArgumentException ex)
-        {
-            return NotFound(new { Error = ex.Message });
-        }
-    }
-
-    [HttpGet("asset/{assetId:guid}/history")]
-    public async Task<IActionResult> GetAssetHistory(Guid assetId)
-    {
-        try
-        {
-            var result = await _mediator.Send(new GetAssetHistory.Query(assetId));
-            return Ok(result);
-        }
-        catch (ArgumentException ex)
-        {
-            return NotFound(new { Error = ex.Message });
-        }
+        var result = await _mediator.Send(new GetActiveBorrowingsForUser.Query(userId));
+        return Ok(result);
     }
 
     [HttpGet("user/{userId:guid}/history")]
     public async Task<IActionResult> GetUserHistory(Guid userId)
     {
-        try
-        {
-            var result = await _mediator.Send(new GetUserHistory.Query(userId));
-            return Ok(result);
-        }
-        catch (ArgumentException ex)
-        {
-            return NotFound(new { Error = ex.Message });
-        }
+        var result = await _mediator.Send(new GetUserHistory.Query(userId));
+        return Ok(result);
     }
 
-    [HttpGet("teacher/{teacherId:guid}/pending")]
-    public async Task<IActionResult> GetPendingForTeacher(Guid teacherId)
+    [HttpGet("asset/{assetId:guid}/history")]
+    [Authorize(Roles = "Teacher")]
+    public async Task<IActionResult> GetAssetHistory(Guid assetId)
     {
-        try
+        var result = await _mediator.Send(new GetAssetHistory.Query(assetId));
+        return Ok(result);
+    }
+
+    [HttpGet("teacher/pending")]
+    [Authorize(Roles = "Teacher")]
+    public async Task<IActionResult> GetMyPendingRequests()
+    {
+        var teacherIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(teacherIdString, out Guid teacherId))
         {
-            var result = await _mediator.Send(new GetPendingRequestsForTeacher.Query(teacherId));
-            return Ok(result);
+            return Unauthorized();
         }
-        catch (ArgumentException ex)
-        {
-            return NotFound(new { Error = ex.Message });
-        }
+
+        var result = await _mediator.Send(new GetPendingRequestsForTeacher.Query(teacherId));
+        return Ok(result);
     }
 }
