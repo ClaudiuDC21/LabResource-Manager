@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using LabResource.VerticalApi.Common.Entities;
 using LabResource.VerticalApi.Common.Enums;
+using LabResource.VerticalApi.Common.Exceptions;
 using LabResource.VerticalApi.Common.Persistence;
 using LabResource.VerticalApi.Features.Users;
 using Microsoft.EntityFrameworkCore;
@@ -44,7 +45,7 @@ public class GetUserByIdTests
         var result = await _handler.Handle(query, CancellationToken.None);
 
         result.Should().NotBeNull();
-        result!.Id.Should().Be(userId);
+        result.Id.Should().Be(userId);
         result.FullName.Should().Be("John Doe");
         result.Email.Should().Be("john@example.com");
         result.Role.Should().Be(UserRole.Student);
@@ -53,7 +54,7 @@ public class GetUserByIdTests
     }
 
     [Fact]
-    public async Task Handle_WithInvalidId_ShouldReturnNull()
+    public async Task Handle_WithInvalidId_ShouldThrowNotFoundException()
     {
         var userId = Guid.NewGuid();
 
@@ -61,8 +62,8 @@ public class GetUserByIdTests
 
         var query = new GetUserById.Query(userId);
 
-        var result = await _handler.Handle(query, CancellationToken.None);
+        var act = async () => await _handler.Handle(query, CancellationToken.None);
 
-        result.Should().BeNull();
+        await act.Should().ThrowAsync<NotFoundException>();
     }
 }

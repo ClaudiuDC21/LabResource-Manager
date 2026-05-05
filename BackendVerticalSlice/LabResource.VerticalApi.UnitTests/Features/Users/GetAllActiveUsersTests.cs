@@ -19,7 +19,6 @@ public class GetAllActiveUsersTests
     {
         var options = new DbContextOptions<ApplicationDbContext>();
         _dbContextMock = new Mock<ApplicationDbContext>(options);
-
         _handler = new GetAllActiveUsers.Handler(_dbContextMock.Object);
     }
 

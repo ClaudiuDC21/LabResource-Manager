@@ -1,97 +1,120 @@
-﻿//using FluentAssertions;
-//using LabResource.VerticalApi.Common.Entities;
-//using LabResource.VerticalApi.Common.Persistence;
-//using LabResource.VerticalApi.Features.LabAssets;
-//using Microsoft.EntityFrameworkCore;
-//using Moq;
-//using Moq.EntityFrameworkCore;
-//using Xunit;
+﻿using FluentAssertions;
+using LabResource.VerticalApi.Common.Entities;
+using LabResource.VerticalApi.Common.Enums;
+using LabResource.VerticalApi.Common.Exceptions;
+using LabResource.VerticalApi.Common.Persistence;
+using LabResource.VerticalApi.Features.LabAssets;
+using Microsoft.EntityFrameworkCore;
+using Moq;
+using Moq.EntityFrameworkCore;
+using Xunit;
 
-//namespace LabResource.VerticalApi.UnitTests.Features.LabAssets;
+namespace LabResource.VerticalApi.UnitTests.Features.LabAssets;
 
-//public class UpdateLabAssetTests
-//{
-//    private readonly Mock<ApplicationDbContext> _dbContextMock;
-//    private readonly UpdateLabAsset.Handler _handler;
+public class UpdateLabAssetTests
+{
+    private readonly Mock<ApplicationDbContext> _dbContextMock;
+    private readonly UpdateLabAsset.Handler _handler;
 
-//    public UpdateLabAssetTests()
-//    {
-//        var options = new DbContextOptions<ApplicationDbContext>();
-//        _dbContextMock = new Mock<ApplicationDbContext>(options);
+    public UpdateLabAssetTests()
+    {
+        var options = new DbContextOptions<ApplicationDbContext>();
+        _dbContextMock = new Mock<ApplicationDbContext>(options);
+        _handler = new UpdateLabAsset.Handler(_dbContextMock.Object);
+    }
 
-//        _handler = new UpdateLabAsset.Handler(_dbContextMock.Object);
-//    }
+    [Fact]
+    public async Task Handle_WithValidData_ShouldUpdateAsset()
+    {
+        var assetId = Guid.NewGuid();
+        var existingAsset = new LabAsset { Id = assetId, Name = "Old Name", SerialNumber = "OLD-123" };
 
-//    [Fact]
-//    public async Task Handle_WithValidData_ShouldUpdateAndReturnTrue()
-//    {
-//        var assetId = Guid.NewGuid();
-//        var existingAsset = new LabAsset { Id = assetId, Name = "Old Name", SerialNumber = "OLD-123" };
+        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { existingAsset });
 
-//        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { existingAsset });
+        var command = new UpdateLabAsset.Command(assetId, "New Name", "NEW-456", "New Location", null);
 
-//        var command = new UpdateLabAsset.Command(assetId, "New Name", "NEW-456");
+        await _handler.Handle(command, CancellationToken.None);
 
-//        var result = await _handler.Handle(command, CancellationToken.None);
+        existingAsset.Name.Should().Be("New Name");
+        existingAsset.SerialNumber.Should().Be("NEW-456");
+        existingAsset.Location.Should().Be("New Location");
+        _dbContextMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
 
-//        result.Should().BeTrue();
-//        existingAsset.Name.Should().Be("New Name");
-//        existingAsset.SerialNumber.Should().Be("NEW-456");
+    [Fact]
+    public async Task Handle_WithValidTeacherAssignment_ShouldUpdateTeacher()
+    {
+        var assetId = Guid.NewGuid();
+        var teacherId = Guid.NewGuid();
+        var teacher = new User { Id = teacherId, Role = UserRole.Teacher };
+        var existingAsset = new LabAsset { Id = assetId, Name = "Asset", SerialNumber = "SN-1" };
 
-//        _dbContextMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-//    }
+        var usersDbSetMock = new Mock<DbSet<User>>();
+        usersDbSetMock.Setup(x => x.FindAsync(It.Is<object[]>(args => (Guid)args[0] == teacherId), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(teacher);
 
-//    [Fact]
-//    public async Task Handle_WithDuplicateSerialNumber_ShouldThrowArgumentException()
-//    {
-//        var assetId = Guid.NewGuid();
-//        var existingAsset = new LabAsset { Id = assetId, Name = "Asset 1", SerialNumber = "SN-001" };
-//        var otherAsset = new LabAsset { Id = Guid.NewGuid(), Name = "Asset 2", SerialNumber = "DUPLICATE" };
+        _dbContextMock.Setup(db => db.Users).Returns(usersDbSetMock.Object);
+        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { existingAsset });
 
-//        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { existingAsset, otherAsset });
+        var command = new UpdateLabAsset.Command(assetId, "Name", "SN-1", "Loc", teacherId);
 
-//        var command = new UpdateLabAsset.Command(assetId, "Updated Asset 1", "DUPLICATE");
+        await _handler.Handle(command, CancellationToken.None);
 
-//        Func<Task> action = async () => await _handler.Handle(command, CancellationToken.None);
+        existingAsset.AssignedTeacherId.Should().Be(teacherId);
+        _dbContextMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
 
-//        await action.Should().ThrowAsync<ArgumentException>()
-//            .WithMessage("An asset with serial number 'DUPLICATE' already exists.");
+    [Fact]
+    public async Task Handle_WithDuplicateSerialNumber_ShouldThrowAlreadyExistsException()
+    {
+        var assetId = Guid.NewGuid();
+        var existingAsset = new LabAsset { Id = assetId, Name = "Asset 1", SerialNumber = "SN-001" };
+        var otherAsset = new LabAsset { Id = Guid.NewGuid(), Name = "Asset 2", SerialNumber = "DUPLICATE" };
 
-//        _dbContextMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-//    }
+        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { existingAsset, otherAsset });
 
-//    [Fact]
-//    public async Task Handle_WithSameSerialNumber_ShouldUpdateSuccessfully()
-//    {
-//        var assetId = Guid.NewGuid();
-//        var existingAsset = new LabAsset { Id = assetId, Name = "Old Name", SerialNumber = "SAME-123" };
+        var command = new UpdateLabAsset.Command(assetId, "Updated Asset 1", "DUPLICATE", "Loc", null);
 
-//        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { existingAsset });
+        var act = async () => await _handler.Handle(command, CancellationToken.None);
 
-//        var command = new UpdateLabAsset.Command(assetId, "New Name", "SAME-123");
+        await act.Should().ThrowAsync<AlreadyExistsException>();
+        _dbContextMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
 
-//        var result = await _handler.Handle(command, CancellationToken.None);
+    [Fact]
+    public async Task Handle_WithInvalidId_ShouldThrowNotFoundException()
+    {
+        var assetId = Guid.NewGuid();
 
-//        result.Should().BeTrue();
-//        existingAsset.Name.Should().Be("New Name");
-//        existingAsset.SerialNumber.Should().Be("SAME-123");
+        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset>());
 
-//        _dbContextMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-//    }
+        var command = new UpdateLabAsset.Command(assetId, "New Name", "NEW-123", "Loc", null);
 
-//    [Fact]
-//    public async Task Handle_WithInvalidId_ShouldReturnFalse()
-//    {
-//        var assetId = Guid.NewGuid();
+        var act = async () => await _handler.Handle(command, CancellationToken.None);
 
-//        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset>());
+        await act.Should().ThrowAsync<NotFoundException>();
+        _dbContextMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
 
-//        var command = new UpdateLabAsset.Command(assetId, "New Name", "NEW-123");
+    [Fact]
+    public async Task Handle_WithNonTeacherRole_ShouldThrowBadRequestException()
+    {
+        var assetId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var student = new User { Id = userId, Role = UserRole.Student };
+        var existingAsset = new LabAsset { Id = assetId, Name = "Asset", SerialNumber = "SN-1" };
 
-//        var result = await _handler.Handle(command, CancellationToken.None);
+        var usersDbSetMock = new Mock<DbSet<User>>();
+        usersDbSetMock.Setup(x => x.FindAsync(It.Is<object[]>(args => (Guid)args[0] == userId), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(student);
 
-//        result.Should().BeFalse();
+        _dbContextMock.Setup(db => db.Users).Returns(usersDbSetMock.Object);
+        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { existingAsset });
 
-//        _dbContextMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-//    }
-//}
+        var command = new UpdateLabAsset.Command(assetId, "Name", "SN-1", "Loc", userId);
+
+        var act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        await act.Should().ThrowAsync<BadRequestException>();
+    }
+}

@@ -1,107 +1,112 @@
-﻿//using FluentAssertions;
-//using LabResource.VerticalApi.Common.Entities;
-//using LabResource.VerticalApi.Common.Enums;
-//using LabResource.VerticalApi.Common.Persistence;
-//using LabResource.VerticalApi.Features.LabAssets;
-//using Microsoft.EntityFrameworkCore;
-//using Moq;
-//using Moq.EntityFrameworkCore;
-//using Xunit;
+﻿using FluentAssertions;
+using LabResource.VerticalApi.Common.Entities;
+using LabResource.VerticalApi.Common.Enums;
+using LabResource.VerticalApi.Common.Exceptions;
+using LabResource.VerticalApi.Common.Persistence;
+using LabResource.VerticalApi.Features.LabAssets;
+using Microsoft.EntityFrameworkCore;
+using Moq;
+using Moq.EntityFrameworkCore;
+using Xunit;
 
-//namespace LabResource.VerticalApi.UnitTests.Features.LabAssets;
+namespace LabResource.VerticalApi.UnitTests.Features.LabAssets;
 
-//public class GetLabAssetByIdTests
-//{
-//    private readonly Mock<ApplicationDbContext> _dbContextMock;
-//    private readonly GetLabAssetById.Handler _handler;
+public class GetLabAssetByIdTests
+{
+    private readonly Mock<ApplicationDbContext> _dbContextMock;
+    private readonly GetLabAssetById.Handler _handler;
 
-//    public GetLabAssetByIdTests()
-//    {
-//        var options = new DbContextOptions<ApplicationDbContext>();
-//        _dbContextMock = new Mock<ApplicationDbContext>(options);
+    public GetLabAssetByIdTests()
+    {
+        var options = new DbContextOptions<ApplicationDbContext>();
+        _dbContextMock = new Mock<ApplicationDbContext>(options);
 
-//        _handler = new GetLabAssetById.Handler(_dbContextMock.Object);
-//    }
+        _handler = new GetLabAssetById.Handler(_dbContextMock.Object);
+    }
 
-//    [Fact]
-//    public async Task Handle_WithValidIdAndActiveBorrowing_ShouldReturnMappedResultWithBorrower()
-//    {
-//        var assetId = Guid.NewGuid();
-//        var user = new User { Id = Guid.NewGuid(), FullName = "Jane Doe" };
+    [Fact]
+    public async Task Handle_WithValidIdAndActiveBorrowing_ShouldReturnMappedResultWithBorrower()
+    {
+        var assetId = Guid.NewGuid();
+        var borrowDate = DateTime.UtcNow.AddDays(-1);
+        var user = new User { Id = Guid.NewGuid(), FullName = "Jane Doe" };
+        var activeBorrowing = new BorrowingRecord
+        {
+            Id = Guid.NewGuid(),
+            ActualReturnedAt = null,
+            Status = BorrowingStatus.Active,
+            ActualBorrowedAt = borrowDate,
+            User = user
+        };
 
-//        var activeBorrowing = new BorrowingRecord
-//        {
-//            Id = Guid.NewGuid(),
-//            ReturnedAt = null,
-//            User = user
-//        };
+        var asset = new LabAsset
+        {
+            Id = assetId,
+            Name = "Oscilloscope",
+            SerialNumber = "OSC-123",
+            Status = AssetStatus.Borrowed,
+            IsActive = true,
+            BorrowingRecords = new List<BorrowingRecord> { activeBorrowing }
+        };
 
-//        var asset = new LabAsset
-//        {
-//            Id = assetId,
-//            Name = "Oscilloscope",
-//            SerialNumber = "OSC-123",
-//            Status = AssetStatus.Borrowed,
-//            IsActive = true,
-//            BorrowingRecords = new List<BorrowingRecord> { activeBorrowing }
-//        };
+        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { asset });
 
-//        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { asset });
+        var query = new GetLabAssetById.Query(assetId);
 
-//        var query = new GetLabAssetById.Query(assetId);
+        var result = await _handler.Handle(query, CancellationToken.None);
 
-//        var result = await _handler.Handle(query, CancellationToken.None);
+        result.Should().NotBeNull();
+        result.Id.Should().Be(assetId);
+        result.Name.Should().Be("Oscilloscope");
+        result.Status.Should().Be(AssetStatus.Borrowed);
+        result.CurrentBorrowerName.Should().Be("Jane Doe");
+        result.CurrentBorrowDate.Should().Be(borrowDate);
+    }
 
-//        result.Should().NotBeNull();
-//        result!.Id.Should().Be(assetId);
-//        result.Name.Should().Be("Oscilloscope");
-//        result.Status.Should().Be(AssetStatus.Borrowed);
-//        result.CurrentBorrowerName.Should().Be("Jane Doe");
-//    }
+    [Fact]
+    public async Task Handle_WithValidIdAndNoActiveBorrowing_ShouldReturnResultWithNullBorrower()
+    {
+        var assetId = Guid.NewGuid();
+        var pastBorrowing = new BorrowingRecord
+        {
+            Id = Guid.NewGuid(),
+            ActualReturnedAt = DateTime.UtcNow,
+            Status = BorrowingStatus.Returned,
+            User = new User { FullName = "Old Borrower" }
+        };
 
-//    [Fact]
-//    public async Task Handle_WithValidIdAndNoActiveBorrowing_ShouldReturnResultWithNullBorrower()
-//    {
-//        var assetId = Guid.NewGuid();
+        var asset = new LabAsset
+        {
+            Id = assetId,
+            Name = "Multimeter",
+            Status = AssetStatus.Available,
+            IsActive = true,
+            BorrowingRecords = new List<BorrowingRecord> { pastBorrowing }
+        };
 
-//        var pastBorrowing = new BorrowingRecord
-//        {
-//            Id = Guid.NewGuid(),
-//            ReturnedAt = DateTime.UtcNow,
-//            User = new User { FullName = "Old Borrower" }
-//        };
+        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { asset });
 
-//        var asset = new LabAsset
-//        {
-//            Id = assetId,
-//            Name = "Multimeter",
-//            Status = AssetStatus.Available,
-//            IsActive = true,
-//            BorrowingRecords = new List<BorrowingRecord> { pastBorrowing }
-//        };
+        var query = new GetLabAssetById.Query(assetId);
 
-//        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { asset });
+        var result = await _handler.Handle(query, CancellationToken.None);
 
-//        var query = new GetLabAssetById.Query(assetId);
+        result.Should().NotBeNull();
+        result.Id.Should().Be(assetId);
+        result.CurrentBorrowerName.Should().BeNull();
+        result.CurrentBorrowDate.Should().BeNull();
+    }
 
-//        var result = await _handler.Handle(query, CancellationToken.None);
+    [Fact]
+    public async Task Handle_WithInvalidId_ShouldThrowNotFoundException()
+    {
+        var assetId = Guid.NewGuid();
 
-//        result.Should().NotBeNull();
-//        result!.Id.Should().Be(assetId);
-//        result.CurrentBorrowerName.Should().BeNull();
-//    }
+        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset>());
 
-//    [Fact]
-//    public async Task Handle_WithInvalidId_ShouldReturnNull()
-//    {
-//        var assetId = Guid.NewGuid();
+        var query = new GetLabAssetById.Query(assetId);
 
-//        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset>());
+        var act = async () => await _handler.Handle(query, CancellationToken.None);
 
-//        var query = new GetLabAssetById.Query(assetId);
-
-//        var result = await _handler.Handle(query, CancellationToken.None);
-
-//        result.Should().BeNull();
-//    }
-//}
+        await act.Should().ThrowAsync<NotFoundException>();
+    }
+}

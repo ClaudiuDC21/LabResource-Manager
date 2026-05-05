@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using LabResource.VerticalApi.Common.Entities;
 using LabResource.VerticalApi.Common.Enums;
+using LabResource.VerticalApi.Common.Exceptions;
 using LabResource.VerticalApi.Common.Persistence;
 using LabResource.VerticalApi.Features.Users;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +25,7 @@ public class RegisterUserTests
     }
 
     [Fact]
-    public async Task Handle_WithExistingEmail_ShouldThrowArgumentException()
+    public async Task Handle_WithExistingEmail_ShouldThrowAlreadyExistsException()
     {
         var existingUsers = new List<User>
         {
@@ -35,9 +36,9 @@ public class RegisterUserTests
 
         var command = new RegisterUser.Command("Test Name", "test@yahoo.com", null, "Password123!");
 
-        Func<Task> action = async () => await _handler.Handle(command, CancellationToken.None);
+        var action = async () => await _handler.Handle(command, CancellationToken.None);
 
-        await action.Should().ThrowAsync<ArgumentException>().WithMessage("Email is already in use.");
+        await action.Should().ThrowAsync<AlreadyExistsException>();
     }
 
     [Fact]
@@ -68,5 +69,8 @@ public class RegisterUserTests
 
         result.Should().NotBeNull();
         result.Role.Should().Be(UserRole.Teacher);
+
+        _dbContextMock.Verify(db => db.Users.Add(It.IsAny<User>()), Times.Once);
+        _dbContextMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

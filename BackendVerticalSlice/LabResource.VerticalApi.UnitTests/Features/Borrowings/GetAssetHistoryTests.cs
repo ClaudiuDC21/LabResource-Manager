@@ -1,105 +1,107 @@
-﻿//using FluentAssertions;
-//using LabResource.VerticalApi.Common.Entities;
-//using LabResource.VerticalApi.Common.Persistence;
-//using LabResource.VerticalApi.Features.Borrowings;
-//using Microsoft.EntityFrameworkCore;
-//using Moq;
-//using Moq.EntityFrameworkCore;
-//using Xunit;
+﻿using FluentAssertions;
+using LabResource.VerticalApi.Common.Entities;
+using LabResource.VerticalApi.Common.Enums;
+using LabResource.VerticalApi.Common.Persistence;
+using LabResource.VerticalApi.Features.Borrowings;
+using Microsoft.EntityFrameworkCore;
+using Moq;
+using Moq.EntityFrameworkCore;
+using Xunit;
 
-//namespace LabResource.VerticalApi.UnitTests.Features.Borrowings;
+namespace LabResource.VerticalApi.UnitTests.Features.Borrowings;
 
-//public class GetAssetHistoryTests
-//{
-//    private readonly Mock<ApplicationDbContext> _dbContextMock;
-//    private readonly GetAssetHistory.Handler _handler;
+public class GetAssetHistoryTests
+{
+    private readonly Mock<ApplicationDbContext> _dbContextMock;
+    private readonly GetAssetHistory.Handler _handler;
 
-//    public GetAssetHistoryTests()
-//    {
-//        var options = new DbContextOptions<ApplicationDbContext>();
-//        _dbContextMock = new Mock<ApplicationDbContext>(options);
+    public GetAssetHistoryTests()
+    {
+        var options = new DbContextOptions<ApplicationDbContext>();
+        _dbContextMock = new Mock<ApplicationDbContext>(options);
+        _handler = new GetAssetHistory.Handler(_dbContextMock.Object);
+    }
 
-//        _handler = new GetAssetHistory.Handler(_dbContextMock.Object);
-//    }
+    [Fact]
+    public async Task Handle_WithValidAssetAndHistory_ShouldReturnMappedAndOrderedResult()
+    {
+        var assetId = Guid.NewGuid();
+        var asset = new LabAsset { Id = assetId };
+        var user = new User { Id = Guid.NewGuid(), FullName = "Alice Smith", MatriculationNumber = "ALICE123" };
 
-//    [Fact]
-//    public async Task Handle_WithValidAssetAndHistory_ShouldReturnMappedAndOrderedResult()
-//    {
-//        var assetId = Guid.NewGuid();
-//        var asset = new LabAsset { Id = assetId };
+        var olderRecord = new BorrowingRecord
+        {
+            Id = Guid.NewGuid(),
+            LabAssetId = assetId,
+            UserId = user.Id,
+            User = user,
+            RequestedStartDate = DateTime.UtcNow.AddDays(-10),
+            RequestedEndDate = DateTime.UtcNow.AddDays(-8),
+            ActualReturnedAt = DateTime.UtcNow.AddDays(-8),
+            Status = BorrowingStatus.Returned,
+            Remarks = "Returned safely"
+        };
 
-//        var user = new User { Id = Guid.NewGuid(), FullName = "Alice Smith", MatriculationNumber = "ALICE123" };
+        var newerRecord = new BorrowingRecord
+        {
+            Id = Guid.NewGuid(),
+            LabAssetId = assetId,
+            UserId = user.Id,
+            User = user,
+            RequestedStartDate = DateTime.UtcNow.AddDays(-2),
+            RequestedEndDate = DateTime.UtcNow.AddDays(2),
+            ActualReturnedAt = null,
+            Status = BorrowingStatus.Active,
+            Remarks = null
+        };
 
-//        var olderRecord = new BorrowingRecord
-//        {
-//            Id = Guid.NewGuid(),
-//            LabAssetId = assetId,
-//            UserId = user.Id,
-//            User = user,
-//            BorrowedAt = DateTime.UtcNow.AddDays(-10),
-//            ReturnedAt = DateTime.UtcNow.AddDays(-8),
-//            Remarks = "Returned safely"
-//        };
+        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { asset });
+        _dbContextMock.Setup(db => db.BorrowingRecords).ReturnsDbSet(new List<BorrowingRecord> { olderRecord, newerRecord });
 
-//        var newerRecord = new BorrowingRecord
-//        {
-//            Id = Guid.NewGuid(),
-//            LabAssetId = assetId,
-//            UserId = user.Id,
-//            User = user,
-//            BorrowedAt = DateTime.UtcNow.AddDays(-2),
-//            ReturnedAt = null,
-//            Remarks = null
-//        };
+        var query = new GetAssetHistory.Query(assetId);
 
-//        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { asset });
-//        _dbContextMock.Setup(db => db.BorrowingRecords).ReturnsDbSet(new List<BorrowingRecord> { olderRecord, newerRecord });
+        var result = await _handler.Handle(query, CancellationToken.None);
 
-//        var query = new GetAssetHistory.Query(assetId);
+        result.Should().NotBeNull();
+        result.Should().HaveCount(2);
 
-//        var result = await _handler.Handle(query, CancellationToken.None);
+        var firstResult = result.First();
+        firstResult.BorrowingRecordId.Should().Be(newerRecord.Id);
+        firstResult.RequestedStartDate.Should().Be(newerRecord.RequestedStartDate);
+        firstResult.UserName.Should().Be("Alice Smith");
 
-//        result.Should().NotBeNull();
-//        result.Should().HaveCount(2);
+        var secondResult = result.Last();
+        secondResult.BorrowingRecordId.Should().Be(olderRecord.Id);
+        secondResult.Remarks.Should().Be("Returned safely");
+    }
 
-//        var firstResult = result.First();
-//        firstResult.BorrowingRecordId.Should().Be(newerRecord.Id);
-//        firstResult.BorrowedAt.Should().Be(newerRecord.BorrowedAt);
-//        firstResult.UserName.Should().Be("Alice Smith");
+    [Fact]
+    public async Task Handle_WithInvalidAsset_ShouldThrowArgumentException()
+    {
+        var assetId = Guid.NewGuid();
+        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset>());
 
-//        var secondResult = result.Last();
-//        secondResult.BorrowingRecordId.Should().Be(olderRecord.Id);
-//        secondResult.Remarks.Should().Be("Returned safely");
-//    }
+        var query = new GetAssetHistory.Query(assetId);
 
-//    [Fact]
-//    public async Task Handle_WithInvalidAsset_ShouldThrowArgumentException()
-//    {
-//        var assetId = Guid.NewGuid();
+        var act = async () => await _handler.Handle(query, CancellationToken.None);
 
-//        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset>());
+        await act.Should().ThrowAsync<ArgumentException>().WithMessage("Asset not found.");
+    }
 
-//        var query = new GetAssetHistory.Query(assetId);
+    [Fact]
+    public async Task Handle_WithNoHistory_ShouldReturnEmptyList()
+    {
+        var assetId = Guid.NewGuid();
+        var asset = new LabAsset { Id = assetId };
 
-//        Func<Task> action = async () => await _handler.Handle(query, CancellationToken.None);
+        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { asset });
+        _dbContextMock.Setup(db => db.BorrowingRecords).ReturnsDbSet(new List<BorrowingRecord>());
 
-//        await action.Should().ThrowAsync<ArgumentException>().WithMessage("Asset not found.");
-//    }
+        var query = new GetAssetHistory.Query(assetId);
 
-//    [Fact]
-//    public async Task Handle_WithNoHistory_ShouldReturnEmptyList()
-//    {
-//        var assetId = Guid.NewGuid();
-//        var asset = new LabAsset { Id = assetId };
+        var result = await _handler.Handle(query, CancellationToken.None);
 
-//        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { asset });
-//        _dbContextMock.Setup(db => db.BorrowingRecords).ReturnsDbSet(new List<BorrowingRecord>());
-
-//        var query = new GetAssetHistory.Query(assetId);
-
-//        var result = await _handler.Handle(query, CancellationToken.None);
-
-//        result.Should().NotBeNull();
-//        result.Should().BeEmpty();
-//    }
-//}
+        result.Should().NotBeNull();
+        result.Should().BeEmpty();
+    }
+}

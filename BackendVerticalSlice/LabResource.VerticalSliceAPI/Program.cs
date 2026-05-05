@@ -65,6 +65,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
         };
     });
+
+builder.Services.AddHealthChecks().AddDbContextCheck<ApplicationDbContext>();
 builder.Services.AddAuthorization();
 
 builder.Services.AddSwaggerGen(c =>
@@ -101,5 +103,6 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks("/api/health");
 
 await app.RunAsync();

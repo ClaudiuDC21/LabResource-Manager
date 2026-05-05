@@ -1,116 +1,111 @@
-﻿//using FluentAssertions;
-//using LabResource.VerticalApi.Common.Entities;
-//using LabResource.VerticalApi.Common.Enums;
-//using LabResource.VerticalApi.Common.Persistence;
-//using LabResource.VerticalApi.Features.Borrowings;
-//using Microsoft.EntityFrameworkCore;
-//using Moq;
-//using Moq.EntityFrameworkCore;
-//using Xunit;
+﻿using FluentAssertions;
+using LabResource.VerticalApi.Common.Entities;
+using LabResource.VerticalApi.Common.Enums;
+using LabResource.VerticalApi.Common.Exceptions;
+using LabResource.VerticalApi.Common.Persistence;
+using LabResource.VerticalApi.Features.Borrowings;
+using Microsoft.EntityFrameworkCore;
+using Moq;
+using Moq.EntityFrameworkCore;
+using Xunit;
 
-//namespace LabResource.VerticalApi.UnitTests.Features.Borrowings;
+namespace LabResource.VerticalApi.UnitTests.Features.Borrowings;
 
-//public class ReturnAssetTests
-//{
-//    private readonly Mock<ApplicationDbContext> _dbContextMock;
-//    private readonly ReturnAsset.Handler _handler;
+public class ReturnAssetTests
+{
+    private readonly Mock<ApplicationDbContext> _dbContextMock;
+    private readonly ReturnAsset.Handler _handler;
 
-//    public ReturnAssetTests()
-//    {
-//        var options = new DbContextOptions<ApplicationDbContext>();
-//        _dbContextMock = new Mock<ApplicationDbContext>(options);
+    public ReturnAssetTests()
+    {
+        var options = new DbContextOptions<ApplicationDbContext>();
+        _dbContextMock = new Mock<ApplicationDbContext>(options);
+        _handler = new ReturnAsset.Handler(_dbContextMock.Object);
+    }
 
-//        _handler = new ReturnAsset.Handler(_dbContextMock.Object);
-//    }
+    [Fact]
+    public async Task Handle_WithValidActiveBorrowing_ShouldReturnResultAndUpdateStatus()
+    {
+        var borrowingId = Guid.NewGuid();
+        var assetId = Guid.NewGuid();
 
-//    [Fact]
-//    public async Task Handle_WhenNotDefective_ShouldUpdateStatusToAvailableAndReturnResult()
-//    {
-//        var assetId = Guid.NewGuid();
-//        var activeBorrowingId = Guid.NewGuid();
+        var record = new BorrowingRecord
+        {
+            Id = borrowingId,
+            LabAssetId = assetId,
+            Status = BorrowingStatus.Active,
+            Remarks = "Initial remark"
+        };
 
-//        var activeBorrowing = new BorrowingRecord
-//        {
-//            Id = activeBorrowingId,
-//            LabAssetId = assetId,
-//            ReturnedAt = null
-//        };
+        var asset = new LabAsset
+        {
+            Id = assetId,
+            Name = "Microscope",
+            Status = AssetStatus.Borrowed
+        };
 
-//        var asset = new LabAsset
-//        {
-//            Id = assetId,
-//            Name = "Microscope",
-//            Status = AssetStatus.Borrowed
-//        };
+        _dbContextMock.Setup(db => db.BorrowingRecords).ReturnsDbSet(new List<BorrowingRecord> { record });
+        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { asset });
 
-//        _dbContextMock.Setup(db => db.BorrowingRecords).ReturnsDbSet(new List<BorrowingRecord> { activeBorrowing });
-//        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { asset });
+        var command = new ReturnAsset.Command(borrowingId, "Returned in good condition", false);
 
-//        var command = new ReturnAsset.Command(assetId, "All good", false);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
-//        var result = await _handler.Handle(command, CancellationToken.None);
+        result.Should().NotBeNull();
+        result.NewStatus.Should().Be(AssetStatus.Available);
+        record.Status.Should().Be(BorrowingStatus.Returned);
+        record.ActualReturnedAt.Should().NotBeNull();
+        record.Remarks.Should().Contain("Return Note: Returned in good condition");
+        asset.Status.Should().Be(AssetStatus.Available);
 
-//        result.Should().NotBeNull();
-//        result.BorrowingRecordId.Should().Be(activeBorrowingId);
-//        result.AssetName.Should().Be("Microscope");
-//        result.NewStatus.Should().Be(AssetStatus.Available);
-//        result.ReturnedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(2));
+        _dbContextMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
 
-//        activeBorrowing.ReturnedAt.Should().NotBeNull();
-//        activeBorrowing.Remarks.Should().Be("All good");
-//        asset.Status.Should().Be(AssetStatus.Available);
+    [Fact]
+    public async Task Handle_WhenDefective_ShouldSetAssetStatusToDefective()
+    {
+        var borrowingId = Guid.NewGuid();
+        var assetId = Guid.NewGuid();
 
-//        _dbContextMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-//    }
+        var record = new BorrowingRecord { Id = borrowingId, LabAssetId = assetId, Status = BorrowingStatus.Active };
+        var asset = new LabAsset { Id = assetId, Name = "Microscope", Status = AssetStatus.Borrowed };
 
-//    [Fact]
-//    public async Task Handle_WhenDefective_ShouldUpdateStatusToDefectiveAndReturnResult()
-//    {
-//        var assetId = Guid.NewGuid();
-//        var activeBorrowing = new BorrowingRecord { Id = Guid.NewGuid(), LabAssetId = assetId, ReturnedAt = null };
-//        var asset = new LabAsset { Id = assetId, Name = "Microscope", Status = AssetStatus.Borrowed };
+        _dbContextMock.Setup(db => db.BorrowingRecords).ReturnsDbSet(new List<BorrowingRecord> { record });
+        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { asset });
 
-//        _dbContextMock.Setup(db => db.BorrowingRecords).ReturnsDbSet(new List<BorrowingRecord> { activeBorrowing });
-//        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { asset });
+        var command = new ReturnAsset.Command(borrowingId, "Broken lens", true);
 
-//        var command = new ReturnAsset.Command(assetId, "Broken lens", true);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
-//        var result = await _handler.Handle(command, CancellationToken.None);
+        result.NewStatus.Should().Be(AssetStatus.Defective);
+        asset.Status.Should().Be(AssetStatus.Defective);
+    }
 
-//        result.NewStatus.Should().Be(AssetStatus.Defective);
-//        asset.Status.Should().Be(AssetStatus.Defective);
-//        activeBorrowing.Remarks.Should().Be("Broken lens");
-//    }
+    [Fact]
+    public async Task Handle_WithInvalidBorrowingId_ShouldThrowNotFoundException()
+    {
+        var borrowingId = Guid.NewGuid();
+        _dbContextMock.Setup(db => db.BorrowingRecords).ReturnsDbSet(new List<BorrowingRecord>());
 
-//    [Fact]
-//    public async Task Handle_WithNoActiveBorrowing_ShouldThrowInvalidOperationException()
-//    {
-//        var assetId = Guid.NewGuid();
+        var command = new ReturnAsset.Command(borrowingId, null, false);
 
-//        _dbContextMock.Setup(db => db.BorrowingRecords).ReturnsDbSet(new List<BorrowingRecord>());
+        var act = async () => await _handler.Handle(command, CancellationToken.None);
 
-//        var command = new ReturnAsset.Command(assetId, null, false);
+        await act.Should().ThrowAsync<NotFoundException>();
+    }
 
-//        Func<Task> action = async () => await _handler.Handle(command, CancellationToken.None);
+    [Fact]
+    public async Task Handle_WhenBorrowingIsNotActive_ShouldThrowConflictException()
+    {
+        var borrowingId = Guid.NewGuid();
+        var record = new BorrowingRecord { Id = borrowingId, Status = BorrowingStatus.Returned };
 
-//        await action.Should().ThrowAsync<InvalidOperationException>().WithMessage("No active borrowing record found for this asset.");
-//        _dbContextMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-//    }
+        _dbContextMock.Setup(db => db.BorrowingRecords).ReturnsDbSet(new List<BorrowingRecord> { record });
 
-//    [Fact]
-//    public async Task Handle_WhenAssetNotFound_ShouldThrowArgumentException()
-//    {
-//        var assetId = Guid.NewGuid();
-//        var activeBorrowing = new BorrowingRecord { Id = Guid.NewGuid(), LabAssetId = assetId, ReturnedAt = null };
+        var command = new ReturnAsset.Command(borrowingId, null, false);
 
-//        _dbContextMock.Setup(db => db.BorrowingRecords).ReturnsDbSet(new List<BorrowingRecord> { activeBorrowing });
-//        _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset>());
+        var act = async () => await _handler.Handle(command, CancellationToken.None);
 
-//        var command = new ReturnAsset.Command(assetId, null, false);
-
-//        Func<Task> action = async () => await _handler.Handle(command, CancellationToken.None);
-
-//        await action.Should().ThrowAsync<ArgumentException>().WithMessage("Asset not found.");
-//        _dbContextMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-//    }
-//}
+        await act.Should().ThrowAsync<ConflictException>().WithMessage("Borrowing is not active.");
+    }
+}
