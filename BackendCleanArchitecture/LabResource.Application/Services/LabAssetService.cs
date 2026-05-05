@@ -1,27 +1,35 @@
 ﻿using LabResource.Application.DTOs.LabAssets;
 using LabResource.Application.Interfaces.Repositories;
 using LabResource.Application.Interfaces.Services;
+using LabResource.Application.Mappings;
 using LabResource.Domain.Entities;
 using LabResource.Domain.Enums;
+using LabResource.Domain.Exceptions;
 
 namespace LabResource.Application.Services;
 
 public class LabAssetService : ILabAssetService
 {
     private readonly ILabAssetRepository _labAssetRepository;
+    private readonly IUserRepository _userRepository;
 
-    public LabAssetService(ILabAssetRepository labAssetRepository)
+    public LabAssetService(ILabAssetRepository labAssetRepository, IUserRepository userRepository)
     {
         _labAssetRepository = labAssetRepository;
+        _userRepository = userRepository;
     }
 
     public async Task<LabAssetResponse> CreateAssetAsync(CreateLabAssetRequest request)
     {
+        await ValidateTeacherAsync(request.AssignedTeacherId);
+
         if (!string.IsNullOrWhiteSpace(request.SerialNumber))
         {
             var existingAsset = await _labAssetRepository.GetBySerialNumberAsync(request.SerialNumber);
             if (existingAsset != null)
-                throw new ArgumentException($"An asset with serial number '{request.SerialNumber}' already exists.");
+            {
+                throw new AlreadyExistsException("LabAsset", request.SerialNumber);
+            }
         }
 
         var newAsset = new LabAsset
@@ -39,37 +47,62 @@ public class LabAssetService : ILabAssetService
         await _labAssetRepository.AddAsync(newAsset);
         await _labAssetRepository.SaveChangesAsync();
 
-        return MapToResponse(newAsset);
+        return newAsset.ToResponse();
     }
 
     public async Task<IEnumerable<LabAssetResponse>> GetAllActiveAssetsAsync()
     {
         var assets = await _labAssetRepository.GetAllActiveAsync();
-        return assets.Select(MapToResponse);
+        return assets.Select(asset => asset.ToResponse());
     }
 
-    public async Task<LabAssetResponse?> GetAssetByIdAsync(Guid id)
+    public async Task<LabAssetResponse> GetAssetByIdAsync(Guid id)
     {
+        if (id == Guid.Empty)
+        {
+            throw new BadRequestException("The provided asset ID is invalid.");
+        }
+
         var asset = await _labAssetRepository.GetByIdAsync(id);
-        return asset != null ? MapToResponse(asset) : null;
+
+        if (asset == null)
+        {
+            throw new NotFoundException("LabAsset", id);
+        }
+
+        return asset.ToResponse();
     }
 
-    public async Task<bool> UpdateAssetAsync(Guid id, CreateLabAssetRequest request)
+    public async Task<bool> UpdateAssetAsync(Guid id, UpdateLabAssetRequest request)
     {
+        if (id == Guid.Empty)
+        {
+            throw new BadRequestException("The provided asset ID is invalid.");
+        }
+
         var asset = await _labAssetRepository.GetByIdAsync(id);
-        if (asset == null) return false;
+
+        if (asset == null)
+        {
+            throw new NotFoundException("LabAsset", id);
+        }
+
+        await ValidateTeacherAsync(request.AssignedTeacherId);
 
         if (!string.IsNullOrWhiteSpace(request.SerialNumber) && request.SerialNumber != asset.SerialNumber)
         {
             var existingAsset = await _labAssetRepository.GetBySerialNumberAsync(request.SerialNumber);
             if (existingAsset != null)
-                throw new ArgumentException($"An asset with serial number '{request.SerialNumber}' already exists.");
+            {
+                throw new AlreadyExistsException("LabAsset", request.SerialNumber);
+            }
         }
 
         asset.Name = request.Name;
         asset.SerialNumber = request.SerialNumber;
         asset.Location = request.Location;
         asset.AssignedTeacherId = request.AssignedTeacherId;
+        asset.IsActive = request.IsActive;
 
         await _labAssetRepository.UpdateAsync(asset);
         await _labAssetRepository.SaveChangesAsync();
@@ -79,8 +112,27 @@ public class LabAssetService : ILabAssetService
 
     public async Task<bool> DeactivateAssetAsync(Guid id)
     {
+        if (id == Guid.Empty)
+        {
+            throw new BadRequestException("The provided asset ID is invalid.");
+        }
+
         var asset = await _labAssetRepository.GetByIdAsync(id);
-        if (asset == null) return false;
+
+        if (asset == null)
+        {
+            throw new NotFoundException("LabAsset", id);
+        }
+
+        if (!asset.IsActive)
+        {
+            throw new ConflictException("This asset is already deactivated.");
+        }
+
+        if (asset.Status == AssetStatus.Borrowed)
+        {
+            throw new ConflictException("Cannot deactivate an asset that is currently borrowed.");
+        }
 
         asset.IsActive = false;
         await _labAssetRepository.UpdateAsync(asset);
@@ -89,23 +141,21 @@ public class LabAssetService : ILabAssetService
         return true;
     }
 
-    private LabAssetResponse MapToResponse(LabAsset asset)
+    private async Task ValidateTeacherAsync(Guid? teacherId)
     {
-        var activeBorrowing = asset.BorrowingRecords?
-            .FirstOrDefault(b => b.ActualReturnedAt == null && b.Status == BorrowingStatus.Active);
-
-        return new LabAssetResponse
+        if (teacherId.HasValue && teacherId.Value != Guid.Empty)
         {
-            Id = asset.Id,
-            Name = asset.Name,
-            SerialNumber = asset.SerialNumber,
-            Location = asset.Location,
-            Status = asset.Status,
-            IsActive = asset.IsActive,
-            AssignedTeacherId = asset.AssignedTeacherId,
-            AssignedTeacherName = asset.AssignedTeacher?.FullName,
-            CurrentBorrowerName = activeBorrowing?.User?.FullName,
-            CurrentBorrowDate = activeBorrowing?.ActualBorrowedAt
-        };
-}
+            var teacher = await _userRepository.GetByIdAsync(teacherId.Value);
+
+            if (teacher == null)
+            {
+                throw new NotFoundException("User", teacherId.Value);
+            }
+
+            if (teacher.Role != UserRole.Teacher)
+            {
+                throw new BadRequestException("The assigned user must have the Teacher role.");
+            }
+        }
+    }
 }

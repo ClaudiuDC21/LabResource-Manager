@@ -1,6 +1,5 @@
 ﻿using LabResource.Application.DTOs.LabAssets;
 using LabResource.Application.Interfaces.Services;
-using LabResource.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,18 +18,13 @@ public class LabAssetsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Teacher")] // Simplificat pentru claritate
+    [Authorize(Roles = "Teacher")]
     public async Task<IActionResult> Create([FromBody] CreateLabAssetRequest request)
     {
-        try
-        {
-            var result = await _labAssetService.CreateAssetAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
+        var result = await _labAssetService.CreateAssetAsync(request);
+
+        // Return 201 Created with a location header pointing to the GetById endpoint
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
     [HttpGet]
@@ -44,32 +38,22 @@ public class LabAssetsController : ControllerBase
     public async Task<IActionResult> GetById(Guid id)
     {
         var asset = await _labAssetService.GetAssetByIdAsync(id);
-        if (asset == null) return NotFound();
         return Ok(asset);
     }
 
     [HttpPut("{id:guid}")]
     [Authorize(Roles = "Teacher")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] CreateLabAssetRequest request)
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateLabAssetRequest request)
     {
-        try
-        {
-            var success = await _labAssetService.UpdateAssetAsync(id, request);
-            if (!success) return NotFound();
-            return NoContent();
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
+        await _labAssetService.UpdateAssetAsync(id, request);
+        return NoContent();
     }
 
     [HttpDelete("{id:guid}")]
     [Authorize(Roles = "Teacher")]
     public async Task<IActionResult> Deactivate(Guid id)
     {
-        var success = await _labAssetService.DeactivateAssetAsync(id);
-        if (!success) return NotFound();
+        await _labAssetService.DeactivateAssetAsync(id);
         return NoContent();
     }
 }
