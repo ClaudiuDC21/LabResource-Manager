@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using LabResource.Application.DTOs.Users;
 
-namespace LabResource.Application.Validators;
+namespace LabResource.Application.Validators.Users;
 
 public class RegisterUserRequestValidator : AbstractValidator<RegisterUserRequest>
 {

@@ -3,7 +3,7 @@ using LabResource.Domain.Entities;
 
 namespace LabResource.Application.Mappings;
 
-public static class UserMappingExtensions
+public static class UserMapper
 {
     public static UserResponse ToResponse(this User user)
     {
