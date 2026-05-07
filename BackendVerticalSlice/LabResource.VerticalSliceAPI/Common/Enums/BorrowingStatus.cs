@@ -1,11 +1,10 @@
-﻿namespace LabResource.VerticalApi.Common.Enums
+﻿namespace LabResource.VerticalApi.Common.Enums;
+
+public enum BorrowingStatus
 {
-    public enum BorrowingStatus
-    {
-        Pending = 1,
-        Approved = 2,
-        Active = 3,
-        Returned = 4,
-        Rejected = 5
-    }
+    Pending = 1,
+    Approved = 2,
+    Active = 3,
+    Returned = 4,
+    Rejected = 5
 }

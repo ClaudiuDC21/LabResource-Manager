@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using System.Text;
+using FluentValidation;
 using LabResource.VerticalApi.Common.Behaviors;
 using LabResource.VerticalApi.Common.ExceptionHandlers;
 using LabResource.VerticalApi.Common.Persistence;
@@ -10,7 +11,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Serilog;
 using Swashbuckle.AspNetCore.Filters;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 

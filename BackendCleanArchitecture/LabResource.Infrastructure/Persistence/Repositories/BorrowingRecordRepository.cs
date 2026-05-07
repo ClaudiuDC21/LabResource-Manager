@@ -73,7 +73,7 @@ public class BorrowingRecordRepository : IBorrowingRecordRepository
     {
         return await _context.BorrowingRecords
             .Include(b => b.LabAsset)
-            .Include(b => b.User) 
+            .Include(b => b.User)
             .Where(b => b.LabAsset.AssignedTeacherId == teacherId && b.Status == BorrowingStatus.Pending)
             .OrderBy(b => b.RequestedStartDate)
             .ToListAsync();

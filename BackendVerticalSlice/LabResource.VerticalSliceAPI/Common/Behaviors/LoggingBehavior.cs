@@ -1,5 +1,5 @@
-﻿using MediatR;
-using System.Security.Claims;
+﻿using System.Security.Claims;
+using MediatR;
 
 namespace LabResource.VerticalApi.Common.Behaviors;
 

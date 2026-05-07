@@ -1,4 +1,7 @@
-﻿using FluentValidation;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using FluentValidation;
 using LabResource.VerticalApi.Common.Exceptions;
 using LabResource.VerticalApi.Common.Persistence;
 using LabResource.VerticalApi.Common.Settings;
@@ -6,9 +9,6 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace LabResource.VerticalApi.Features.Auth;
 

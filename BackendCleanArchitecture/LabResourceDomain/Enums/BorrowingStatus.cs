@@ -4,7 +4,7 @@ public enum BorrowingStatus
 {
     Pending = 1,
     Approved = 2,
-    Active = 3,   
+    Active = 3,
     Returned = 4,
-    Rejected = 5  
+    Rejected = 5
 }

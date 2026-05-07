@@ -1,6 +1,7 @@
 ﻿using LabResource.VerticalApi.Common.Enums;
 
-namespace LabResource.VerticalApi.Common.Entities { 
+namespace LabResource.VerticalApi.Common.Entities;
+
 public class User
 {
     public Guid Id { get; set; }
@@ -22,5 +23,4 @@ public class User
     public ICollection<BorrowingRecord> BorrowingRecords { get; set; } = new List<BorrowingRecord>();
 
     public ICollection<LabAsset> ManagedAssets { get; set; } = new List<LabAsset>();
-}
 }

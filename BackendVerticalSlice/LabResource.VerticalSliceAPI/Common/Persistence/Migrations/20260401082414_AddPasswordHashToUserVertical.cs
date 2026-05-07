@@ -2,28 +2,27 @@
 
 #nullable disable
 
-namespace LabResource.VerticalApi.Common.Persistence.Migrations
+namespace LabResource.VerticalApi.Common.Persistence.Migrations;
+
+/// <inheritdoc />
+public partial class AddPasswordHashToUserVertical : Migration
 {
     /// <inheritdoc />
-    public partial class AddPasswordHashToUserVertical : Migration
+    protected override void Up(MigrationBuilder migrationBuilder)
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.AddColumn<string>(
-                name: "PasswordHash",
-                table: "Users",
-                type: "nvarchar(max)",
-                nullable: false,
-                defaultValue: "");
-        }
+        migrationBuilder.AddColumn<string>(
+            name: "PasswordHash",
+            table: "Users",
+            type: "nvarchar(max)",
+            nullable: false,
+            defaultValue: "");
+    }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropColumn(
-                name: "PasswordHash",
-                table: "Users");
-        }
+    /// <inheritdoc />
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.DropColumn(
+            name: "PasswordHash",
+            table: "Users");
     }
 }

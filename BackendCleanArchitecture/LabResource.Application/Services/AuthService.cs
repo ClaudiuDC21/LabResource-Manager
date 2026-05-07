@@ -1,4 +1,7 @@
-﻿using LabResource.Application.DTOs.Auth;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using LabResource.Application.DTOs.Auth;
 using LabResource.Application.Interfaces.Repositories;
 using LabResource.Application.Interfaces.Services;
 using LabResource.Application.Mappings;
@@ -6,9 +9,6 @@ using LabResource.Application.Settings;
 using LabResource.Domain.Exceptions;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace LabResource.Application.Services;
 

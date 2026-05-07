@@ -1,10 +1,10 @@
-﻿using FluentValidation;
+﻿using System.Text.Json.Serialization;
+using FluentValidation;
 using LabResource.VerticalApi.Common.Enums;
 using LabResource.VerticalApi.Common.Exceptions;
 using LabResource.VerticalApi.Common.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json.Serialization;
 
 namespace LabResource.VerticalApi.Features.LabAssets;
 

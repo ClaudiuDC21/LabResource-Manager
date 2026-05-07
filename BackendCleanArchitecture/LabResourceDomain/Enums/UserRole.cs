@@ -1,8 +1,7 @@
-﻿namespace LabResource.Domain.Enums
+﻿namespace LabResource.Domain.Enums;
+
+public enum UserRole
 {
-    public enum UserRole
-    {
-        Student = 1,
-        Teacher = 2
-    }
+    Student = 1,
+    Teacher = 2
 }

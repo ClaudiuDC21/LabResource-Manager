@@ -1,3 +1,4 @@
+using System.Text;
 using FluentValidation;
 using LabResource.Application;
 using LabResource.Application.Settings;
@@ -11,7 +12,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Serilog;
 using Swashbuckle.AspNetCore.Filters;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,7 +67,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
         };
     });
-builder.Services.AddHealthChecks().AddDbContextCheck<ApplicationDbContext>(); 
+builder.Services.AddHealthChecks().AddDbContextCheck<ApplicationDbContext>();
 builder.Services.AddAuthorization();
 
 builder.Services.AddSwaggerGen(c =>

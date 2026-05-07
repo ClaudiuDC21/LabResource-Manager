@@ -1,8 +1,8 @@
-﻿using LabResource.VerticalApi.Features.Borrowings;
+﻿using System.Security.Claims;
+using LabResource.VerticalApi.Features.Borrowings;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace LabResource.VerticalApi.Controllers;
 

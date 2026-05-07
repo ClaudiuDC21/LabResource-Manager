@@ -1,4 +1,6 @@
-﻿using FluentAssertions;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using FluentAssertions;
 using LabResource.Application.DTOs.Auth;
 using LabResource.Application.Interfaces.Repositories;
 using LabResource.Application.Services;
@@ -8,8 +10,6 @@ using LabResource.Domain.Enums;
 using LabResource.Domain.Exceptions;
 using Microsoft.Extensions.Options;
 using Moq;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using Xunit;
 
 namespace LabResource.Application.UnitTests.Services;

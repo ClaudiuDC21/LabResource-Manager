@@ -1,8 +1,8 @@
-﻿using LabResource.Application.DTOs.Borrowings;
+﻿using System.Security.Claims;
+using LabResource.Application.DTOs.Borrowings;
 using LabResource.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace LabResource.CleanApi.Controllers;
 

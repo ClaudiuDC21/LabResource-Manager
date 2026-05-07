@@ -1,4 +1,6 @@
-﻿using FluentAssertions;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using FluentAssertions;
 using LabResource.VerticalApi.Common.Entities;
 using LabResource.VerticalApi.Common.Enums;
 using LabResource.VerticalApi.Common.Exceptions;
@@ -9,8 +11,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Moq;
 using Moq.EntityFrameworkCore;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using Xunit;
 
 namespace LabResource.VerticalApi.UnitTests.Features.Auth;
