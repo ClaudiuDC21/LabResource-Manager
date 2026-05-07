@@ -85,7 +85,6 @@ public class BorrowingService : IBorrowingService
 
         var asset = await _assetRepository.GetByIdAsync(record.LabAssetId);
 
-        // Security check: Only the teacher assigned to the asset can approve/reject its requests
         if (asset != null && asset.AssignedTeacherId != teacherId)
         {
             throw new ForbiddenAccessException("You are not authorized to review requests for this asset.");
@@ -127,7 +126,6 @@ public class BorrowingService : IBorrowingService
 
         var asset = await _assetRepository.GetByIdAsync(record.LabAssetId);
 
-        // Ensure the asset has actually been returned by the previous borrower before handing it out
         if (asset != null && asset.Status != AssetStatus.Available)
         {
             throw new ConflictException($"Asset cannot be picked up because its current status is {asset.Status}.");

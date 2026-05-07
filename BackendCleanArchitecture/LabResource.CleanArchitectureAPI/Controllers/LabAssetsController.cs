@@ -23,7 +23,6 @@ public class LabAssetsController : ControllerBase
     {
         var result = await _labAssetService.CreateAssetAsync(request);
 
-        // Return 201 Created with a location header pointing to the GetById endpoint
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 

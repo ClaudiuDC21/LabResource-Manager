@@ -80,7 +80,6 @@ public class BorrowingsController : ControllerBase
     [Authorize(Roles = "Teacher")]
     public async Task<IActionResult> GetMyPendingRequests()
     {
-        // Automatically fetch pending requests for the currently logged-in teacher
         var teacherIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         if (!Guid.TryParse(teacherIdString, out Guid teacherId))

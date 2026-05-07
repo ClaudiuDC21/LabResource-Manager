@@ -35,7 +35,6 @@ public class BorrowingsController : ControllerBase
             return Unauthorized();
         }
 
-        // Ne asigurăm că ID-ul din URL ajunge în comandă
         await _mediator.Send(command with { BorrowingId = id, TeacherId = teacherId });
         return NoContent();
     }

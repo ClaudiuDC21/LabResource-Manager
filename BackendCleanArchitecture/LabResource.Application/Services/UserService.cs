@@ -39,7 +39,6 @@ public class UserService : IUserService
             Role = assignedRole,
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            // Hash the password using BCrypt before storing it in the database
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password)
         };
 
@@ -114,7 +113,6 @@ public class UserService : IUserService
             throw new BadRequestException("Invalid current password.");
         }
 
-        // Prevent updating if the new password is the same as the old one
         if (BCrypt.Net.BCrypt.Verify(request.NewPassword, user.PasswordHash))
         {
             throw new ConflictException("The new password cannot be the same as the current password.");
@@ -142,7 +140,6 @@ public class UserService : IUserService
             throw new NotFoundException("User", id);
         }
 
-        // Prevent deactivating an already deactivated user
         if (!user.IsActive)
         {
             throw new ConflictException("This user is already deactivated.");

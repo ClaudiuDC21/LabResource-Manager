@@ -11,5 +11,5 @@ public class ActiveBorrowingResponse
     public string? UserName { get; set; }
     public DateTime RequestedStartDate { get; set; }
     public DateTime RequestedEndDate { get; set; }
-    public BorrowingStatus Status { get; set; } // Pentru a ști frontend-ul dacă e Pending sau Active
+    public BorrowingStatus Status { get; set; }
 }
