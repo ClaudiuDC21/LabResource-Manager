@@ -26,7 +26,10 @@ public static class PickUpAsset
             if (record.Status != BorrowingStatus.Approved) throw new ConflictException("Reservation is not approved.");
 
             var asset = await _context.LabAssets.FirstOrDefaultAsync(a => a.Id == record.LabAssetId, cancellationToken);
-            if (asset != null && asset.Status != AssetStatus.Available) throw new ConflictException("Asset is not currently available.");
+            if (asset != null && asset.Status != AssetStatus.PendingApproval && asset.Status != AssetStatus.Borrowed)
+            {
+                throw new ConflictException($"Asset cannot be picked up because its current status is {asset.Status}. It must be awaiting pickup.");
+            }
 
             record.Status = BorrowingStatus.Active;
             record.ActualBorrowedAt = DateTime.UtcNow;

@@ -126,9 +126,9 @@ public class BorrowingService : IBorrowingService
 
         var asset = await _assetRepository.GetByIdAsync(record.LabAssetId);
 
-        if (asset != null && asset.Status != AssetStatus.Available)
+        if (asset != null && asset.Status != AssetStatus.PendingApproval && asset.Status != AssetStatus.Borrowed)
         {
-            throw new ConflictException($"Asset cannot be picked up because its current status is {asset.Status}.");
+            throw new ConflictException($"Asset cannot be picked up because its current status is {asset.Status}. It must be awaiting pickup.");
         }
 
         record.Status = BorrowingStatus.Active;
