@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Engines;
 using LabResource.Application.DTOs.Users;
 using LabResource.Application.Interfaces.Repositories;
 using LabResource.Application.Services;
@@ -9,6 +10,8 @@ using LabResource.Domain.Entities;
 using LabResource.Domain.Enums;
 using Moq;
 
+[SimpleJob(RunStrategy.ColdStart, launchCount: 1, warmupCount: 3, iterationCount: 30, id: "ThesisJob")]
+[MinColumn, MaxColumn, MeanColumn, MedianColumn]
 [MemoryDiagnoser]
 public class GetAllUsersBenchmark
 {
@@ -36,6 +39,7 @@ public class GetAllUsersBenchmark
     [Benchmark(Baseline = true)]
     public async Task<IEnumerable<UserResponse>> CleanArchitecture_GetAllUsers()
     {
-        return await _cleanArchitectureService.GetAllActiveUsersAsync();
+        var users = await _cleanArchitectureService.GetAllActiveUsersAsync();
+        return users.ToList();
     }
 }

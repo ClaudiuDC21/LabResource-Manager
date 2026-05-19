@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Engines;
 using LabResource.Application.DTOs.Borrowings;
 using LabResource.Application.Interfaces.Repositories;
 using LabResource.Application.Services;
@@ -8,6 +9,8 @@ using LabResource.Domain.Entities;
 using LabResource.Domain.Enums;
 using Moq;
 
+[SimpleJob(RunStrategy.ColdStart, launchCount: 1, warmupCount: 3, iterationCount: 30, id: "ThesisJob")]
+[MinColumn, MaxColumn, MeanColumn, MedianColumn]
 [MemoryDiagnoser]
 public class ReturnAssetBenchmark
 {
