@@ -1,10 +1,31 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { BackendConfigService } from '../../../core/services/backend-config.service';
 import { AuthService } from '../../../core/services/auth.service';
+
+export const passwordMatchValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+  const password = control.get('password')?.value;
+  const confirmControl = control.get('confirm');
+  
+  if (!confirmControl) {
+    return null;
+  }
+
+  if (password && confirmControl.value && password !== confirmControl.value) {
+    confirmControl.setErrors({ ...confirmControl.errors, passwordMismatch: true });
+    return { passwordMismatch: true };
+  }
+
+  if (confirmControl.errors) {
+    const { passwordMismatch, ...remainingErrors } = confirmControl.errors;
+    confirmControl.setErrors(Object.keys(remainingErrors).length ? remainingErrors : null);
+  }
+  
+  return null;
+};
 
 @Component({
   selector: 'app-register',
@@ -29,10 +50,14 @@ export class RegisterComponent {
   registerForm: FormGroup = this.fb.group({
     fullName: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
-    matriculationNumber: [''], // Câmp opțional
-    password: ['', [Validators.required, Validators.minLength(6)]],
+    matriculationNumber: [''], 
+    password: ['', [
+      Validators.required, 
+      Validators.minLength(8),
+      Validators.pattern(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9])/)
+    ]],
     confirm: ['', Validators.required]
-  });
+  }, { validators: passwordMatchValidator });
 
   handleRegister() {
     if (this.registerForm.invalid) {
@@ -40,15 +65,10 @@ export class RegisterComponent {
       return;
     }
 
-    const { fullName, email, matriculationNumber, password, confirm } = this.registerForm.value;
-
-    if (password !== confirm) {
-      this.errorMessage = 'Passwords do not match!';
-      return;
-    }
-
     this.isLoading = true;
     this.errorMessage = '';
+
+    const { fullName, email, matriculationNumber, password } = this.registerForm.value;
 
     const payload = {
       fullName,
@@ -65,7 +85,7 @@ export class RegisterComponent {
       error: (err) => {
         this.isLoading = false;
         this.errorMessage = err.error?.detail || 'Registration failed. Email might already be in use.';
-        console.error('Register error:', err);
+        console.error(err);
       }
     });
   }

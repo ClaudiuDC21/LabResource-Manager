@@ -1,5 +1,5 @@
-<div class="min-h-screen flex align-items-center justify-content-center surface-ground px-4">
-  <div class="surface-card p-5 shadow-2 border-round w-full lg:w-4 flex flex-column">
+<div class="flex align-items-center justify-content-center px-4 py-8" style="min-height: calc(100vh - 70px)">
+  <div class="surface-card p-5 shadow-2 border-round w-full lg:w-4 flex flex-column mt-4 mb-4">
     
     <div class="text-center mb-5">
       <img src="logo-LabResource.png" alt="Logo" height="55" class="mb-3" />
@@ -21,36 +21,54 @@
     <form [formGroup]="registerForm" (ngSubmit)="handleRegister()" class="cursor-default">
       
       <label for="fullName" class="block text-900 font-medium mb-2">Full Name</label>
-      <input id="fullName" type="text" formControlName="fullName" pInputText class="w-full mb-2 p-3" placeholder="Enter your full name" />
+      <input id="fullName" type="text" formControlName="fullName" pInputText class="w-full mb-2 p-3 text-900" 
+             [ngClass]="{'ng-invalid ng-dirty': registerForm.get('fullName')?.invalid && registerForm.get('fullName')?.touched}"
+             placeholder="Enter your full name" />
       @if (registerForm.get('fullName')?.invalid && registerForm.get('fullName')?.touched) {
-        <small class="p-error block mb-3">Name is required.</small>
+        <small class="p-error block mb-3 text-red-500 font-medium">Name is required.</small>
       } @else { <div class="mb-3"></div> }
 
       <label for="email" class="block text-900 font-medium mb-2">Email Address</label>
-      <input id="email" type="text" formControlName="email" pInputText class="w-full mb-2 p-3" placeholder="email@example.com (e.g. @ubbcluj.ro)" />
+      <input id="email" type="text" formControlName="email" pInputText class="w-full mb-2 p-3 text-900" 
+             [ngClass]="{'ng-invalid ng-dirty': registerForm.get('email')?.invalid && registerForm.get('email')?.touched}"
+             placeholder="email@example.com (e.g. @ubbcluj.ro)" />
       @if (registerForm.get('email')?.invalid && registerForm.get('email')?.touched) {
-        <small class="p-error block mb-3">A valid email is required.</small>
+        <small class="p-error block mb-3 text-red-500 font-medium">A valid email is required.</small>
       } @else { <div class="mb-3"></div> }
 
       <label for="matriculationNumber" class="block text-900 font-medium mb-2">Matriculation Number <span class="text-500 text-sm font-normal">(Optional)</span></label>
-      <input id="matriculationNumber" type="text" formControlName="matriculationNumber" pInputText class="w-full mb-4 p-3" placeholder="For students only" />
+      <input id="matriculationNumber" type="text" formControlName="matriculationNumber" pInputText class="w-full mb-4 p-3 text-900" placeholder="For students only" />
 
       <label for="password" class="block text-900 font-medium mb-2">Password</label>
-      <input id="password" type="password" formControlName="password" pInputText class="w-full mb-2 p-3" placeholder="Create a password" />
+      <input id="password" type="password" formControlName="password" pInputText class="w-full mb-2 p-3 text-900" 
+             [ngClass]="{'ng-invalid ng-dirty': registerForm.get('password')?.invalid && registerForm.get('password')?.touched}"
+             placeholder="Create a password" />
       @if (registerForm.get('password')?.invalid && registerForm.get('password')?.touched) {
-        <small class="p-error block mb-3">Password must be at least 6 characters.</small>
+        <small class="p-error block mb-3 text-red-500 font-medium line-height-2">
+          Password must be at least 8 characters and contain an uppercase letter, a lowercase letter, a number, and a special character.
+        </small>
       } @else { <div class="mb-3"></div> }
 
       <label for="confirm" class="block text-900 font-medium mb-2">Confirm Password</label>
-      <input id="confirm" type="password" formControlName="confirm" pInputText class="w-full mb-4 p-3" placeholder="Repeat password" />
+      <input id="confirm" type="password" formControlName="confirm" pInputText class="w-full mb-2 p-3 text-900" 
+             [ngClass]="{'ng-invalid ng-dirty': registerForm.get('confirm')?.invalid && (registerForm.get('confirm')?.touched || registerForm.get('confirm')?.dirty)}"
+             placeholder="Repeat password" />
+      
+      @if (registerForm.get('confirm')?.hasError('required') && registerForm.get('confirm')?.touched) {
+        <small class="p-error block mb-3 text-red-500 font-medium">Confirm password is required.</small>
+      } @else if (registerForm.get('confirm')?.hasError('passwordMismatch') && registerForm.get('confirm')?.dirty) {
+        <small class="p-error block mb-3 text-red-500 font-medium">Passwords must match.</small>
+      } @else { 
+        <div class="mb-3"></div> 
+      }
 
       @if (errorMessage) {
-        <div class="mb-4 p-3 border-round bg-red-50 text-red-600 border-1 border-red-200 text-sm">
+        <div class="mb-4 p-3 border-round bg-red-50 text-red-600 border-1 border-red-200 text-sm font-medium">
           <i class="pi pi-exclamation-circle mr-2"></i>{{ errorMessage }}
         </div>
       }
 
-      <button type="submit" class="p-button p-component w-full bg-logo-green shadow-soft-green py-3 font-bold text-xl" [disabled]="isLoading">
+      <button type="submit" class="p-button p-component w-full bg-logo-green shadow-soft-green py-3 font-bold text-xl mt-2" [disabled]="isLoading">
         <i *ngIf="isLoading" class="pi pi-spin pi-spinner mr-2"></i>
         <span class="p-button-label">{{ isLoading ? 'Registering...' : 'Register Now' }}</span>
       </button>
