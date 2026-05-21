@@ -64,6 +64,13 @@ export class ProfileComponent implements OnInit {
     confirmPassword: ''
   };
 
+  showPasswordErrors = false;
+  dirtyCurrentPassword = false;
+  dirtyNewPassword = false;
+  dirtyConfirmPassword = false;
+  
+  private readonly passwordPattern = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9])/;
+
   ngOnInit() {
     this.loadUserData();
     this.loadBorrowings();
@@ -125,6 +132,12 @@ export class ProfileComponent implements OnInit {
       next: () => {
         this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Profile updated successfully!' });
         this.isEditingProfile.set(false);
+        
+        const currentData = this.authService.currentUser();
+        if (currentData) {
+            this.authService.updateCurrentUserState({ ...currentData, name: this.profileForm.fullName });
+        }
+
         this.loadUserData(); 
       },
       error: (err) => {
@@ -133,12 +146,23 @@ export class ProfileComponent implements OnInit {
     });
   }
 
+  isNewPasswordValid(): boolean {
+      if (!this.passwords.newPassword) return false;
+      if (this.passwords.newPassword.length < 8) return false;
+      return this.passwordPattern.test(this.passwords.newPassword);
+  }
+
   changePassword() {
     const userId = this.authService.currentUser()?.id;
     if (!userId) return;
 
-    if (this.passwords.newPassword !== this.passwords.confirmPassword) {
-      this.messageService.add({ severity: 'warn', summary: 'Warning', detail: 'The new passwords do not match!' });
+    if (!this.passwords.currentPassword && !this.passwords.newPassword && !this.passwords.confirmPassword) {
+      return;
+    }
+
+    this.showPasswordErrors = true;
+
+    if (!this.passwords.currentPassword || !this.isNewPasswordValid() || (this.passwords.newPassword === this.passwords.currentPassword) || (this.passwords.newPassword !== this.passwords.confirmPassword)) {
       return;
     }
 
@@ -151,6 +175,10 @@ export class ProfileComponent implements OnInit {
       next: () => {
         this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Password changed successfully!' });
         this.passwords = { currentPassword: '', newPassword: '', confirmPassword: '' };
+        this.showPasswordErrors = false;
+        this.dirtyCurrentPassword = false;
+        this.dirtyNewPassword = false;
+        this.dirtyConfirmPassword = false;
       },
       error: () => {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Check your current password.' });

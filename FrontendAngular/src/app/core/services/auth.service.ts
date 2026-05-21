@@ -1,9 +1,15 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BackendConfigService } from './backend-config.service';
 import { Router } from '@angular/router';
 import { tap } from 'rxjs';
 
+export interface UserState {
+  id: string;
+  name: string;
+  role: string | number;
+  email: string;
+}
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
@@ -12,9 +18,11 @@ export class AuthService {
 
   isLoggedIn = signal<boolean>(this.checkInitialAuth());
 
-  currentUser = computed(() => {
-    if (!this.isLoggedIn()) return null;
-    
+  private currentUserState = signal<UserState | null>(this.extractUserFromToken());
+
+  currentUser = computed(() => this.currentUserState());
+
+  private extractUserFromToken(): UserState | null {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) return null;
 
@@ -32,7 +40,7 @@ export class AuthService {
     } catch (e) {
       return null;
     }
-  });
+  }
 
   private checkInitialAuth(): boolean {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -51,6 +59,10 @@ export class AuthService {
     }
   }
 
+  updateCurrentUserState(newState: UserState) {
+    this.currentUserState.set(newState);
+  }
+
   login(credentials: { email: string; password: string }, rememberMe: boolean = false) {
     return this.http.post('/api/auth/login', credentials).pipe(
       tap((response: any) => {
@@ -61,6 +73,7 @@ export class AuthService {
             sessionStorage.setItem('token', response.token);
           }
           this.isLoggedIn.set(true);
+          this.currentUserState.set(this.extractUserFromToken()); 
         }
       })
     );
@@ -74,6 +87,7 @@ export class AuthService {
     localStorage.removeItem('token');
     sessionStorage.removeItem('token');
     this.isLoggedIn.set(false);
+    this.currentUserState.set(null); 
     this.router.navigate(['/']);
   }
 }

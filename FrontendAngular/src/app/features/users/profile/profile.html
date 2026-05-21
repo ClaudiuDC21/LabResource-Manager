@@ -11,8 +11,8 @@
         </div>
     } @else if (userFromApi) {
         
-        <div class="grid gap-5">
-            <div class="col-12 lg:col-5">
+        <div class="grid">
+            <div class="col-12 lg:col-5 p-3">
                 <div class="surface-card p-5 shadow-2 border-round-xl h-full flex flex-column">
                     <div class="text-xl font-bold text-900 mb-4 flex align-items-center justify-content-between">
                         <span class="flex align-items-center">
@@ -33,16 +33,22 @@
                         <div class="flex flex-column gap-2">
                             <label class="text-500 font-medium text-sm">Full Name</label>
                             @if (isEditingProfile()) {
-                                <input pInputText [(ngModel)]="profileForm.fullName" class="w-full" />
+                                <input pInputText [(ngModel)]="profileForm.fullName" class="w-full text-900" 
+                                       [ngClass]="{'ng-invalid ng-dirty': !profileForm.fullName.trim()}" />
+                                @if (!profileForm.fullName.trim()) {
+                                    <small class="text-red-500 font-medium mt-1">Full name cannot be empty.</small>
+                                }
                             } @else {
-                                <div class="text-900 font-bold text-xl p-2 surface-100 border-round">{{ userFromApi.fullName }}</div>
+                                <div class="text-900 font-bold text-lg p-2 surface-100 border-round min-h-3rem flex align-items-center">
+                                    {{ userFromApi.fullName }}
+                                </div>
                             }
                         </div>
 
                         <div class="flex flex-column gap-2">
                             <label class="text-500 font-medium text-sm">Matriculation Number</label>
                             @if (isEditingProfile()) {
-                                <input pInputText [(ngModel)]="profileForm.matriculationNumber" placeholder="Optional" class="w-full" />
+                                <input pInputText [(ngModel)]="profileForm.matriculationNumber" placeholder="Optional" class="w-full text-900" />
                             } @else {
                                 <div class="text-900 font-bold text-lg p-2 surface-100 border-round min-h-3rem flex align-items-center">
                                     {{ userFromApi.matriculationNumber || 'Not provided' }}
@@ -50,24 +56,28 @@
                             }
                         </div>
 
-                        <div class="flex flex-column gap-3 mt-3 p-3 surface-50 border-round border-1 surface-border">
-                            <div class="flex justify-content-between align-items-center">
-                                <span class="text-600 font-medium">Role:</span>
-                                <span class="font-bold uppercase text-green-700 bg-green-100 px-3 py-1 border-round text-sm">{{ UIHelpers.getRoleName(authService.currentUser()?.role) }}</span>
+                        <div class="flex flex-column gap-2">
+                            <label class="text-500 font-medium text-sm">Role</label>
+                            <div class="text-900 font-bold text-lg p-2 surface-100 border-round min-h-3rem flex align-items-center uppercase">
+                                {{ UIHelpers.getRoleName(authService.currentUser()?.role) }}
                             </div>
-                            <div class="flex justify-content-between align-items-center">
-                                <span class="text-600 font-medium">Email:</span>
-                                <span class="font-bold text-700">{{ authService.currentUser()?.email }}</span>
+                        </div>
+
+                        <div class="flex flex-column gap-2">
+                            <label class="text-500 font-medium text-sm">Email Address</label>
+                            <div class="text-900 font-bold text-lg p-2 surface-100 border-round min-h-3rem flex align-items-center">
+                                {{ authService.currentUser()?.email }}
                             </div>
                         </div>
                     </div>
 
                     @if (isEditingProfile()) {
-                        <div class="flex gap-3 mt-5 pt-3 border-top-1 surface-border">
-                            <p-button label="Cancel" [text]="true" severity="secondary" class="flex-grow-1" 
+                        <div class="flex justify-content-end gap-3 mt-5 pt-4 border-top-1 surface-border">
+                            <p-button label="Cancel" class="bg-gray-200 hover:bg-gray-300 text-gray-800 border-round transition-colors" [text]="true" 
                                       (click)="cancelEditing()" 
                                       (keydown.enter)="cancelEditing()"></p-button>
-                            <p-button label="Save Changes" severity="success" class="flex-grow-1" 
+                            <p-button label="Save Changes" severity="success" 
+                                      [disabled]="!profileForm.fullName.trim()"
                                       (click)="updateProfile()" 
                                       (keydown.enter)="updateProfile()"></p-button>
                         </div>
@@ -75,7 +85,7 @@
                 </div>
             </div>
 
-            <div class="col-12 lg:col-6 flex flex-column gap-5">
+            <div class="col-12 lg:col-7 p-3 flex flex-column gap-5">
                 <div class="surface-card p-5 shadow-2 border-round-xl">
                     <div class="text-xl font-bold text-900 mb-4 flex align-items-center">
                         <i class="pi pi-lock text-logo-green mr-2 text-2xl"></i> Change Password
@@ -85,16 +95,45 @@
                     <div class="flex flex-column gap-4 mt-4">
                         <div class="flex flex-column gap-2">
                             <label class="text-700 font-medium">Current Password</label>
-                            <p-password [(ngModel)]="passwords.currentPassword" [feedback]="false" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full"></p-password>
+                            <p-password [(ngModel)]="passwords.currentPassword" [feedback]="false" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full"
+                                        (onBlur)="dirtyCurrentPassword = true"
+                                        [ngClass]="{'ng-invalid ng-dirty': (dirtyCurrentPassword || showPasswordErrors) && !passwords.currentPassword}"></p-password>
+                            @if ((dirtyCurrentPassword || showPasswordErrors) && !passwords.currentPassword) {
+                                <small class="text-red-500 font-medium mt-1">Current password is required.</small>
+                            }
                         </div>
+
                         <div class="flex flex-column gap-2">
                             <label class="text-700 font-medium">New Password</label>
-                            <p-password [(ngModel)]="passwords.newPassword" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full"></p-password>
+                            <p-password [(ngModel)]="passwords.newPassword" [feedback]="false" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full"
+                                        (onBlur)="dirtyNewPassword = true"
+                                        (ngModelChange)="dirtyNewPassword = true"
+                                        [ngClass]="{'ng-invalid ng-dirty': (dirtyNewPassword || showPasswordErrors) && (!isNewPasswordValid() || (passwords.currentPassword && passwords.newPassword === passwords.currentPassword))}"></p-password>
+                            
+                            @if ((dirtyNewPassword || showPasswordErrors) && passwords.currentPassword && passwords.newPassword === passwords.currentPassword) {
+                                <small class="text-red-500 font-medium mt-1">New password cannot be the same as the current password.</small>
+                            } 
+                            @else if ((dirtyNewPassword || showPasswordErrors) && !isNewPasswordValid()) {
+                                <small class="text-red-500 font-medium mt-1 line-height-2">
+                                    Password must be at least 8 characters and contain an uppercase letter, a lowercase letter, a number, and a special character.
+                                </small>
+                            }
                         </div>
+
                         <div class="flex flex-column gap-2">
                             <label class="text-700 font-medium">Confirm Password</label>
-                            <p-password [(ngModel)]="passwords.confirmPassword" [feedback]="false" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full"></p-password>
+                            <p-password [(ngModel)]="passwords.confirmPassword" [feedback]="false" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full"
+                                        (onBlur)="dirtyConfirmPassword = true"
+                                        (ngModelChange)="dirtyConfirmPassword = true"
+                                        [ngClass]="{'ng-invalid ng-dirty': (dirtyConfirmPassword || showPasswordErrors) && (passwords.newPassword !== passwords.confirmPassword || !passwords.confirmPassword)}"></p-password>
+                            
+                            @if ((dirtyConfirmPassword || showPasswordErrors) && !passwords.confirmPassword) {
+                                <small class="text-red-500 font-medium mt-1">Confirm password is required.</small>
+                            } @else if ((dirtyConfirmPassword || showPasswordErrors) && passwords.newPassword !== passwords.confirmPassword) {
+                                <small class="text-red-500 font-medium mt-1">Passwords must match.</small>
+                            }
                         </div>
+
                         <p-button label="Update Password" [outlined]="true" severity="success" 
                                   (click)="changePassword()" 
                                   (keydown.enter)="changePassword()"></p-button>
@@ -112,7 +151,7 @@
                 </div>
             </div>
 
-            <div class="col-12 mt-4">
+            <div class="col-12 p-3">
                 <div class="surface-card p-5 shadow-2 border-round-xl">
                     <div class="text-xl font-bold text-900 mb-4 flex align-items-center">
                         <i class="pi pi-shopping-cart text-logo-green mr-2 text-2xl"></i> Active Borrowings & Reservations
@@ -148,7 +187,7 @@
                 </div>
             </div>
 
-            <div class="col-12 mt-4">
+            <div class="col-12 p-3">
                 <div class="surface-card p-5 shadow-2 border-round-xl">
                     <div class="text-xl font-bold text-900 mb-4 flex align-items-center">
                         <i class="pi pi-history text-logo-green mr-2 text-2xl"></i> Full History
