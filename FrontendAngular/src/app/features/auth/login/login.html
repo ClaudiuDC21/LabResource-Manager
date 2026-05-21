@@ -1,5 +1,5 @@
-<div class="min-h-screen flex align-items-center justify-content-center surface-ground px-4">
-  <div class="surface-card p-5 shadow-2 border-round w-full lg:w-4 flex flex-column">
+<div class="flex align-items-center justify-content-center px-4 py-8" style="min-height: calc(100vh - 70px)">
+  <div class="surface-card p-5 shadow-2 border-round w-full lg:w-4 flex flex-column mt-4 mb-4">
     
     <div class="text-center mb-5">
       <img src="logo-LabResource.png" alt="Logo" height="55" class="mb-3" />
@@ -20,24 +20,28 @@
 
     <form [formGroup]="loginForm" (ngSubmit)="handleLogin()" class="cursor-default">
       <label for="email" class="block text-900 font-medium mb-2">Email</label>
-      <input id="email" type="text" formControlName="email" pInputText class="w-full mb-2 p-3" placeholder="Enter your email" />
+      <input id="email" type="text" formControlName="email" pInputText class="w-full mb-2 p-3 text-900" 
+             [ngClass]="{'ng-invalid ng-dirty': loginForm.get('email')?.invalid && loginForm.get('email')?.touched}"
+             placeholder="Enter your email" />
       @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
-        <small class="p-error block mb-3">Please enter a valid email.</small>
+        <small class="p-error block mb-3 text-red-500 font-medium">Please enter a valid email.</small>
       } @else { <div class="mb-3"></div> }
 
       <label for="password" class="block text-900 font-medium mb-2">Password</label>
-      <input id="password" type="password" formControlName="password" pInputText class="w-full mb-2 p-3" placeholder="Enter your password" />
+      <input id="password" type="password" formControlName="password" pInputText class="w-full mb-2 p-3 text-900" 
+             [ngClass]="{'ng-invalid ng-dirty': loginForm.get('password')?.invalid && loginForm.get('password')?.touched}"
+             placeholder="Enter your password" />
       @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
-        <small class="p-error block mb-3">Password is required.</small>
+        <small class="p-error block mb-3 text-red-500 font-medium">Password is required.</small>
       } @else { <div class="mb-3"></div> }
 
       @if (errorMessage) {
-        <div class="mb-4 p-3 border-round bg-red-50 text-red-600 border-1 border-red-200 text-sm">
+        <div class="mb-4 p-3 border-round bg-red-50 text-red-600 border-1 border-red-200 text-sm font-medium">
           <i class="pi pi-exclamation-circle mr-2"></i>{{ errorMessage }}
         </div>
       }
 
-      <button type="submit" class="p-button p-component w-full bg-logo-green shadow-soft-green py-3 font-bold text-xl" [disabled]="isLoading">
+      <button type="submit" class="p-button p-component w-full bg-logo-green shadow-soft-green py-3 font-bold text-xl mt-2" [disabled]="isLoading">
         <i *ngIf="isLoading" class="pi pi-spin pi-spinner mr-2"></i>
         <span class="p-button-label">{{ isLoading ? 'Signing In...' : 'Sign In' }}</span>
       </button>
