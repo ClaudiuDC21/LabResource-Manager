@@ -7,4 +7,5 @@ public class UpdateLabAssetRequest
     public string? Location { get; set; }
     public Guid? AssignedTeacherId { get; set; }
     public bool IsActive { get; set; }
+    public bool IsDefective { get; set; }
 }

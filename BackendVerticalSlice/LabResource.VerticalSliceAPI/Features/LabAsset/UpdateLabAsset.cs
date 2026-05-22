@@ -10,7 +10,13 @@ namespace LabResource.VerticalApi.Features.LabAssets;
 
 public static class UpdateLabAsset
 {
-    public record Command([property: JsonRequired] Guid Id, string Name, string? SerialNumber, string? Location, Guid? AssignedTeacherId) : IRequest;
+    public record Command(
+        [property: JsonIgnore] Guid Id,
+        string Name,
+        string? SerialNumber,
+        string? Location,
+        Guid? AssignedTeacherId,
+        bool IsDefective) : IRequest;
 
     public class Validator : AbstractValidator<Command>
     {
@@ -63,6 +69,15 @@ public static class UpdateLabAsset
             asset.SerialNumber = request.SerialNumber;
             asset.Location = request.Location;
             asset.AssignedTeacherId = request.AssignedTeacherId;
+
+            if (request.IsDefective)
+            {
+                asset.Status = AssetStatus.Defective;
+            }
+            else if (asset.Status == AssetStatus.Defective)
+            {
+                asset.Status = AssetStatus.Available;
+            }
 
             await _context.SaveChangesAsync(cancellationToken);
         }

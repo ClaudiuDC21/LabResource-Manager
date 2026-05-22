@@ -102,7 +102,15 @@ public class LabAssetService : ILabAssetService
         asset.SerialNumber = request.SerialNumber;
         asset.Location = request.Location;
         asset.AssignedTeacherId = request.AssignedTeacherId;
-        asset.IsActive = request.IsActive;
+
+        if (request.IsDefective)
+        {
+            asset.Status = AssetStatus.Defective;
+        }
+        else if (asset.Status == AssetStatus.Defective)
+        {
+            asset.Status = AssetStatus.Available;
+        }
 
         await _labAssetRepository.UpdateAsync(asset);
         await _labAssetRepository.SaveChangesAsync();
