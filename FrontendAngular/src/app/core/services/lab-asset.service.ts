@@ -23,19 +23,12 @@ export class LabAssetService {
     return this.http.post<LabAsset>(this.apiUrl, asset);
   }
 
-  update(id: string, asset: CreateLabAssetRequest): Observable<void> {
-    const payload = {
-      name: asset.name,
-      serialNumber: asset.serialNumber,
-      location: asset.location,
-      assignedTeacherId: asset.assignedTeacherId
-    };
-
+update(id: string, asset: any): Observable<void> {
     if (this.backendConfig.isCleanArchitecture()) {
-      return this.http.put<void>(`${this.apiUrl}/${id}`, payload);
+      return this.http.put<void>(`${this.apiUrl}/${id}`, asset);
     } else {
       return this.http.put<void>(`${this.apiUrl}/${id}`, {
-        ...payload,
+        ...asset,
         id: id
       });
     }

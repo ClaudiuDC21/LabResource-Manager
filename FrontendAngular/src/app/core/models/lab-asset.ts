@@ -21,3 +21,11 @@ export interface CreateLabAssetRequest {
   location?: string | null;
   assignedTeacherId?: string | null;
 }
+
+export interface UpdateLabAssetRequest {
+  name: string;
+  serialNumber?: string | null;
+  location?: string | null;
+  assignedTeacherId?: string | null;
+  isDefective: boolean;
+}

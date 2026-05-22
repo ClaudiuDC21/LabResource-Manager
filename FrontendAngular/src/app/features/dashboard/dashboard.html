@@ -33,6 +33,7 @@
       <ng-template pTemplate="header">
         <tr>
           <th scope="col" pSortableColumn="name">Asset Name <p-sortIcon field="name"></p-sortIcon></th>
+          <th scope="col" pSortableColumn="serialNumber">Serial Number <p-sortIcon field="serialNumber"></p-sortIcon></th>
           <th scope="col" pSortableColumn="location">Location <p-sortIcon field="location"></p-sortIcon></th>
           <th scope="col" pSortableColumn="status">Status <p-sortIcon field="status"></p-sortIcon></th>
           <th scope="col">Responsible Teacher</th>
@@ -46,6 +47,7 @@
             (keydown.enter)="viewAssetDetails(asset.id)">
           
           <td class="font-bold text-800">{{ asset.name }}</td>
+          <td class="text-600 font-medium">{{ asset.serialNumber || '-' }}</td>
           <td class="text-600">
             <i class="pi pi-map-marker text-xs mr-1 text-logo-green"></i>
             {{ asset.location || 'N/A' }}
@@ -118,6 +120,13 @@
                   appendTo="body"
                   class="w-full"></p-select>
         <small class="text-500">This teacher will approve/reject reservation requests for this asset.</small>
+
+        @if (isEditing) {
+          <div class="flex align-items-center gap-2 mt-3">
+            <p-checkbox [(ngModel)]="assetForm.isDefective" [binary]="true" inputId="isDefective"></p-checkbox>
+            <label for="isDefective" class="font-bold text-900 mb-0 cursor-pointer">Mark as Defective</label>
+          </div>
+        }
       </div>
     </div>
   </ng-template>

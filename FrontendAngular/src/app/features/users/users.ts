@@ -62,7 +62,6 @@ export class UsersComponent implements OnInit {
   }
 
   getRoleSeverity(role: UserRole | string | number): 'success' | 'info' {
-    // În funcție de cum face maparea JSON-ul (număr sau string)
     const roleValue = typeof role === 'string' ? parseInt(role, 10) : role;
     return roleValue === UserRole.Teacher ? 'info' : 'success';
   }

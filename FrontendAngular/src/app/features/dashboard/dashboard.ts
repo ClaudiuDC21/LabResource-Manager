@@ -10,9 +10,10 @@ import { DialogModule } from 'primeng/dialog';
 import { TagModule } from 'primeng/tag';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
-import { SelectModule } from 'primeng/select'; 
-import { IconFieldModule } from 'primeng/iconfield'; 
+import { SelectModule } from 'primeng/select';
+import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { AuthService } from '../../core/services/auth.service';
@@ -26,18 +27,19 @@ import { AssetStatus } from '../../core/models/enums';
   selector: 'app-dashboard',
   standalone: true,
   imports: [
-    CommonModule, 
-    FormsModule, 
+    CommonModule,
+    FormsModule,
     TableModule,
     ButtonModule,
-    InputTextModule, 
-    DialogModule, 
+    InputTextModule,
+    DialogModule,
     TagModule,
     ConfirmDialogModule,
     ToastModule,
     SelectModule,
     IconFieldModule,
-    InputIconModule
+    InputIconModule,
+    CheckboxModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './dashboard.html'
@@ -57,18 +59,20 @@ export class DashboardComponent implements OnInit {
   assetDialog = false;
   isEditing = false;
   currentAssetId: string | null = null;
-  
-  assetForm: CreateLabAssetRequest = {
+
+  // Modificat din CreateLabAssetRequest in any pentru a permite adaugarea locala a isDefective
+  assetForm: any = {
     name: '',
     serialNumber: '',
     location: '',
-    assignedTeacherId: null
+    assignedTeacherId: null,
+    isDefective: false
   };
 
   ngOnInit() {
     this.loadAssets();
     if (this.isTeacher) {
-      this.loadTeachers();
+       this.loadTeachers();
     }
   }
 
@@ -86,8 +90,12 @@ export class DashboardComponent implements OnInit {
   loadTeachers() {
     this.userService.getAllActive().subscribe({
       next: (users) => {
-        this.teachers.set(users.filter(u => u.role === 2 || u.role.toString() === 'Teacher'));
-      }
+        const mappedTeachers = users
+          .filter(u => u.role === 2 || u.role.toString() === 'Teacher')
+          .map(u => ({ ...u, id: u.id.toLowerCase() }));
+        this.teachers.set(mappedTeachers);
+      },
+      error: (err) => console.error('Error loading teachers:', err)
     });
   }
 
@@ -133,11 +141,16 @@ export class DashboardComponent implements OnInit {
   }
 
   openNew() {
-    this.assetForm = { 
-      name: '', 
-      serialNumber: '', 
-      location: '', 
-      assignedTeacherId: null 
+    if (this.teachers().length === 0 && this.isTeacher) {
+       this.loadTeachers();
+    }
+    
+    this.assetForm = {
+      name: '',
+      serialNumber: '',
+      location: '',
+      assignedTeacherId: null,
+      isDefective: false
     };
     this.isEditing = false;
     this.currentAssetId = null;
@@ -145,11 +158,16 @@ export class DashboardComponent implements OnInit {
   }
 
   editAsset(asset: LabAsset) {
-    this.assetForm = { 
-      name: asset.name, 
+    if (this.teachers().length === 0 && this.isTeacher) {
+       this.loadTeachers();
+    }
+
+    this.assetForm = {
+      name: asset.name,
       serialNumber: asset.serialNumber || '',
       location: asset.location || '',
-      assignedTeacherId: asset.assignedTeacherId || null
+      assignedTeacherId: asset.assignedTeacherId ? asset.assignedTeacherId.toLowerCase() : null,
+      isDefective: asset.status === AssetStatus.Defective
     };
     this.currentAssetId = asset.id;
     this.isEditing = true;
@@ -163,8 +181,19 @@ export class DashboardComponent implements OnInit {
   saveAsset() {
     if (!this.assetForm.name?.trim()) return;
 
+    const payload: any = {
+      ...this.assetForm,
+      serialNumber: this.assetForm.serialNumber?.trim() || null,
+      location: this.assetForm.location?.trim() || null
+    };
+
     if (this.isEditing && this.currentAssetId) {
-      this.assetService.update(this.currentAssetId, this.assetForm).subscribe({
+      const updatePayload = {
+        ...payload,
+        isActive: true
+      };
+
+      this.assetService.update(this.currentAssetId, updatePayload).subscribe({
         next: () => {
           this.loadAssets();
           this.hideDialog();
@@ -173,7 +202,7 @@ export class DashboardComponent implements OnInit {
         error: (err) => this.handleError(err)
       });
     } else {
-      this.assetService.create(this.assetForm).subscribe({
+      this.assetService.create(payload).subscribe({
         next: () => {
           this.loadAssets();
           this.hideDialog();
