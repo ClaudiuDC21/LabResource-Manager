@@ -44,12 +44,9 @@ public class LabAssetsController : ControllerBase
     [Authorize(Roles = nameof(UserRole.Teacher))]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateLabAsset.Command command)
     {
-        if (id != command.Id)
-        {
-            return BadRequest();
-        }
+        var commandWithId = command with { Id = id };
 
-        await _mediator.Send(command);
+        await _mediator.Send(commandWithId);
         return NoContent();
     }
 

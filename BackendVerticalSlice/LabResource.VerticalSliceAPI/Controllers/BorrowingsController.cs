@@ -68,7 +68,6 @@ public class BorrowingsController : ControllerBase
     }
 
     [HttpGet("asset/{assetId:guid}/history")]
-    [Authorize(Roles = "Teacher")]
     public async Task<IActionResult> GetAssetHistory(Guid assetId)
     {
         var result = await _mediator.Send(new GetAssetHistory.Query(assetId));
@@ -76,7 +75,6 @@ public class BorrowingsController : ControllerBase
     }
 
     [HttpGet("teacher/pending")]
-    [Authorize(Roles = "Teacher")]
     public async Task<IActionResult> GetMyPendingRequests()
     {
         var teacherIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
