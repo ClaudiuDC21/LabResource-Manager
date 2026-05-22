@@ -43,6 +43,8 @@ export class AssetRequestComponent implements OnInit {
   readonly authService = inject(AuthService);
   private readonly messageService = inject(MessageService);
 
+  protected readonly BorrowingStatus = BorrowingStatus;
+
   asset = signal<LabAsset | null>(null);
   assetSchedule = signal<AssetHistoryResponse[]>([]);
   isLoading = signal<boolean>(true);
@@ -60,16 +62,21 @@ export class AssetRequestComponent implements OnInit {
 
     const startOfDay = new Date(targetDate).setHours(0, 0, 0, 0);
     const endOfDay = new Date(targetDate).setHours(23, 59, 59, 999);
-    const slots: { start: Date, end: Date }[] = [];
+    
+    const slots: { start: Date, end: Date, isPending: boolean }[] = [];
 
     for (const booking of this.assetSchedule()) {
       const bStart = new Date(booking.requestedStartDate);
       const bEnd = new Date(booking.requestedEndDate);
 
       if (bStart.getTime() <= endOfDay && bEnd.getTime() >= startOfDay) {
+        const statusValue = booking.status?.toString();
+        const pending = statusValue === 'Pending' || statusValue === '1' || booking.status === BorrowingStatus.Pending;
+
         slots.push({
           start: bStart.getTime() < startOfDay ? new Date(startOfDay) : bStart,
-          end: bEnd.getTime() > endOfDay ? new Date(endOfDay) : bEnd
+          end: bEnd.getTime() > endOfDay ? new Date(endOfDay) : bEnd,
+          isPending: pending
         });
       }
     }
@@ -85,7 +92,7 @@ export class AssetRequestComponent implements OnInit {
       this.router.navigate(['/dashboard']);
     }
 
-    const defaultReturn = new Date(this.pickUpDate().getTime() + (2 * 60 * 60 * 1000));
+    const defaultReturn = new Date(this.pickUpDate().getTime() + (1 * 60 * 60 * 1000));
     this.returnDate.set(new Date(defaultReturn));
     this.returnTime.set(new Date(defaultReturn));
   }
@@ -106,11 +113,14 @@ export class AssetRequestComponent implements OnInit {
   loadSchedule(id: string) {
     this.borrowingService.getAssetHistory(id).subscribe({
       next: (history) => {
-        const activeBookings = history.filter(h => 
-          h.status !== BorrowingStatus.Returned && 
-          h.status !== BorrowingStatus.Rejected
-        );
+        const activeBookings = history.filter(h => {
+          const s = h.status?.toString();
+          return s !== 'Returned' && s !== '4' && s !== 'Rejected' && s !== '5';
+        });
         this.assetSchedule.set(activeBookings);
+      },
+      error: (err) => {
+        console.error('Error loading schedule:', err);
       }
     });
   }
@@ -119,6 +129,25 @@ export class AssetRequestComponent implements OnInit {
     if (!newDate) return;
     this.pickUpDate.set(newDate);
     this.returnDate.set(new Date(newDate.getTime()));
+  }
+
+  onPickUpTimeChange(newTime: Date) {
+    if (!newTime) return;
+    this.pickUpTime.set(newTime);
+
+    const pDate = this.pickUpDate();
+    const rDate = this.returnDate();
+
+    if (
+      pDate && rDate &&
+      pDate.getFullYear() === rDate.getFullYear() &&
+      pDate.getMonth() === rDate.getMonth() &&
+      pDate.getDate() === rDate.getDate()
+    ) {
+      const newReturnTime = new Date(newTime);
+      newReturnTime.setHours(newReturnTime.getHours() + 1);
+      this.returnTime.set(newReturnTime);
+    }
   }
 
   getDayStatus(dateObj: any): 'full' | 'partial' | 'free' {

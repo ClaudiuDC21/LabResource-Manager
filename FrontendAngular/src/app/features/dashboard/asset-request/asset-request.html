@@ -54,7 +54,7 @@
               </div>
               <div class="col-12 md:col-4">
                 <label class="block font-bold text-700 mb-2">Pick-up Time</label>
-                <p-datepicker [ngModel]="pickUpTime()" (ngModelChange)="pickUpTime.set($event)" [timeOnly]="true" appendTo="body" [showIcon]="true" iconDisplay="input" styleClass="w-full" placeholder="Select Time">
+                <p-datepicker [ngModel]="pickUpTime()" (ngModelChange)="onPickUpTimeChange($event)" [timeOnly]="true" appendTo="body" [showIcon]="true" iconDisplay="input" styleClass="w-full" placeholder="Select Time">
                   <ng-template pTemplate="inputicon">
                     <i class="pi pi-clock"></i>
                   </ng-template>
@@ -69,9 +69,18 @@
               } @else {
                 <div class="flex flex-wrap gap-2">
                   @for (slot of bookedSlots(); track $index) {
-                    <p-tag severity="danger" icon="pi pi-lock">
-                      {{ slot.start | date: 'HH:mm' }} - {{ slot.end | date: 'HH:mm' }}
-                    </p-tag>
+                    
+                    @if (slot.isPending) {
+                      <p-tag severity="warn" icon="pi pi-clock">
+                        Waiting for approval: {{ slot.start | date: 'HH:mm' }} - {{ slot.end | date: 'HH:mm' }}
+                      </p-tag>
+                    } 
+                    @else {
+                      <p-tag severity="danger" icon="pi pi-lock">
+                        Reserved: {{ slot.start | date: 'HH:mm' }} - {{ slot.end | date: 'HH:mm' }}
+                      </p-tag>
+                    }
+                    
                   }
                 </div>
               }
@@ -122,7 +131,7 @@
                 } @else {
                   <span>
                     Your request will be sent to
-                    <strong>{{ asset()?.assignedTeacherName || 'Simona Motogna' }}</strong> for
+                    <strong>{{ asset()?.assignedTeacherName || 'the assigned teacher' }}</strong> for
                     approval. You will be notified once the equipment is ready for pick-up.
                   </span>
                 }
