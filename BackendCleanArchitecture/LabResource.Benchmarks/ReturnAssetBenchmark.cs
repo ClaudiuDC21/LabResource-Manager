@@ -9,7 +9,7 @@ using LabResource.Domain.Entities;
 using LabResource.Domain.Enums;
 using Moq;
 
-[SimpleJob(RunStrategy.ColdStart, launchCount: 1, warmupCount: 3, iterationCount: 30, id: "ThesisJob")]
+[SimpleJob(RunStrategy.ColdStart, launchCount: 1, warmupCount: 3, iterationCount: 30, id: "CleanArchitecture Thesis")]
 [MinColumn, MaxColumn, MeanColumn, MedianColumn]
 [MemoryDiagnoser]
 public class ReturnAssetBenchmark
@@ -19,8 +19,26 @@ public class ReturnAssetBenchmark
     private Guid _borrowingId;
     private Guid _assetId;
 
+    private Mock<IBorrowingRecordRepository> _mockBorrowingRepo;
+    private Mock<ILabAssetRepository> _mockAssetRepo;
+    private Mock<IUserRepository> _mockUserRepo;
+
     [GlobalSetup]
-    public void Setup()
+    public void GlobalSetup()
+    {
+        _mockBorrowingRepo = new Mock<IBorrowingRecordRepository>();
+        _mockAssetRepo = new Mock<ILabAssetRepository>();
+        _mockUserRepo = new Mock<IUserRepository>();
+
+        _cleanArchitectureService = new BorrowingService(
+            _mockUserRepo.Object,
+            _mockAssetRepo.Object,
+            _mockBorrowingRepo.Object
+        );
+    }
+
+    [IterationSetup]
+    public void IterationSetup()
     {
         _borrowingId = Guid.NewGuid();
         _assetId = Guid.NewGuid();
@@ -31,31 +49,25 @@ public class ReturnAssetBenchmark
             IsDefective = false
         };
 
-        var mockBorrowingRepo = new Mock<IBorrowingRecordRepository>();
-        mockBorrowingRepo.Setup(repo => repo.GetByIdAsync(_borrowingId))
+        _mockBorrowingRepo.Setup(repo => repo.GetByIdAsync(_borrowingId))
             .ReturnsAsync(new BorrowingRecord
             {
                 Id = _borrowingId,
                 LabAssetId = _assetId,
                 Status = BorrowingStatus.Active,
-                Remarks = "Picked up on Monday for field research."
+                Remarks = "Picked up on Monday."
             });
 
-        var mockAssetRepo = new Mock<ILabAssetRepository>();
-        mockAssetRepo.Setup(repo => repo.GetByIdAsync(_assetId))
+        _mockAssetRepo.Setup(repo => repo.GetByIdAsync(_assetId))
             .ReturnsAsync(new LabAsset
             {
                 Id = _assetId,
                 Status = AssetStatus.Borrowed,
                 Name = "Thermal Camera"
             });
-
-        var mockUserRepo = new Mock<IUserRepository>();
-
-        _cleanArchitectureService = new BorrowingService(mockUserRepo.Object, mockAssetRepo.Object, mockBorrowingRepo.Object);
     }
 
-    [Benchmark(Baseline = true)]
+    [Benchmark]
     public async Task<ReturnAssetResponse> CleanArchitecture_ReturnAsset()
     {
         return await _cleanArchitectureService.ReturnAssetAsync(_borrowingId, _request);

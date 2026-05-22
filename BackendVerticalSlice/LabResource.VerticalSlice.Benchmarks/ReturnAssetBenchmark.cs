@@ -2,14 +2,17 @@
 using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Engines;
 using LabResource.VerticalApi.Common.Entities;
 using LabResource.VerticalApi.Common.Enums;
 using LabResource.VerticalApi.Common.Persistence;
 using LabResource.VerticalApi.Features.Borrowings;
 using Microsoft.EntityFrameworkCore;
 
+[SimpleJob(RunStrategy.ColdStart, launchCount: 1, warmupCount: 3, iterationCount: 30, id: "VerticalSlice Thesis")]
+[MinColumn, MaxColumn, MeanColumn, MedianColumn]
 [MemoryDiagnoser]
-public class ReturnAssetBenchmark
+public class ReturnAssetBenchmarkVertical
 {
     private ApplicationDbContext _context;
     private ReturnAsset.Handler _handler;
@@ -17,8 +20,8 @@ public class ReturnAssetBenchmark
     private Guid _borrowingId;
     private Guid _assetId;
 
-    [GlobalSetup]
-    public void Setup()
+    [IterationSetup]
+    public void IterationSetup()
     {
         _borrowingId = Guid.NewGuid();
         _assetId = Guid.NewGuid();
@@ -38,7 +41,7 @@ public class ReturnAssetBenchmark
         _handler = new ReturnAsset.Handler(_context);
     }
 
-    [Benchmark(Baseline = true)]
+    [Benchmark]
     public async Task<ReturnAsset.Result> VerticalSlice_ReturnAsset()
     {
         return await _handler.Handle(_command, CancellationToken.None);

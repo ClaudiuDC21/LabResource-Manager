@@ -9,7 +9,7 @@ using LabResource.Domain.Entities;
 using LabResource.Domain.Enums;
 using Moq;
 
-[SimpleJob(RunStrategy.ColdStart, launchCount: 1, warmupCount: 3, iterationCount: 30, id: "ThesisJob")]
+[SimpleJob(RunStrategy.ColdStart, launchCount: 1, warmupCount: 3, iterationCount: 30, id: "CleanArchitecture Thesis")]
 [MinColumn, MaxColumn, MeanColumn, MedianColumn]
 [MemoryDiagnoser]
 public class RequestAssetBenchmark
@@ -61,7 +61,7 @@ public class RequestAssetBenchmark
         _cleanArchitectureService = new BorrowingService(mockUserRepo.Object, mockAssetRepo.Object, mockBorrowingRepo.Object);
     }
 
-    [Benchmark(Baseline = true)]
+    [Benchmark]
     public async Task<BorrowingResponse> CleanArchitecture_RequestAsset()
     {
         return await _cleanArchitectureService.RequestAssetAsync(_request);

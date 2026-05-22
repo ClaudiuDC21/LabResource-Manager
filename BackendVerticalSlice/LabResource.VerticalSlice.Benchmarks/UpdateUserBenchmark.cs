@@ -2,11 +2,14 @@
 using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Engines;
 using LabResource.VerticalApi.Common.Entities;
 using LabResource.VerticalApi.Common.Persistence;
 using LabResource.VerticalApi.Features.Users;
 using Microsoft.EntityFrameworkCore;
 
+[SimpleJob(RunStrategy.ColdStart, launchCount: 1, warmupCount: 3, iterationCount: 30, id: "VerticalSlice Thesis")]
+[MinColumn, MaxColumn, MeanColumn, MedianColumn]
 [MemoryDiagnoser]
 public class UpdateUserBenchmark
 {
@@ -41,7 +44,7 @@ public class UpdateUserBenchmark
         _handler = new UpdateUser.Handler(_context);
     }
 
-    [Benchmark(Baseline = true)]
+    [Benchmark]
     public async Task VerticalSlice_UpdateUser()
     {
         await _handler.Handle(_command, CancellationToken.None);

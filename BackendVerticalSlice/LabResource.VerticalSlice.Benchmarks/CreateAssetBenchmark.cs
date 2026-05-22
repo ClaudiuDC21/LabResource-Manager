@@ -2,12 +2,15 @@
 using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Engines;
 using LabResource.VerticalApi.Common.Entities;
 using LabResource.VerticalApi.Common.Enums;
 using LabResource.VerticalApi.Common.Persistence;
 using LabResource.VerticalApi.Features.LabAssets;
 using Microsoft.EntityFrameworkCore;
 
+[SimpleJob(RunStrategy.ColdStart, launchCount: 1, warmupCount: 3, iterationCount: 30, id: "VerticalSlice Thesis")]
+[MinColumn, MaxColumn, MeanColumn, MedianColumn]
 [MemoryDiagnoser]
 public class CreateAssetBenchmark
 {
@@ -16,8 +19,8 @@ public class CreateAssetBenchmark
     private CreateLabAsset.Command _command;
     private Guid _teacherId;
 
-    [GlobalSetup]
-    public void Setup()
+    [IterationSetup]
+    public void IterationSetup()
     {
         _teacherId = Guid.NewGuid();
 
@@ -47,7 +50,7 @@ public class CreateAssetBenchmark
         _handler = new CreateLabAsset.Handler(_context);
     }
 
-    [Benchmark(Baseline = true)]
+    [Benchmark]
     public async Task<CreateLabAsset.Result> VerticalSlice_CreateAsset()
     {
         return await _handler.Handle(_command, CancellationToken.None);

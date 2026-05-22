@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Engines;
 using LabResource.VerticalApi.Common.Entities;
 using LabResource.VerticalApi.Common.Enums;
 using LabResource.VerticalApi.Common.Persistence;
 using LabResource.VerticalApi.Features.Users;
 using Microsoft.EntityFrameworkCore;
 
+[SimpleJob(RunStrategy.ColdStart, launchCount: 1, warmupCount: 3, iterationCount: 30, id: "VerticalSlice Thesis")]
+[MinColumn, MaxColumn, MeanColumn, MedianColumn]
 [MemoryDiagnoser]
 public class GetAllUsersBenchmark
 {
@@ -40,9 +43,10 @@ public class GetAllUsersBenchmark
         _handler = new GetAllActiveUsers.Handler(_context);
     }
 
-    [Benchmark(Baseline = true)]
-    public async Task<IEnumerable<GetAllActiveUsers.Result>> VerticalSlice_GetAllUsers()
+    [Benchmark]
+    public async Task<List<GetAllActiveUsers.Result>> VerticalSlice_GetAllUsers()
     {
-        return await _handler.Handle(_query, CancellationToken.None);
+        var result = await _handler.Handle(_query, CancellationToken.None);
+        return result.ToList();
     }
 }

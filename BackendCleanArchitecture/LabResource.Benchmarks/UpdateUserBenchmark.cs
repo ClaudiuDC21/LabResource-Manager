@@ -9,7 +9,7 @@ using LabResource.Domain.Entities;
 using LabResource.Domain.Enums;
 using Moq;
 
-[SimpleJob(RunStrategy.ColdStart, launchCount: 1, warmupCount: 3, iterationCount: 30, id: "ThesisJob")]
+[SimpleJob(RunStrategy.ColdStart, launchCount: 1, warmupCount: 3, iterationCount: 30, id: "CleanArchitecture Thesis")]
 [MinColumn, MaxColumn, MeanColumn, MedianColumn]
 [MemoryDiagnoser]
 public class UpdateUserBenchmark
@@ -43,7 +43,7 @@ public class UpdateUserBenchmark
         _cleanArchitectureService = new UserService(mockUserRepo.Object);
     }
 
-    [Benchmark(Baseline = true)]
+    [Benchmark]
     public async Task<bool> CleanArchitecture_UpdateUser()
     {
         return await _cleanArchitectureService.UpdateUserAsync(_userId, _request);
