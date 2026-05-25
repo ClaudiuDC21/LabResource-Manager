@@ -9,19 +9,21 @@ using LabResource.Domain.Entities;
 using LabResource.Domain.Enums;
 using Moq;
 
+namespace LabResource.Benchmarks;
+
 [SimpleJob(RunStrategy.ColdStart, launchCount: 1, warmupCount: 3, iterationCount: 30, id: "CleanArchitecture Thesis")]
 [MinColumn, MaxColumn, MeanColumn, MedianColumn]
 [MemoryDiagnoser]
 public class ReturnAssetBenchmark
 {
-    private BorrowingService _cleanArchitectureService;
-    private ReturnAssetRequest _request;
+    private BorrowingService _cleanArchitectureService = null!;
+    private ReturnAssetRequest _request = null!;
     private Guid _borrowingId;
     private Guid _assetId;
 
-    private Mock<IBorrowingRecordRepository> _mockBorrowingRepo;
-    private Mock<ILabAssetRepository> _mockAssetRepo;
-    private Mock<IUserRepository> _mockUserRepo;
+    private Mock<IBorrowingRecordRepository> _mockBorrowingRepo = null!;
+    private Mock<ILabAssetRepository> _mockAssetRepo = null!;
+    private Mock<IUserRepository> _mockUserRepo = null!;
 
     [GlobalSetup]
     public void GlobalSetup()

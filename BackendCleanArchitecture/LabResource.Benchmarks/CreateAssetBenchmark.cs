@@ -9,13 +9,15 @@ using LabResource.Domain.Entities;
 using LabResource.Domain.Enums;
 using Moq;
 
+namespace LabResource.Benchmarks;
+
 [SimpleJob(RunStrategy.ColdStart, launchCount: 1, warmupCount: 3, iterationCount: 30, id: "CleanArchitecture Thesis")]
 [MinColumn, MaxColumn, MeanColumn, MedianColumn]
 [MemoryDiagnoser]
 public class CreateAssetBenchmark
 {
-    private LabAssetService _cleanArchitectureService;
-    private CreateLabAssetRequest _request;
+    private LabAssetService _cleanArchitectureService = null!;
+    private CreateLabAssetRequest _request = null!;
     private Guid _teacherId;
 
     [GlobalSetup]
@@ -34,7 +36,7 @@ public class CreateAssetBenchmark
         var mockAssetRepo = new Mock<ILabAssetRepository>();
         mockAssetRepo
             .Setup(repo => repo.GetBySerialNumberAsync(It.IsAny<string>()))
-            .ReturnsAsync((LabAsset)null);
+            .ReturnsAsync((LabAsset?)null);
 
         var mockUserRepo = new Mock<IUserRepository>();
         mockUserRepo

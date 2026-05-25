@@ -9,13 +9,15 @@ using LabResource.Domain.Entities;
 using LabResource.Domain.Enums;
 using Moq;
 
+namespace LabResource.Benchmarks;
+
 [SimpleJob(RunStrategy.ColdStart, launchCount: 1, warmupCount: 3, iterationCount: 30, id: "CleanArchitecture Thesis")]
 [MinColumn, MaxColumn, MeanColumn, MedianColumn]
 [MemoryDiagnoser]
 public class UpdateUserBenchmark
 {
-    private UserService _cleanArchitectureService;
-    private UpdateUserRequest _request;
+    private UserService _cleanArchitectureService = null!;
+    private UpdateUserRequest _request = null!;
     private Guid _userId;
 
     [GlobalSetup]

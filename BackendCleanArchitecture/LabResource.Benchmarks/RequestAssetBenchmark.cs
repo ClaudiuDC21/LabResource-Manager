@@ -9,13 +9,15 @@ using LabResource.Domain.Entities;
 using LabResource.Domain.Enums;
 using Moq;
 
+namespace LabResource.Benchmarks;
+
 [SimpleJob(RunStrategy.ColdStart, launchCount: 1, warmupCount: 3, iterationCount: 30, id: "CleanArchitecture Thesis")]
 [MinColumn, MaxColumn, MeanColumn, MedianColumn]
 [MemoryDiagnoser]
 public class RequestAssetBenchmark
 {
-    private BorrowingService _cleanArchitectureService;
-    private BorrowAssetRequest _request;
+    private BorrowingService _cleanArchitectureService = null!;
+    private BorrowAssetRequest _request = null!;
     private Guid _userId;
     private Guid _assetId;
 

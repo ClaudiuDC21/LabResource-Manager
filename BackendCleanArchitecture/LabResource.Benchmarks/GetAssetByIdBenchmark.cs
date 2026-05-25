@@ -9,12 +9,14 @@ using LabResource.Domain.Entities;
 using LabResource.Domain.Enums;
 using Moq;
 
+namespace LabResource.Benchmarks;
+
 [SimpleJob(RunStrategy.ColdStart, launchCount: 1, warmupCount: 3, iterationCount: 30, id: "CleanArchitecture Thesis")]
 [MinColumn, MaxColumn, MeanColumn, MedianColumn]
 [MemoryDiagnoser]
 public class GetAssetByIdBenchmark
 {
-    private LabAssetService _cleanArchitectureService;
+    private LabAssetService _cleanArchitectureService = null!;
     private Guid _testAssetId;
 
     [GlobalSetup]
@@ -41,7 +43,7 @@ public class GetAssetByIdBenchmark
     }
 
     [Benchmark]
-    public async Task<LabAssetResponse> CleanArchitecture_GetById()
+    public async Task<LabAssetResponse?> CleanArchitecture_GetById()
     {
         return await _cleanArchitectureService.GetAssetByIdAsync(_testAssetId);
     }
