@@ -20,11 +20,17 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
         var featureName = typeof(TRequest).DeclaringType?.Name ?? typeof(TRequest).Name;
         var userEmail = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value ?? "Anonymous";
 
-        _logger.LogInformation("[AUDIT] User '{User}' initiated {Feature} with data: {@Request}", userEmail, featureName, request);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("[AUDIT] User '{User}' initiated {Feature} with data: {@Request}", userEmail, featureName, request);
+        }
 
         var response = await next();
 
-        _logger.LogInformation("[AUDIT] User '{User}' successfully completed {Feature}.", userEmail, featureName);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("[AUDIT] User '{User}' successfully completed {Feature}.", userEmail, featureName);
+        }
 
         return response;
     }

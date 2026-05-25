@@ -24,6 +24,6 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
             if (failures.Count != 0)
                 throw new ValidationException(failures);
         }
-        return await next();
+        return await next(cancellationToken);
     }
 }
