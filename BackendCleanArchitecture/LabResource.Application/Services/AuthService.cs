@@ -17,15 +17,13 @@ public class AuthService : IAuthService
     private readonly IUserRepository _userRepository;
     private readonly JwtSettings _jwtSettings;
 
-    public Guid LoggedUserId { get; private set; }
-
     public AuthService(IUserRepository userRepository, IOptions<JwtSettings> jwtOptions)
     {
         _userRepository = userRepository;
         _jwtSettings = jwtOptions.Value;
     }
 
-    public async Task<AuthResponse> LoginAsync(LoginRequest request)
+    public async Task<AuthResponse?> LoginAsync(LoginRequest request)
     {
         var user = await _userRepository.GetByEmailAsync(request.Email);
 

@@ -13,6 +13,8 @@ public class LabAssetService : ILabAssetService
     private readonly ILabAssetRepository _labAssetRepository;
     private readonly IUserRepository _userRepository;
 
+    private const string LabAssetEntityName = "LabAsset";
+
     public LabAssetService(ILabAssetRepository labAssetRepository, IUserRepository userRepository)
     {
         _labAssetRepository = labAssetRepository;
@@ -28,7 +30,7 @@ public class LabAssetService : ILabAssetService
             var existingAsset = await _labAssetRepository.GetBySerialNumberAsync(request.SerialNumber);
             if (existingAsset != null)
             {
-                throw new AlreadyExistsException("LabAsset", request.SerialNumber);
+                throw new AlreadyExistsException(LabAssetEntityName, request.SerialNumber);
             }
         }
 
@@ -56,7 +58,7 @@ public class LabAssetService : ILabAssetService
         return assets.Select(asset => asset.ToResponse());
     }
 
-    public async Task<LabAssetResponse> GetAssetByIdAsync(Guid id)
+    public async Task<LabAssetResponse?> GetAssetByIdAsync(Guid id)
     {
         if (id == Guid.Empty)
         {
@@ -67,7 +69,7 @@ public class LabAssetService : ILabAssetService
 
         if (asset == null)
         {
-            throw new NotFoundException("LabAsset", id);
+            throw new NotFoundException(LabAssetEntityName, id);
         }
 
         return asset.ToResponse();
@@ -84,7 +86,7 @@ public class LabAssetService : ILabAssetService
 
         if (asset == null)
         {
-            throw new NotFoundException("LabAsset", id);
+            throw new NotFoundException(LabAssetEntityName, id);
         }
 
         await ValidateTeacherAsync(request.AssignedTeacherId);
@@ -94,7 +96,7 @@ public class LabAssetService : ILabAssetService
             var existingAsset = await _labAssetRepository.GetBySerialNumberAsync(request.SerialNumber);
             if (existingAsset != null)
             {
-                throw new AlreadyExistsException("LabAsset", request.SerialNumber);
+                throw new AlreadyExistsException(LabAssetEntityName, request.SerialNumber);
             }
         }
 
@@ -129,7 +131,7 @@ public class LabAssetService : ILabAssetService
 
         if (asset == null)
         {
-            throw new NotFoundException("LabAsset", id);
+            throw new NotFoundException(LabAssetEntityName, id);
         }
 
         if (!asset.IsActive)

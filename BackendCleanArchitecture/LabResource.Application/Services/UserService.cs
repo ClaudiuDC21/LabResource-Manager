@@ -12,6 +12,9 @@ public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
 
+    private const string InvalidUserIdMessage = "The provided user ID is invalid.";
+    private const string UserEntityName = "User";
+
     public UserService(IUserRepository userRepository)
     {
         _userRepository = userRepository;
@@ -23,7 +26,7 @@ public class UserService : IUserService
 
         if (existingUser != null)
         {
-            throw new AlreadyExistsException("User", request.Email);
+            throw new AlreadyExistsException(UserEntityName, request.Email);
         }
 
         var assignedRole = request.Email.EndsWith("@ubbcluj.ro", StringComparison.OrdinalIgnoreCase)
@@ -58,14 +61,14 @@ public class UserService : IUserService
     {
         if (id == Guid.Empty)
         {
-            throw new BadRequestException("The provided user ID is invalid.");
+            throw new BadRequestException(InvalidUserIdMessage);
         }
 
         var user = await _userRepository.GetByIdAsync(id);
 
         if (user == null)
         {
-            throw new NotFoundException("User", id);
+            throw new NotFoundException(UserEntityName, id);
         }
 
         return user.ToResponse();
@@ -75,14 +78,14 @@ public class UserService : IUserService
     {
         if (id == Guid.Empty)
         {
-            throw new BadRequestException("The provided user ID is invalid.");
+            throw new BadRequestException(InvalidUserIdMessage);
         }
 
         var user = await _userRepository.GetByIdAsync(id);
 
         if (user == null)
         {
-            throw new NotFoundException("User", id);
+            throw new NotFoundException(UserEntityName, id);
         }
 
         user.FullName = request.FullName;
@@ -98,14 +101,14 @@ public class UserService : IUserService
     {
         if (id == Guid.Empty)
         {
-            throw new BadRequestException("The provided user ID is invalid.");
+            throw new BadRequestException(InvalidUserIdMessage);
         }
 
         var user = await _userRepository.GetByIdAsync(id);
 
         if (user == null)
         {
-            throw new NotFoundException("User", id);
+            throw new NotFoundException(UserEntityName, id);
         }
 
         if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
@@ -130,14 +133,14 @@ public class UserService : IUserService
     {
         if (id == Guid.Empty)
         {
-            throw new BadRequestException("The provided user ID is invalid.");
+            throw new BadRequestException(InvalidUserIdMessage);
         }
 
         var user = await _userRepository.GetByIdAsync(id);
 
         if (user == null)
         {
-            throw new NotFoundException("User", id);
+            throw new NotFoundException(UserEntityName, id);
         }
 
         if (!user.IsActive)
