@@ -9,14 +9,16 @@ using LabResource.VerticalApi.Common.Persistence;
 using LabResource.VerticalApi.Features.Borrowings;
 using Microsoft.EntityFrameworkCore;
 
+namespace LabResource.VerticalSlice.Benchmarks;
+
 [SimpleJob(RunStrategy.ColdStart, launchCount: 1, warmupCount: 3, iterationCount: 30, id: "VerticalSlice Thesis")]
 [MinColumn, MaxColumn, MeanColumn, MedianColumn]
 [MemoryDiagnoser]
-public class ReturnAssetBenchmarkVertical
+public class ReturnAssetBenchmark
 {
-    private ApplicationDbContext _context;
-    private ReturnAsset.Handler _handler;
-    private ReturnAsset.Command _command;
+    private ApplicationDbContext _context = null!;
+    private ReturnAsset.Handler _handler = null!;
+    private ReturnAsset.Command _command = null!;
     private Guid _borrowingId;
     private Guid _assetId;
 

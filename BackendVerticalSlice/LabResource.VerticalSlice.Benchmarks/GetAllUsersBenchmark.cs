@@ -10,14 +10,16 @@ using LabResource.VerticalApi.Common.Persistence;
 using LabResource.VerticalApi.Features.Users;
 using Microsoft.EntityFrameworkCore;
 
+namespace LabResource.VerticalSlice.Benchmarks;
+
 [SimpleJob(RunStrategy.ColdStart, launchCount: 1, warmupCount: 3, iterationCount: 30, id: "VerticalSlice Thesis")]
 [MinColumn, MaxColumn, MeanColumn, MedianColumn]
 [MemoryDiagnoser]
 public class GetAllUsersBenchmark
 {
-    private ApplicationDbContext _context;
-    private GetAllActiveUsers.Handler _handler;
-    private GetAllActiveUsers.Query _query;
+    private ApplicationDbContext _context = null!;
+    private GetAllActiveUsers.Handler _handler = null!;
+    private GetAllActiveUsers.Query _query = null!;
 
     [GlobalSetup]
     public void Setup()
