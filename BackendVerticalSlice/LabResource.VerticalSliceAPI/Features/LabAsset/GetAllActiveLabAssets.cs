@@ -30,7 +30,7 @@ public static class GetAllActiveLabAssets
                     a.AssignedTeacher != null ? a.AssignedTeacher.FullName : null,
                     a.Status, a.IsActive,
                     a.BorrowingRecords.Where(b => b.ActualReturnedAt == null && b.Status == BorrowingStatus.Active).Select(b => b.User.FullName).FirstOrDefault(),
-                    a.BorrowingRecords.Where(b => b.ActualReturnedAt == null && b.Status == BorrowingStatus.Active).Select(b => (DateTime?)b.ActualBorrowedAt).FirstOrDefault()
+                    a.BorrowingRecords.Where(b => b.ActualReturnedAt == null && b.Status == BorrowingStatus.Active).Select(b => b.ActualBorrowedAt).FirstOrDefault()
                 ))
                 .ToListAsync(cancellationToken);
         }

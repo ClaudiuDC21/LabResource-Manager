@@ -16,7 +16,7 @@ public static class UpdateLabAsset
         string? SerialNumber,
         string? Location,
         Guid? AssignedTeacherId,
-        bool IsDefective) : IRequest;
+        [property: JsonIgnore] bool IsDefective) : IRequest;
 
     public class Validator : AbstractValidator<Command>
     {
@@ -57,13 +57,12 @@ public static class UpdateLabAsset
                 if (teacher.Role != UserRole.Teacher) throw new BadRequestException("Assigned user must be a Teacher.");
             }
 
-            if (!string.IsNullOrWhiteSpace(request.SerialNumber) && request.SerialNumber != asset.SerialNumber)
-            {
-                if (await _context.LabAssets.AnyAsync(a => a.SerialNumber == request.SerialNumber, cancellationToken))
+            if (!string.IsNullOrWhiteSpace(request.SerialNumber) && request.SerialNumber != asset.SerialNumber && 
+                await _context.LabAssets.AnyAsync(a => a.SerialNumber == request.SerialNumber, cancellationToken))
                 {
                     throw new AlreadyExistsException("LabAsset", request.SerialNumber);
                 }
-            }
+            
 
             asset.Name = request.Name;
             asset.SerialNumber = request.SerialNumber;

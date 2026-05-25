@@ -50,12 +50,10 @@ public static class CreateLabAsset
                 if (teacher.Role != UserRole.Teacher) throw new BadRequestException("Assigned user must be a Teacher.");
             }
 
-            if (!string.IsNullOrWhiteSpace(request.SerialNumber))
+            if (!string.IsNullOrWhiteSpace(request.SerialNumber) &&
+                    await _context.LabAssets.AnyAsync(a => a.SerialNumber == request.SerialNumber, cancellationToken))
             {
-                if (await _context.LabAssets.AnyAsync(a => a.SerialNumber == request.SerialNumber, cancellationToken))
-                {
-                    throw new AlreadyExistsException("LabAsset", request.SerialNumber);
-                }
+                throw new AlreadyExistsException("LabAsset", request.SerialNumber);
             }
 
             var newAsset = new LabAsset

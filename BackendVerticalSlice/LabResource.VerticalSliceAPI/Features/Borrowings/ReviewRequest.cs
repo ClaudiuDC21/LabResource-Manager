@@ -13,7 +13,7 @@ public static class ReviewRequest
     public record Command(
         [property: JsonIgnore] Guid BorrowingId,
         [property: JsonIgnore] Guid TeacherId,
-        bool IsApproved,
+        [property: JsonIgnore] bool IsApproved,
         string? TeacherNotes) : IRequest;
 
     public class Validator : AbstractValidator<Command>

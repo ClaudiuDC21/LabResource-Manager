@@ -12,10 +12,10 @@ namespace LabResource.VerticalApi.Features.Borrowings;
 public static class RequestAsset
 {
     public record Command(
-        [property: JsonRequired] Guid UserId,
-        [property: JsonRequired] Guid LabAssetId,
-        DateTime RequestedStartDate,
-        DateTime RequestedEndDate) : IRequest<Result>;
+    [property: JsonRequired] Guid UserId,
+    [property: JsonRequired] Guid LabAssetId,
+    [property: JsonRequired] DateTime RequestedStartDate,
+    [property: JsonRequired] DateTime RequestedEndDate) : IRequest<Result>;
 
     public record Result(
         Guid Id,

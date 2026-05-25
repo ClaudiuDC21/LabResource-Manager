@@ -13,7 +13,7 @@ public static class ReturnAsset
     public record Command(
         [property: JsonIgnore] Guid BorrowingId,
         string? Remarks,
-        bool IsDefective) : IRequest<Result>;
+        [property: JsonIgnore] bool IsDefective) : IRequest<Result>;
 
     public record Result(Guid BorrowingRecordId, string AssetName, DateTime ReturnedAt, AssetStatus NewStatus);
 
