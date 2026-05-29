@@ -30,12 +30,9 @@ public class LoggingFilterAttribute : IAsyncActionFilter
 
         var resultContext = await next();
 
-        if (resultContext.Exception == null)
+        if (resultContext.Exception == null && _logger.IsEnabled(LogLevel.Information))
         {
-            if (_logger.IsEnabled(LogLevel.Information))
-            {
-                _logger.LogInformation("[AUDIT] User '{User}' successfully completed {Feature}.", userEmail, featureName);
-            }
+            _logger.LogInformation("[AUDIT] User '{User}' successfully completed {Feature}.", userEmail, featureName);
         }
     }
 }
