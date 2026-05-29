@@ -19,7 +19,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { AuthService } from '../../core/services/auth.service';
 import { LabAssetService } from '../../core/services/lab-asset.service';
 import { UserService } from '../../core/services/user.service';
-import { LabAsset, CreateLabAssetRequest } from '../../core/models/lab-asset';
+import { LabAsset } from '../../core/models/lab-asset';
 import { UserResponse } from '../../core/models/user';
 import { AssetStatus } from '../../core/models/enums';
 

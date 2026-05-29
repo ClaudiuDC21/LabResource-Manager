@@ -15,10 +15,9 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly backendConfig = inject(BackendConfigService);
   private readonly router = inject(Router);
+  private readonly currentUserState = signal<UserState | null>(this.extractUserFromToken());
 
   isLoggedIn = signal<boolean>(this.checkInitialAuth());
-
-  private currentUserState = signal<UserState | null>(this.extractUserFromToken());
 
   currentUser = computed(() => this.currentUserState());
 
@@ -38,6 +37,7 @@ export class AuthService {
         email: payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] || payload['email'] || 'N/A'
       };
     } catch (e) {
+      console.error('Failed to decode JWT token:', e);
       return null;
     }
   }

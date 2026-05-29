@@ -4,13 +4,13 @@ import { UserResponse } from './user';
 export class UIHelpers {
   static getRoleName(role: UserRole | string | number | undefined): string {
     if (role === undefined || role === null) return 'Unknown';
-    const roleValue = typeof role === 'string' ? parseInt(role, 10) : role;
+    const roleValue = typeof role === 'string' ? Number.parseInt(role, 10) : role;
     return roleValue === UserRole.Teacher ? 'Teacher' : 'Student';
   }
 
   static getRoleSeverity(role: UserRole | string | number | undefined): 'success' | 'info' {
     if (role === undefined || role === null) return 'info';
-    const roleValue = typeof role === 'string' ? parseInt(role, 10) : role;
+    const roleValue = typeof role === 'string' ? Number.parseInt(role, 10) : role;
     return roleValue === UserRole.Teacher ? 'info' : 'success';
   }
 

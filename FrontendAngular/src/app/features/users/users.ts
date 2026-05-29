@@ -62,12 +62,12 @@ export class UsersComponent implements OnInit {
   }
 
   getRoleSeverity(role: UserRole | string | number): 'success' | 'info' {
-    const roleValue = typeof role === 'string' ? parseInt(role, 10) : role;
+    const roleValue = typeof role === 'string' ? Number.parseInt(role, 10) : role;
     return roleValue === UserRole.Teacher ? 'info' : 'success';
   }
 
   getRoleName(role: UserRole | string | number): string {
-    const roleValue = typeof role === 'string' ? parseInt(role, 10) : role;
+    const roleValue = typeof role === 'string' ? Number.parseInt(role, 10) : role;
     return roleValue === UserRole.Teacher ? 'Teacher' : 'Student';
   }
 

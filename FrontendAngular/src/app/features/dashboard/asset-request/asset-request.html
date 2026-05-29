@@ -38,14 +38,14 @@
             </div>
             <div class="grid mt-1">
               <div class="col-12 md:col-8">
-                <label class="block font-bold text-700 mb-2">Pick-up Date</label>
-                <p-datepicker [ngModel]="pickUpDate()" (ngModelChange)="onPickUpDateChange($event)" [minDate]="minDate" appendTo="body" [showIcon]="true" styleClass="w-full" placeholder="Select Date">
+                <label for="pickUpDate" class="block font-bold text-700 mb-2">Pick-up Date</label>
+                <p-datepicker id="pickUpDate" [ngModel]="pickUpDate()" (ngModelChange)="onPickUpDateChange($event)" [minDate]="minDate" appendTo="body" [showIcon]="true" styleClass="w-full" placeholder="Select Date">
                   <ng-template pTemplate="date" let-date>
                     <span [ngClass]="{
-                            'bg-red-100 text-red-600 opacity-50': getDayStatus(date) === 'full',
-                            'bg-orange-100 text-orange-700 font-bold': getDayStatus(date) === 'partial',
-                            'text-900': getDayStatus(date) === 'free'
-                          }" 
+                          'bg-red-100 text-red-600 opacity-50': getDayStatus(date) === 'full',
+                          'bg-orange-100 text-orange-700 font-bold': getDayStatus(date) === 'partial',
+                          'text-900': getDayStatus(date) === 'free'
+                        }" 
                           class="w-full h-full flex align-items-center justify-content-center border-round">
                       {{ date.day }}
                     </span>
@@ -53,8 +53,8 @@
                 </p-datepicker>
               </div>
               <div class="col-12 md:col-4">
-                <label class="block font-bold text-700 mb-2">Pick-up Time</label>
-                <p-datepicker [ngModel]="pickUpTime()" (ngModelChange)="onPickUpTimeChange($event)" [timeOnly]="true" appendTo="body" [showIcon]="true" iconDisplay="input" styleClass="w-full" placeholder="Select Time">
+                <label for="pickUpTime" class="block font-bold text-700 mb-2">Pick-up Time</label>
+                <p-datepicker id="pickUpTime" [ngModel]="pickUpTime()" (ngModelChange)="onPickUpTimeChange($event)" [timeOnly]="true" appendTo="body" [showIcon]="true" iconDisplay="input" styleClass="w-full" placeholder="Select Time">
                   <ng-template pTemplate="inputicon">
                     <i class="pi pi-clock"></i>
                   </ng-template>
@@ -94,8 +94,8 @@
             </div>
             <div class="grid mt-1">
               <div class="col-12 md:col-8">
-                <label class="block font-bold text-700 mb-2">Return Date</label>
-                <p-datepicker [ngModel]="returnDate()" (ngModelChange)="returnDate.set($event)" [minDate]="pickUpDate()" appendTo="body" [showIcon]="true" styleClass="w-full" placeholder="Select Date">
+                <label for="returnDate" class="block font-bold text-700 mb-2">Return Date</label>
+                <p-datepicker id="returnDate" [ngModel]="returnDate()" (ngModelChange)="returnDate.set($event)" [minDate]="pickUpDate()" appendTo="body" [showIcon]="true" styleClass="w-full" placeholder="Select Date">
                     <ng-template pTemplate="date" let-date>
                         <span [ngClass]="{
                                 'bg-red-100 text-red-600 opacity-50': getDayStatus(date) === 'full',
@@ -109,8 +109,8 @@
                 </p-datepicker>
               </div>
               <div class="col-12 md:col-4">
-                <label class="block font-bold text-700 mb-2">Return Time</label>
-                <p-datepicker [ngModel]="returnTime()" (ngModelChange)="returnTime.set($event)" [timeOnly]="true" appendTo="body" [showIcon]="true" iconDisplay="input" styleClass="w-full" placeholder="Select Time">
+                <label for="returnTime" class="block font-bold text-700 mb-2">Return Time</label>
+                <p-datepicker id="returnTime" [ngModel]="returnTime()" (ngModelChange)="returnTime.set($event)" [timeOnly]="true" appendTo="body" [showIcon]="true" iconDisplay="input" styleClass="w-full" placeholder="Select Time">
                   <ng-template pTemplate="inputicon">
                     <i class="pi pi-clock"></i>
                   </ng-template>

@@ -10,7 +10,6 @@
             <p class="text-600 mt-3">Loading your data...</p>
         </div>
     } @else if (userFromApi) {
-        
         <div class="grid">
             <div class="col-12 lg:col-5 p-3">
                 <div class="surface-card p-5 shadow-2 border-round-xl h-full flex flex-column">
@@ -31,9 +30,9 @@
                     
                     <div class="flex flex-column gap-4 mt-4 flex-grow-1">
                         <div class="flex flex-column gap-2">
-                            <label class="text-500 font-medium text-sm">Full Name</label>
+                            <label for="fullName" class="text-500 font-medium text-sm">Full Name</label>
                             @if (isEditingProfile()) {
-                                <input pInputText [(ngModel)]="profileForm.fullName" class="w-full text-900" 
+                                <input id="fullName" pInputText [(ngModel)]="profileForm.fullName" class="w-full text-900" 
                                        [ngClass]="{'ng-invalid ng-dirty': !profileForm.fullName.trim()}" />
                                 @if (!profileForm.fullName.trim()) {
                                     <small class="text-red-500 font-medium mt-1">Full name cannot be empty.</small>
@@ -46,9 +45,9 @@
                         </div>
 
                         <div class="flex flex-column gap-2">
-                            <label class="text-500 font-medium text-sm">Matriculation Number</label>
+                            <label for="matriculationNumber" class="text-500 font-medium text-sm">Matriculation Number</label>
                             @if (isEditingProfile()) {
-                                <input pInputText [(ngModel)]="profileForm.matriculationNumber" placeholder="Optional" class="w-full text-900" />
+                                <input id="matriculationNumber" pInputText [(ngModel)]="profileForm.matriculationNumber" placeholder="Optional" class="w-full text-900" />
                             } @else {
                                 <div class="text-900 font-bold text-lg p-2 surface-100 border-round min-h-3rem flex align-items-center">
                                     {{ userFromApi.matriculationNumber || 'Not provided' }}
@@ -94,8 +93,8 @@
 
                     <div class="flex flex-column gap-4 mt-4">
                         <div class="flex flex-column gap-2">
-                            <label class="text-700 font-medium">Current Password</label>
-                            <p-password [(ngModel)]="passwords.currentPassword" [feedback]="false" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full"
+                            <label for="currentPassword" class="text-700 font-medium">Current Password</label>
+                            <p-password id="currentPassword" [(ngModel)]="passwords.currentPassword" [feedback]="false" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full"
                                         (onBlur)="dirtyCurrentPassword = true"
                                         [ngClass]="{'ng-invalid ng-dirty': (dirtyCurrentPassword || showPasswordErrors) && !passwords.currentPassword}"></p-password>
                             @if ((dirtyCurrentPassword || showPasswordErrors) && !passwords.currentPassword) {
@@ -104,8 +103,8 @@
                         </div>
 
                         <div class="flex flex-column gap-2">
-                            <label class="text-700 font-medium">New Password</label>
-                            <p-password [(ngModel)]="passwords.newPassword" [feedback]="false" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full"
+                            <label for="newPassword" class="text-700 font-medium">New Password</label>
+                            <p-password id="newPassword" [(ngModel)]="passwords.newPassword" [feedback]="false" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full"
                                         (onBlur)="dirtyNewPassword = true"
                                         (ngModelChange)="dirtyNewPassword = true"
                                         [ngClass]="{'ng-invalid ng-dirty': (dirtyNewPassword || showPasswordErrors) && (!isNewPasswordValid() || (passwords.currentPassword && passwords.newPassword === passwords.currentPassword))}"></p-password>
@@ -121,8 +120,8 @@
                         </div>
 
                         <div class="flex flex-column gap-2">
-                            <label class="text-700 font-medium">Confirm Password</label>
-                            <p-password [(ngModel)]="passwords.confirmPassword" [feedback]="false" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full"
+                            <label for="confirmPassword" class="text-700 font-medium">Confirm Password</label>
+                            <p-password id="confirmPassword" [(ngModel)]="passwords.confirmPassword" [feedback]="false" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full"
                                         (onBlur)="dirtyConfirmPassword = true"
                                         (ngModelChange)="dirtyConfirmPassword = true"
                                         [ngClass]="{'ng-invalid ng-dirty': (dirtyConfirmPassword || showPasswordErrors) && (passwords.newPassword !== passwords.confirmPassword || !passwords.confirmPassword)}"></p-password>

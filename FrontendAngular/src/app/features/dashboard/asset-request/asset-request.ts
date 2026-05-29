@@ -128,7 +128,7 @@ export class AssetRequestComponent implements OnInit {
   onPickUpDateChange(newDate: Date) {
     if (!newDate) return;
     this.pickUpDate.set(newDate);
-    this.returnDate.set(new Date(newDate.getTime()));
+    this.returnDate.set(new Date(newDate));
   }
 
   onPickUpTimeChange(newTime: Date) {
@@ -196,7 +196,7 @@ export class AssetRequestComponent implements OnInit {
     const finalStart = this.combineDateTime(this.pickUpDate(), this.pickUpTime());
     const finalEnd = this.combineDateTime(this.returnDate(), this.returnTime());
 
-    if (finalStart < new Date(new Date().getTime() - 1000 * 60 * 5)) {
+    if (finalStart < new Date(Date.now() - 1000 * 60 * 5)) {
        this.messageService.add({ severity: 'warn', summary: 'Invalid Date', detail: 'Pick-up time cannot be in the past.' });
       return;
     }

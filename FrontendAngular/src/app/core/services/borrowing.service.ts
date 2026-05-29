@@ -17,7 +17,7 @@ export class BorrowingService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = '/api/Borrowings';
 
-  private pendingCountUpdatedSource = new Subject<void>();
+  private readonly pendingCountUpdatedSource = new Subject<void>();
   public pendingCountUpdated$ = this.pendingCountUpdatedSource.asObservable();
 
   notifyPendingCountChanged() {

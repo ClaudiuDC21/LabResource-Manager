@@ -90,28 +90,28 @@
 <p-dialog [(visible)]="assetDialog" [style]="{ width: '550px' }" 
           [header]="isEditing ? 'Update Equipment Details' : 'Register New Equipment'" 
           [modal]="true" [draggable]="false" [resizable]="false" styleClass="p-fluid">
-  
+ 
   <ng-template pTemplate="content">
     <div class="flex flex-column gap-4 pt-3">
       <div class="flex flex-column gap-2">
-        <label class="font-bold text-900">Equipment Name *</label>
-        <input pInputText [(ngModel)]="assetForm.name" placeholder="e.g. Oscilloscope Tektronix" />
+        <label for="assetName" class="font-bold text-900">Equipment Name *</label>
+        <input id="assetName" pInputText [(ngModel)]="assetForm.name" placeholder="e.g. Oscilloscope Tektronix" />
       </div>
 
       <div class="grid">
         <div class="col-6 flex flex-column gap-2">
-          <label class="font-bold text-900">Serial Number</label>
-          <input pInputText [(ngModel)]="assetForm.serialNumber" placeholder="SN-XXXX" />
+          <label for="serialNumber" class="font-bold text-900">Serial Number</label>
+          <input id="serialNumber" pInputText [(ngModel)]="assetForm.serialNumber" placeholder="SN-XXXX" />
         </div>
         <div class="col-6 flex flex-column gap-2">
-          <label class="font-bold text-900">Laboratory Location</label>
-          <input pInputText [(ngModel)]="assetForm.location" placeholder="e.g. Room 302" />
+          <label for="location" class="font-bold text-900">Laboratory Location</label>
+          <input id="location" pInputText [(ngModel)]="assetForm.location" placeholder="e.g. Room 302" />
         </div>
       </div>
 
       <div class="flex flex-column gap-2">
-        <label class="font-bold text-900">Responsible Teacher (Owner)</label>
-        <p-select [options]="teachers()" 
+        <label for="teacherSelect" class="font-bold text-900">Responsible Teacher (Owner)</label>
+        <p-select id="teacherSelect" [options]="teachers()" 
                   [(ngModel)]="assetForm.assignedTeacherId" 
                   optionLabel="fullName" 
                   optionValue="id" 
