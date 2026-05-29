@@ -31,7 +31,7 @@ public class UpdateLabAssetTests
 
         _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { existingAsset });
 
-        var command = new UpdateLabAsset.Command(assetId, "New Name", "NEW-456", "New Location", null);
+        var command = new UpdateLabAsset.Command(assetId, "New Name", "NEW-456", "New Location", null, false);
 
         await _handler.Handle(command, CancellationToken.None);
 
@@ -56,7 +56,7 @@ public class UpdateLabAssetTests
         _dbContextMock.Setup(db => db.Users).Returns(usersDbSetMock.Object);
         _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { existingAsset });
 
-        var command = new UpdateLabAsset.Command(assetId, "Name", "SN-1", "Loc", teacherId);
+        var command = new UpdateLabAsset.Command(assetId, "Name", "SN-1", "Loc", teacherId, false);
 
         await _handler.Handle(command, CancellationToken.None);
 
@@ -73,7 +73,7 @@ public class UpdateLabAssetTests
 
         _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { existingAsset, otherAsset });
 
-        var command = new UpdateLabAsset.Command(assetId, "Updated Asset 1", "DUPLICATE", "Loc", null);
+        var command = new UpdateLabAsset.Command(assetId, "Updated Asset 1", "DUPLICATE", "Loc", null, false);
 
         var act = async () => await _handler.Handle(command, CancellationToken.None);
 
@@ -88,7 +88,7 @@ public class UpdateLabAssetTests
 
         _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset>());
 
-        var command = new UpdateLabAsset.Command(assetId, "New Name", "NEW-123", "Loc", null);
+        var command = new UpdateLabAsset.Command(assetId, "New Name", "NEW-123", "Loc", null, false);
 
         var act = async () => await _handler.Handle(command, CancellationToken.None);
 
@@ -111,7 +111,7 @@ public class UpdateLabAssetTests
         _dbContextMock.Setup(db => db.Users).Returns(usersDbSetMock.Object);
         _dbContextMock.Setup(db => db.LabAssets).ReturnsDbSet(new List<LabAsset> { existingAsset });
 
-        var command = new UpdateLabAsset.Command(assetId, "Name", "SN-1", "Loc", userId);
+        var command = new UpdateLabAsset.Command(assetId, "Name", "SN-1", "Loc", userId, false);
 
         var act = async () => await _handler.Handle(command, CancellationToken.None);
 
