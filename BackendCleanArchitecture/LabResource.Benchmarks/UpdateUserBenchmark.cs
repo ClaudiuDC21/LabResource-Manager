@@ -46,7 +46,7 @@ public class UpdateUserBenchmark
             FullName = "John Doe",
             Email = "john.doe@stud.ubbcluj.ro",
             IsActive = true,
-            PasswordHash = "hash"
+            PasswordHash = "test_data_no_secret_123"
         });
         _context.SaveChanges();
 

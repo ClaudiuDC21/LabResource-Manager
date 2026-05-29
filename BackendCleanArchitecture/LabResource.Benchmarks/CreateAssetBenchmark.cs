@@ -48,7 +48,7 @@ public class CreateAssetBenchmark
             IsActive = true,
             FullName = "Dr. Sarah Jenkins",
             Email = "sarah.jenkins@ubbcluj.ro",
-            PasswordHash = "hash"
+            PasswordHash = "test_data_no_secret_123"
         });
         _context.SaveChanges();
 

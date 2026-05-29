@@ -50,7 +50,7 @@ public class ReturnAssetBenchmark
             IsActive = true,
             FullName = "Test User",
             Email = "test.user@stud.ubbcluj.ro",
-            PasswordHash = "hash"
+            PasswordHash = "test_data_no_secret_123"
         });
 
         _context.LabAssets.Add(new LabAsset
