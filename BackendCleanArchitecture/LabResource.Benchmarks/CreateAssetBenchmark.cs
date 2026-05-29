@@ -3,11 +3,12 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Engines;
 using LabResource.Application.DTOs.LabAssets;
-using LabResource.Application.Interfaces.Repositories;
 using LabResource.Application.Services;
 using LabResource.Domain.Entities;
 using LabResource.Domain.Enums;
-using Moq;
+using LabResource.Infrastructure.Persistence;
+using LabResource.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace LabResource.Benchmarks;
 
@@ -19,9 +20,10 @@ public class CreateAssetBenchmark
     private LabAssetService _cleanArchitectureService = null!;
     private CreateLabAssetRequest _request = null!;
     private Guid _teacherId;
+    private ApplicationDbContext _context = null!;
 
-    [GlobalSetup]
-    public void Setup()
+    [IterationSetup]
+    public void IterationSetup()
     {
         _teacherId = Guid.NewGuid();
 
@@ -33,24 +35,27 @@ public class CreateAssetBenchmark
             AssignedTeacherId = _teacherId
         };
 
-        var mockAssetRepo = new Mock<ILabAssetRepository>();
-        mockAssetRepo
-            .Setup(repo => repo.GetBySerialNumberAsync(It.IsAny<string>()))
-            .ReturnsAsync((LabAsset?)null);
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
 
-        var mockUserRepo = new Mock<IUserRepository>();
-        mockUserRepo
-            .Setup(repo => repo.GetByIdAsync(_teacherId))
-            .ReturnsAsync(new User
-            {
-                Id = _teacherId,
-                Role = UserRole.Teacher,
-                IsActive = true,
-                FullName = "Dr. Sarah Jenkins",
-                Email = "sarah.jenkins@ubbcluj.ro"
-            });
+        _context = new ApplicationDbContext(options);
 
-        _cleanArchitectureService = new LabAssetService(mockAssetRepo.Object, mockUserRepo.Object);
+        _context.Users.Add(new User
+        {
+            Id = _teacherId,
+            Role = UserRole.Teacher,
+            IsActive = true,
+            FullName = "Dr. Sarah Jenkins",
+            Email = "sarah.jenkins@ubbcluj.ro",
+            PasswordHash = "hash"
+        });
+        _context.SaveChanges();
+
+        var assetRepo = new LabAssetRepository(_context);
+        var userRepo = new UserRepository(_context);
+
+        _cleanArchitectureService = new LabAssetService(assetRepo, userRepo);
     }
 
     [Benchmark]

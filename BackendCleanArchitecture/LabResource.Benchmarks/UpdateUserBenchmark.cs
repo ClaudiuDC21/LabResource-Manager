@@ -7,7 +7,9 @@ using LabResource.Application.Interfaces.Repositories;
 using LabResource.Application.Services;
 using LabResource.Domain.Entities;
 using LabResource.Domain.Enums;
-using Moq;
+using LabResource.Infrastructure.Persistence;
+using LabResource.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace LabResource.Benchmarks;
 
@@ -19,6 +21,7 @@ public class UpdateUserBenchmark
     private UserService _cleanArchitectureService = null!;
     private UpdateUserRequest _request = null!;
     private Guid _userId;
+    private ApplicationDbContext _context = null!;
 
     [GlobalSetup]
     public void Setup()
@@ -31,18 +34,25 @@ public class UpdateUserBenchmark
             MatriculationNumber = "STU-98765432"
         };
 
-        var mockUserRepo = new Mock<IUserRepository>();
-        mockUserRepo
-            .Setup(repo => repo.GetByIdAsync(_userId))
-            .ReturnsAsync(new User
-            {
-                Id = _userId,
-                FullName = "John Doe",
-                Email = "john.doe@stud.ubbcluj.ro",
-                IsActive = true
-            });
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
 
-        _cleanArchitectureService = new UserService(mockUserRepo.Object);
+        _context = new ApplicationDbContext(options);
+
+        _context.Users.Add(new User
+        {
+            Id = _userId,
+            FullName = "John Doe",
+            Email = "john.doe@stud.ubbcluj.ro",
+            IsActive = true,
+            PasswordHash = "hash"
+        });
+        _context.SaveChanges();
+
+        IUserRepository userRepo = new UserRepository(_context);
+
+        _cleanArchitectureService = new UserService(userRepo);
     }
 
     [Benchmark]

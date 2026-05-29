@@ -7,7 +7,9 @@ using LabResource.Application.Interfaces.Repositories;
 using LabResource.Application.Services;
 using LabResource.Domain.Entities;
 using LabResource.Domain.Enums;
-using Moq;
+using LabResource.Infrastructure.Persistence;
+using LabResource.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace LabResource.Benchmarks;
 
@@ -20,9 +22,10 @@ public class RequestAssetBenchmark
     private BorrowAssetRequest _request = null!;
     private Guid _userId;
     private Guid _assetId;
+    private ApplicationDbContext _context = null!;
 
-    [GlobalSetup]
-    public void Setup()
+    [IterationSetup]
+    public void IterationSetup()
     {
         _userId = Guid.NewGuid();
         _assetId = Guid.NewGuid();
@@ -35,32 +38,37 @@ public class RequestAssetBenchmark
             RequestedEndDate = DateTime.UtcNow.AddDays(3)
         };
 
-        var mockUserRepo = new Mock<IUserRepository>();
-        mockUserRepo.Setup(repo => repo.GetByIdAsync(_userId))
-            .ReturnsAsync(new User
-            {
-                Id = _userId,
-                IsActive = true,
-                FullName = "Emily Chen",
-                Email = "emily.chen@stud.ubbcluj.ro"
-            });
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
 
-        var mockAssetRepo = new Mock<ILabAssetRepository>();
-        mockAssetRepo.Setup(repo => repo.GetByIdAsync(_assetId))
-            .ReturnsAsync(new LabAsset
-            {
-                Id = _assetId,
-                IsActive = true,
-                Status = AssetStatus.Available,
-                AssignedTeacherId = Guid.NewGuid(),
-                Name = "Mass Spectrometer"
-            });
+        _context = new ApplicationDbContext(options);
 
-        var mockBorrowingRepo = new Mock<IBorrowingRecordRepository>();
-        mockBorrowingRepo.Setup(repo => repo.HasOverlappingReservationsAsync(_assetId, _request.RequestedStartDate, _request.RequestedEndDate))
-            .ReturnsAsync(false);
+        _context.Users.Add(new User
+        {
+            Id = _userId,
+            IsActive = true,
+            FullName = "Emily Chen",
+            Email = "emily.chen@stud.ubbcluj.ro",
+            PasswordHash = "hash"
+        });
 
-        _cleanArchitectureService = new BorrowingService(mockUserRepo.Object, mockAssetRepo.Object, mockBorrowingRepo.Object);
+        _context.LabAssets.Add(new LabAsset
+        {
+            Id = _assetId,
+            IsActive = true,
+            Status = AssetStatus.Available,
+            AssignedTeacherId = Guid.NewGuid(),
+            Name = "Mass Spectrometer"
+        });
+
+        _context.SaveChanges();
+
+        IUserRepository userRepo = new UserRepository(_context);
+        ILabAssetRepository assetRepo = new LabAssetRepository(_context);
+        IBorrowingRecordRepository borrowingRepo = new BorrowingRecordRepository(_context);
+
+        _cleanArchitectureService = new BorrowingService(userRepo, assetRepo, borrowingRepo);
     }
 
     [Benchmark]

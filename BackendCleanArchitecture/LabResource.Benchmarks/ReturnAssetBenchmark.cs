@@ -7,7 +7,9 @@ using LabResource.Application.Interfaces.Repositories;
 using LabResource.Application.Services;
 using LabResource.Domain.Entities;
 using LabResource.Domain.Enums;
-using Moq;
+using LabResource.Infrastructure.Persistence;
+using LabResource.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace LabResource.Benchmarks;
 
@@ -20,30 +22,15 @@ public class ReturnAssetBenchmark
     private ReturnAssetRequest _request = null!;
     private Guid _borrowingId;
     private Guid _assetId;
-
-    private Mock<IBorrowingRecordRepository> _mockBorrowingRepo = null!;
-    private Mock<ILabAssetRepository> _mockAssetRepo = null!;
-    private Mock<IUserRepository> _mockUserRepo = null!;
-
-    [GlobalSetup]
-    public void GlobalSetup()
-    {
-        _mockBorrowingRepo = new Mock<IBorrowingRecordRepository>();
-        _mockAssetRepo = new Mock<ILabAssetRepository>();
-        _mockUserRepo = new Mock<IUserRepository>();
-
-        _cleanArchitectureService = new BorrowingService(
-            _mockUserRepo.Object,
-            _mockAssetRepo.Object,
-            _mockBorrowingRepo.Object
-        );
-    }
+    private Guid _userId;
+    private ApplicationDbContext _context = null!;
 
     [IterationSetup]
     public void IterationSetup()
     {
         _borrowingId = Guid.NewGuid();
         _assetId = Guid.NewGuid();
+        _userId = Guid.NewGuid();
 
         _request = new ReturnAssetRequest
         {
@@ -51,22 +38,45 @@ public class ReturnAssetBenchmark
             IsDefective = false
         };
 
-        _mockBorrowingRepo.Setup(repo => repo.GetByIdAsync(_borrowingId))
-            .ReturnsAsync(new BorrowingRecord
-            {
-                Id = _borrowingId,
-                LabAssetId = _assetId,
-                Status = BorrowingStatus.Active,
-                Remarks = "Picked up on Monday."
-            });
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
 
-        _mockAssetRepo.Setup(repo => repo.GetByIdAsync(_assetId))
-            .ReturnsAsync(new LabAsset
-            {
-                Id = _assetId,
-                Status = AssetStatus.Borrowed,
-                Name = "Thermal Camera"
-            });
+        _context = new ApplicationDbContext(options);
+
+        _context.Users.Add(new User
+        {
+            Id = _userId,
+            IsActive = true,
+            FullName = "Test User",
+            Email = "test.user@stud.ubbcluj.ro",
+            PasswordHash = "hash"
+        });
+
+        _context.LabAssets.Add(new LabAsset
+        {
+            Id = _assetId,
+            Status = AssetStatus.Borrowed,
+            Name = "Thermal Camera",
+            IsActive = true
+        });
+
+        _context.BorrowingRecords.Add(new BorrowingRecord
+        {
+            Id = _borrowingId,
+            LabAssetId = _assetId,
+            UserId = _userId,
+            Status = BorrowingStatus.Active,
+            Remarks = "Picked up on Monday."
+        });
+
+        _context.SaveChanges();
+
+        IUserRepository userRepo = new UserRepository(_context);
+        ILabAssetRepository assetRepo = new LabAssetRepository(_context);
+        IBorrowingRecordRepository borrowingRepo = new BorrowingRecordRepository(_context);
+
+        _cleanArchitectureService = new BorrowingService(userRepo, assetRepo, borrowingRepo);
     }
 
     [Benchmark]

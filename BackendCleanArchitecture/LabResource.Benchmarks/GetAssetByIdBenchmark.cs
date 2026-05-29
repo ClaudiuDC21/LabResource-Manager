@@ -7,7 +7,9 @@ using LabResource.Application.Interfaces.Repositories;
 using LabResource.Application.Services;
 using LabResource.Domain.Entities;
 using LabResource.Domain.Enums;
-using Moq;
+using LabResource.Infrastructure.Persistence;
+using LabResource.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace LabResource.Benchmarks;
 
@@ -17,6 +19,7 @@ namespace LabResource.Benchmarks;
 public class GetAssetByIdBenchmark
 {
     private LabAssetService _cleanArchitectureService = null!;
+    private ApplicationDbContext _context = null!;
     private Guid _testAssetId;
 
     [GlobalSetup]
@@ -24,22 +27,28 @@ public class GetAssetByIdBenchmark
     {
         _testAssetId = Guid.NewGuid();
 
-        var mockAssetRepo = new Mock<ILabAssetRepository>();
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
 
-        mockAssetRepo
-            .Setup(repo => repo.GetByIdAsync(_testAssetId))
-            .ReturnsAsync(new LabAsset
-            {
-                Id = _testAssetId,
-                Name = "Digital Oscilloscope",
-                SerialNumber = "OSC-2023-XYZ",
-                IsActive = true,
-                Status = AssetStatus.Available
-            });
+        _context = new ApplicationDbContext(options);
 
-        var mockUserRepo = new Mock<IUserRepository>();
+        var asset = new LabAsset
+        {
+            Id = _testAssetId,
+            Name = "Digital Oscilloscope",
+            SerialNumber = "OSC-2023-XYZ",
+            IsActive = true,
+            Status = AssetStatus.Available
+        };
 
-        _cleanArchitectureService = new LabAssetService(mockAssetRepo.Object, mockUserRepo.Object);
+        _context.LabAssets.Add(asset);
+        _context.SaveChanges();
+
+        ILabAssetRepository assetRepo = new LabAssetRepository(_context);
+        IUserRepository userRepo = new UserRepository(_context);
+
+        _cleanArchitectureService = new LabAssetService(assetRepo, userRepo);
     }
 
     [Benchmark]

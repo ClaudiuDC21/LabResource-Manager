@@ -9,7 +9,9 @@ using LabResource.Application.Interfaces.Repositories;
 using LabResource.Application.Services;
 using LabResource.Domain.Entities;
 using LabResource.Domain.Enums;
-using Moq;
+using LabResource.Infrastructure.Persistence;
+using LabResource.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace LabResource.Benchmarks;
 
@@ -19,24 +21,30 @@ namespace LabResource.Benchmarks;
 public class GetAllUsersBenchmark
 {
     private UserService _cleanArchitectureService = null!;
+    private ApplicationDbContext _context = null!;
 
     [GlobalSetup]
     public void Setup()
     {
-        var mockUserRepo = new Mock<IUserRepository>();
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
 
-        var mockUsers = new List<User>
+        _context = new ApplicationDbContext(options);
+
+        var users = new List<User>
         {
             new User { Id = Guid.NewGuid(), FullName = "Alice Johnson", Email = "alice.johnson@stud.ubbcluj.ro", Role = UserRole.Student, IsActive = true, PasswordHash = "hash" },
             new User { Id = Guid.NewGuid(), FullName = "Dr. Robert Smith", Email = "robert.smith@ubbcluj.ro", Role = UserRole.Teacher, IsActive = true, PasswordHash = "hash" },
             new User { Id = Guid.NewGuid(), FullName = "Charlie Davis", Email = "charlie.davis@stud.ubbcluj.ro", Role = UserRole.Student, IsActive = true, PasswordHash = "hash" }
         };
 
-        mockUserRepo
-            .Setup(repo => repo.GetAllActiveAsync())
-            .ReturnsAsync(mockUsers);
+        _context.Users.AddRange(users);
+        _context.SaveChanges();
 
-        _cleanArchitectureService = new UserService(mockUserRepo.Object);
+        IUserRepository userRepo = new UserRepository(_context);
+
+        _cleanArchitectureService = new UserService(userRepo);
     }
 
     [Benchmark]
