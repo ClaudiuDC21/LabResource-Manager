@@ -56,14 +56,14 @@
                         </div>
 
                         <div class="flex flex-column gap-2">
-                            <label class="text-500 font-medium text-sm">Role</label>
+                            <span class="text-500 font-medium text-sm">Role</span>
                             <div class="text-900 font-bold text-lg p-2 surface-100 border-round min-h-3rem flex align-items-center uppercase">
                                 {{ UIHelpers.getRoleName(authService.currentUser()?.role) }}
                             </div>
                         </div>
 
                         <div class="flex flex-column gap-2">
-                            <label class="text-500 font-medium text-sm">Email Address</label>
+                            <span class="text-500 font-medium text-sm">Email Address</span>
                             <div class="text-900 font-bold text-lg p-2 surface-100 border-round min-h-3rem flex align-items-center">
                                 {{ authService.currentUser()?.email }}
                             </div>
