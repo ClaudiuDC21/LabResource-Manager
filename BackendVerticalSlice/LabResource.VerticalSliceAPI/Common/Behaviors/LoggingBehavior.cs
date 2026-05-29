@@ -25,7 +25,7 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
             _logger.LogInformation("[AUDIT] User '{User}' initiated {Feature} with data: {@Request}", userEmail, featureName, request);
         }
 
-        var response = await next();
+        var response = await next(cancellationToken);
 
         if (_logger.IsEnabled(LogLevel.Information))
         {

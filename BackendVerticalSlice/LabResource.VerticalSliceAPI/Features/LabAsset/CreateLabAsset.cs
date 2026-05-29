@@ -1,8 +1,8 @@
 ﻿using FluentValidation;
 using LabResource.VerticalApi.Common.Entities;
 using LabResource.VerticalApi.Common.Enums;
-using LabResource.VerticalApi.Common.Exceptions;
 using LabResource.VerticalApi.Common.Persistence;
+using LabResource.VerticalApi.Common.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -43,18 +43,8 @@ public static class CreateLabAsset
 
         public async Task<Result> Handle(Command request, CancellationToken cancellationToken)
         {
-            if (request.AssignedTeacherId.HasValue)
-            {
-                var teacher = await _context.Users.FindAsync(new object[] { request.AssignedTeacherId.Value }, cancellationToken);
-                if (teacher == null) throw new NotFoundException("User", request.AssignedTeacherId.Value);
-                if (teacher.Role != UserRole.Teacher) throw new BadRequestException("Assigned user must be a Teacher.");
-            }
-
-            if (!string.IsNullOrWhiteSpace(request.SerialNumber) &&
-                    await _context.LabAssets.AnyAsync(a => a.SerialNumber == request.SerialNumber, cancellationToken))
-            {
-                throw new AlreadyExistsException("LabAsset", request.SerialNumber);
-            }
+            await LabAssetBusinessRules.ValidateTeacherAsync(_context, request.AssignedTeacherId, cancellationToken);
+            await LabAssetBusinessRules.ValidateSerialNumberUniquenessAsync(_context, request.SerialNumber, null, cancellationToken);
 
             var newAsset = new LabAsset
             {
