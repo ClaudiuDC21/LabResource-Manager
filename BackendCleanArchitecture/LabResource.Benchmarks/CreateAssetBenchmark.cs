@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Engines;
 using LabResource.Application.DTOs.LabAssets;
+using LabResource.Application.Interfaces.Repositories;
 using LabResource.Application.Services;
 using LabResource.Domain.Entities;
 using LabResource.Domain.Enums;
@@ -19,41 +20,40 @@ public class CreateAssetBenchmark
 {
     private LabAssetService _cleanArchitectureService = null!;
     private CreateLabAssetRequest _request = null!;
-    private Guid _teacherId;
-    private ApplicationDbContext _context = null!;
 
     [IterationSetup]
     public void IterationSetup()
     {
-        _teacherId = Guid.NewGuid();
+        var teacherId = Guid.NewGuid();
 
         _request = new CreateLabAssetRequest
         {
             Name = "Electron Microscope",
             SerialNumber = "EM-5000X",
             Location = "Biology Lab B201",
-            AssignedTeacherId = _teacherId
+            AssignedTeacherId = teacherId
         };
 
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        _context = new ApplicationDbContext(options);
+        var context = new ApplicationDbContext(options);
 
-        _context.Users.Add(new User
+        context.Users.Add(new User
         {
-            Id = _teacherId,
+            Id = teacherId,
             Role = UserRole.Teacher,
             IsActive = true,
             FullName = "Dr. Sarah Jenkins",
             Email = "sarah.jenkins@ubbcluj.ro",
-            PasswordHash = "test_data_no_secret_123"
+            PasswordHash = Guid.NewGuid().ToString()
         });
-        _context.SaveChanges();
 
-        var assetRepo = new LabAssetRepository(_context);
-        var userRepo = new UserRepository(_context);
+        context.SaveChanges();
+
+        ILabAssetRepository assetRepo = new LabAssetRepository(context);
+        IUserRepository userRepo = new UserRepository(context);
 
         _cleanArchitectureService = new LabAssetService(assetRepo, userRepo);
     }

@@ -19,20 +19,17 @@ namespace LabResource.Benchmarks;
 public class ReturnAssetBenchmark
 {
     private BorrowingService _cleanArchitectureService = null!;
-    private ReturnAssetRequest _request = null!;
-    private Guid _borrowingId;
-    private Guid _assetId;
-    private Guid _userId;
-    private ApplicationDbContext _context = null!;
+    private ReturnAssetRequest _storedRequest = null!;
+    private Guid _storedBorrowingId;
 
     [IterationSetup]
     public void IterationSetup()
     {
-        _borrowingId = Guid.NewGuid();
-        _assetId = Guid.NewGuid();
-        _userId = Guid.NewGuid();
+        var borrowingId = Guid.NewGuid();
+        var assetId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
 
-        _request = new ReturnAssetRequest
+        var request = new ReturnAssetRequest
         {
             Remarks = "Returned in good condition.",
             IsDefective = false
@@ -42,46 +39,49 @@ public class ReturnAssetBenchmark
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        _context = new ApplicationDbContext(options);
+        var context = new ApplicationDbContext(options);
 
-        _context.Users.Add(new User
+        context.Users.Add(new User
         {
-            Id = _userId,
+            Id = userId,
             IsActive = true,
             FullName = "Test User",
             Email = "test.user@stud.ubbcluj.ro",
-            PasswordHash = "test_data_no_secret_123"
+            PasswordHash = Guid.NewGuid().ToString()
         });
 
-        _context.LabAssets.Add(new LabAsset
+        context.LabAssets.Add(new LabAsset
         {
-            Id = _assetId,
+            Id = assetId,
             Status = AssetStatus.Borrowed,
             Name = "Thermal Camera",
             IsActive = true
         });
 
-        _context.BorrowingRecords.Add(new BorrowingRecord
+        context.BorrowingRecords.Add(new BorrowingRecord
         {
-            Id = _borrowingId,
-            LabAssetId = _assetId,
-            UserId = _userId,
+            Id = borrowingId,
+            LabAssetId = assetId,
+            UserId = userId,
             Status = BorrowingStatus.Active,
             Remarks = "Picked up on Monday."
         });
 
-        _context.SaveChanges();
+        context.SaveChanges();
 
-        IUserRepository userRepo = new UserRepository(_context);
-        ILabAssetRepository assetRepo = new LabAssetRepository(_context);
-        IBorrowingRecordRepository borrowingRepo = new BorrowingRecordRepository(_context);
+        IUserRepository userRepo = new UserRepository(context);
+        ILabAssetRepository assetRepo = new LabAssetRepository(context);
+        IBorrowingRecordRepository borrowingRepo = new BorrowingRecordRepository(context);
 
         _cleanArchitectureService = new BorrowingService(userRepo, assetRepo, borrowingRepo);
+
+        _storedBorrowingId = borrowingId;
+        _storedRequest = request;
     }
 
     [Benchmark]
     public async Task<ReturnAssetResponse> CleanArchitecture_ReturnAsset()
     {
-        return await _cleanArchitectureService.ReturnAssetAsync(_borrowingId, _request);
+        return await _cleanArchitectureService.ReturnAssetAsync(_storedBorrowingId, _storedRequest);
     }
 }

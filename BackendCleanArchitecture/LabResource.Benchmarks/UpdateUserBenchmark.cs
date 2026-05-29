@@ -19,16 +19,15 @@ namespace LabResource.Benchmarks;
 public class UpdateUserBenchmark
 {
     private UserService _cleanArchitectureService = null!;
-    private UpdateUserRequest _request = null!;
-    private Guid _userId;
-    private ApplicationDbContext _context = null!;
+    private UpdateUserRequest _storedRequest = null!;
+    private Guid _storedUserId;
 
     [GlobalSetup]
     public void Setup()
     {
-        _userId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
 
-        _request = new UpdateUserRequest
+        _storedRequest = new UpdateUserRequest
         {
             FullName = "Johnathon Doe",
             MatriculationNumber = "STU-98765432"
@@ -38,26 +37,28 @@ public class UpdateUserBenchmark
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        _context = new ApplicationDbContext(options);
+        var context = new ApplicationDbContext(options);
 
-        _context.Users.Add(new User
+        context.Users.Add(new User
         {
-            Id = _userId,
+            Id = userId,
             FullName = "John Doe",
             Email = "john.doe@stud.ubbcluj.ro",
             IsActive = true,
-            PasswordHash = "test_data_no_secret_123"
+            PasswordHash = Guid.NewGuid().ToString()
         });
-        _context.SaveChanges();
+        context.SaveChanges();
 
-        IUserRepository userRepo = new UserRepository(_context);
+        IUserRepository userRepo = new UserRepository(context);
 
         _cleanArchitectureService = new UserService(userRepo);
+
+        _storedUserId = userId;
     }
 
     [Benchmark]
     public async Task<bool> CleanArchitecture_UpdateUser()
     {
-        return await _cleanArchitectureService.UpdateUserAsync(_userId, _request);
+        return await _cleanArchitectureService.UpdateUserAsync(_storedUserId, _storedRequest);
     }
 }

@@ -19,7 +19,6 @@ namespace LabResource.Benchmarks;
 public class GetAssetByIdBenchmark
 {
     private LabAssetService _cleanArchitectureService = null!;
-    private ApplicationDbContext _context = null!;
     private Guid _testAssetId;
 
     [GlobalSetup]
@@ -31,7 +30,7 @@ public class GetAssetByIdBenchmark
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        _context = new ApplicationDbContext(options);
+        var context = new ApplicationDbContext(options);
 
         var asset = new LabAsset
         {
@@ -42,11 +41,11 @@ public class GetAssetByIdBenchmark
             Status = AssetStatus.Available
         };
 
-        _context.LabAssets.Add(asset);
-        _context.SaveChanges();
+        context.LabAssets.Add(asset);
+        context.SaveChanges();
 
-        ILabAssetRepository assetRepo = new LabAssetRepository(_context);
-        IUserRepository userRepo = new UserRepository(_context);
+        ILabAssetRepository assetRepo = new LabAssetRepository(context);
+        IUserRepository userRepo = new UserRepository(context);
 
         _cleanArchitectureService = new LabAssetService(assetRepo, userRepo);
     }

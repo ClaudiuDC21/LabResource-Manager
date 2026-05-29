@@ -19,21 +19,17 @@ namespace LabResource.Benchmarks;
 public class RequestAssetBenchmark
 {
     private BorrowingService _cleanArchitectureService = null!;
-    private BorrowAssetRequest _request = null!;
-    private Guid _userId;
-    private Guid _assetId;
-    private ApplicationDbContext _context = null!;
 
     [IterationSetup]
     public void IterationSetup()
     {
-        _userId = Guid.NewGuid();
-        _assetId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var assetId = Guid.NewGuid();
 
-        _request = new BorrowAssetRequest
+        var request = new BorrowAssetRequest
         {
-            UserId = _userId,
-            LabAssetId = _assetId,
+            UserId = userId,
+            LabAssetId = assetId,
             RequestedStartDate = DateTime.UtcNow.AddDays(1),
             RequestedEndDate = DateTime.UtcNow.AddDays(3)
         };
@@ -42,38 +38,41 @@ public class RequestAssetBenchmark
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        _context = new ApplicationDbContext(options);
+        var context = new ApplicationDbContext(options);
 
-        _context.Users.Add(new User
+        context.Users.Add(new User
         {
-            Id = _userId,
+            Id = userId,
             IsActive = true,
             FullName = "Emily Chen",
             Email = "emily.chen@stud.ubbcluj.ro",
-            PasswordHash = "test_data_no_secret_123"
+            PasswordHash = Guid.NewGuid().ToString()
         });
 
-        _context.LabAssets.Add(new LabAsset
+        context.LabAssets.Add(new LabAsset
         {
-            Id = _assetId,
+            Id = assetId,
             IsActive = true,
             Status = AssetStatus.Available,
             AssignedTeacherId = Guid.NewGuid(),
             Name = "Mass Spectrometer"
         });
 
-        _context.SaveChanges();
+        context.SaveChanges();
 
-        IUserRepository userRepo = new UserRepository(_context);
-        ILabAssetRepository assetRepo = new LabAssetRepository(_context);
-        IBorrowingRecordRepository borrowingRepo = new BorrowingRecordRepository(_context);
+        IUserRepository userRepo = new UserRepository(context);
+        ILabAssetRepository assetRepo = new LabAssetRepository(context);
+        IBorrowingRecordRepository borrowingRepo = new BorrowingRecordRepository(context);
 
         _cleanArchitectureService = new BorrowingService(userRepo, assetRepo, borrowingRepo);
+        _storedRequest = request;
     }
+
+    private BorrowAssetRequest _storedRequest = null!;
 
     [Benchmark]
     public async Task<BorrowingResponse> CleanArchitecture_RequestAsset()
     {
-        return await _cleanArchitectureService.RequestAssetAsync(_request);
+        return await _cleanArchitectureService.RequestAssetAsync(_storedRequest);
     }
 }

@@ -21,7 +21,6 @@ namespace LabResource.Benchmarks;
 public class GetAllUsersBenchmark
 {
     private UserService _cleanArchitectureService = null!;
-    private ApplicationDbContext _context = null!;
 
     [GlobalSetup]
     public void Setup()
@@ -30,19 +29,19 @@ public class GetAllUsersBenchmark
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        _context = new ApplicationDbContext(options);
+        var context = new ApplicationDbContext(options);
 
         var users = new List<User>
         {
-            new User { Id = Guid.NewGuid(), FullName = "Alice Johnson", Email = "alice.johnson@stud.ubbcluj.ro", Role = UserRole.Student, IsActive = true, PasswordHash = "test_data_no_secret_123" },
-            new User { Id = Guid.NewGuid(), FullName = "Dr. Robert Smith", Email = "robert.smith@ubbcluj.ro", Role = UserRole.Teacher, IsActive = true, PasswordHash = "test_data_no_secret_123" },
-            new User { Id = Guid.NewGuid(), FullName = "Charlie Davis", Email = "charlie.davis@stud.ubbcluj.ro", Role = UserRole.Student, IsActive = true, PasswordHash = "test_data_no_secret_123" }
+            new User { Id = Guid.NewGuid(), FullName = "Alice Johnson", Email = "alice.johnson@stud.ubbcluj.ro", Role = UserRole.Student, IsActive = true, PasswordHash = Guid.NewGuid().ToString() },
+            new User { Id = Guid.NewGuid(), FullName = "Dr. Robert Smith", Email = "robert.smith@ubbcluj.ro", Role = UserRole.Teacher, IsActive = true, PasswordHash = Guid.NewGuid().ToString() },
+            new User { Id = Guid.NewGuid(), FullName = "Charlie Davis", Email = "charlie.davis@stud.ubbcluj.ro", Role = UserRole.Student, IsActive = true, PasswordHash = Guid.NewGuid().ToString() }
         };
 
-        _context.Users.AddRange(users);
-        _context.SaveChanges();
+        context.Users.AddRange(users);
+        context.SaveChanges();
 
-        IUserRepository userRepo = new UserRepository(_context);
+        IUserRepository userRepo = new UserRepository(context);
 
         _cleanArchitectureService = new UserService(userRepo);
     }
